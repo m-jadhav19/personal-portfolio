@@ -23,7 +23,7 @@
 		{
 			"id": "1",
 			"title": "Product Configurator",
-			"description": "Simple web app using three.js to configure a 3D chair model",
+			"description": "Simple web app using Three.js to configure a 3D chair model",
 			"imageSrc": "/images/product-config.png",
 			"url": "https://product-configurator-one.vercel.app/"
 		},
@@ -37,14 +37,14 @@
 		{
 			"id": "3",
 			"title": "Property Search",
-			"description": "A web application that uses Maptiler maps to search Propeties",
+			"description": "A web application that uses Maptiler maps to search Properties",
 			"imageSrc": "/images/property-search.png",
 			"url": "https://property-search-web.vercel.app/"
 		},
 		{
 			"id": "4",
 			"title": "3D Portfolio",
-			"description": "A User portfolio bulit using Three JS",
+			"description": "A User portfolio bulit using Three.js",
 			"imageSrc": "/images/3dportfolio.png",
 			"url": "https://3d-portfolio-zeta-ten.vercel.app/"
 		}
