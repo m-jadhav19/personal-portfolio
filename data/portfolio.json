@@ -1,0 +1,98 @@
+{
+	"name": "Mandar",
+	"headerTaglineOne": "Hello ",
+	"headerTaglineTwo": "I'm Mandar Jadhav",
+	"headerTaglineThree": "Frontend Devloper",
+	"headerTaglineFour": " based in Pune, India.",
+	"showBlog": false,
+	"darkMode": true,
+	"socials": [
+		{
+			"id": "1",
+			"title": "Github",
+			"link": "https://github.com/m-jadhav19/"
+		},
+		{
+			"id": "2",
+			"title": "LinkedIn",
+			"link": "https://www.linkedin.com/in/mjadhav19/"
+		},
+		{"id": "3", "title": "Email", "link": "mailto:mjadhav19@outlook.com"}
+	],
+	"projects": [
+		{
+			"id": "1",
+			"title": "Product Configurator",
+			"description": "Simple web app using three.js to configure a 3D chair model",
+			"imageSrc": "/images/product-config.png",
+			"url": "https://product-configurator-one.vercel.app/"
+		},
+		{
+			"id": "2",
+			"title": "T-Shirt Configurator",
+			"description": "Simple web app that uses Fabric Js and Three.js to customize a Tshirt model",
+			"imageSrc": "/images/tshirt-config.png",
+			"url": "https://t-shirt-config.vercel.app/"
+		},
+		{
+			"id": "3",
+			"title": "Property Search",
+			"description": "A web application that uses Maptiler maps to search Propeties",
+			"imageSrc": "/images/property-search.png",
+			"url": "https://property-search-web.vercel.app/"
+		},
+		{
+			"id": "4",
+			"title": "3D Portfolio",
+			"description": "A User portfolio bulit using Three JS",
+			"imageSrc": "/images/3dportfolio.png",
+			"url": "https://3d-portfolio-zeta-ten.vercel.app/"
+		}
+	],
+	"services": [
+		{
+			"id": "1",
+			"title": "Art Direction",
+			"description": "We help with the creation and development of online advertising ideas, with particular focus on their visual appearance."
+		},
+		{
+			"id": "2",
+			"title": "Branding",
+			"description": "We design key brand elements such as the logo, color scheme, typography, and other design components that makes your brand stand out from competitors."
+		},
+		{
+			"id": "3",
+			"title": "Web Design",
+			"description": "We build and optimize your online presence.  Website is the digital entry point into your business and a powerful revenue channel."
+		},
+		{
+			"id": "4",
+			"title": "3D Design",
+			"description": "We combine creative design and technical skills to build striking 3D visualisations that bring your project to life."
+		}
+	],
+	"aboutParaLine1": "I am an enthusiastic and devoted Frontend Developer with nearly two years of experience building responsive, user-friendly online apps as a professional. With a strong background in HTML, CSS, and JavaScript, I specialize in creating dynamic and engaging user interfaces using modern frameworks like as React.js, Vue.js and Next.js. ",
+	"aboutParaLine2": "In my recent projects, I've been working on constructing interactive 3D model viewers with Three.js, as well as complex property search functions that allow users to easily filter properties. My expertise includes increasing site performance and guaranteeing cross-browser compatibility, which improves the overall user experience.",
+	"aboutParaLine3": "Aside from coding, I enjoy gaming and game creation, and I am always searching for new methods to merge complex graphics and interactivity into web applications. I also love football, and when I have free time, I like to play and watch the game. I'm always willing to pick up new skills and take on challenging projects that test the boundaries of web development. My objective is to grow as a developer and support innovative projects that make a big difference.",
+	"resume": {
+		"tagline": "👋  I'm a Frontend Developer and Gamer.",
+		"description": "I created top-class user experiences using modern Frontend tools and design principals. Well-versed with React, Javascript, and most of the Web frameworks.",
+		"experiences": [
+			{
+				"id": "1",
+				"dates": "August 2022 - May 2024",
+				"type": "Full Time",
+				"position": "IoT Engineer",
+				"bullets": ["Worked on building Web applications for IoT purposes", "Worked with IoT devices"]
+			}
+		],
+		"education": {
+			"universityName": "MIT ADT University",
+			"universityDate": "2018-2021",
+			"universityPara": ""
+		},
+		"languages": ["Javascript", "HTML5", "CSS", "Java", "C#", "C++"],
+		"frameworks": ["React", "Typescript", "Javascript"],
+		"others": ["Figma", "AdobeXD", "AWS"]
+	}
+}
