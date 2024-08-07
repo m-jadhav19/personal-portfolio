@@ -17,6 +17,23 @@ const Header = ({handleWorkScroll, handleAboutScroll, isBlog}) => {
 		setMounted(true)
 	}, [])
 
+	const renderThemeChanger = () => {
+		if (!mounted) return null
+		const currentTheme = theme === 'system' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme
+
+		return (
+			<Button onClick={() => setTheme(currentTheme === 'dark' ? 'light' : 'dark')}>
+				<img
+					className='h-6 transition-transform duration-300 transform'
+					style={{
+						transform: currentTheme === 'dark' ? 'rotate(0deg)' : 'rotate(360deg)',
+					}}
+					src={`/images/${currentTheme === 'dark' ? 'moon.svg' : 'sun.svg'}`}
+				/>
+			</Button>
+		)
+	}
+
 	return (
 		<>
 			<Popover className='block tablet:hidden mt-5'>
@@ -26,25 +43,19 @@ const Header = ({handleWorkScroll, handleAboutScroll, isBlog}) => {
 							<h1
 								onClick={() => router.push('/')}
 								className='font-medium p-2 laptop:p-0 link'>
-								{name}.
+								{name}
 							</h1>
 
 							<div className='flex items-center'>
-								{data.darkMode && (
-									<Button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
-										{
-											<img
-												className='h-6'
-												src={`/images/${theme === 'dark' ? 'moon.svg' : 'sun.svg'}`}
-											/>
-										}
-									</Button>
-								)}
+								{data.darkMode && renderThemeChanger()}
 
 								<Popover.Button>
 									<img
-										className='h-5'
-										src={`/images/${!open ? (theme === 'dark' ? 'menu-white.svg' : 'menu.svg') : theme === 'light' ? 'cancel.svg' : 'cancel-white.svg'}`}
+										className='h-5 transition-transform duration-300 transform'
+										style={{
+											transform: !open ? 'rotate(0deg)' : 'rotate(360deg)',
+										}}
+										src={`/images/${!open ? 'menu.svg' : 'cancel.svg'}`}
 									/>
 								</Popover.Button>
 							</div>
@@ -86,7 +97,7 @@ const Header = ({handleWorkScroll, handleAboutScroll, isBlog}) => {
 				<h1
 					onClick={() => router.push('/')}
 					className='font-medium cursor-pointer mob:p-2 laptop:p-0'>
-					{name}.
+					{name}
 				</h1>
 				{!isBlog ? (
 					<div className='flex'>
@@ -102,13 +113,7 @@ const Header = ({handleWorkScroll, handleAboutScroll, isBlog}) => {
 						)}
 
 						<Button onClick={() => window.open('mailto:mjadhav19@outlook.com')}>Contact</Button>
-						{mounted && theme && data.darkMode && (
-							<Button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
-								<img
-									className='h-6'
-									src={`/images/${theme === 'dark' ? 'moon.svg' : 'sun.svg'}`}></img>
-							</Button>
-						)}
+						{data.darkMode && renderThemeChanger()}
 					</div>
 				) : (
 					<div className='flex'>
@@ -124,13 +129,7 @@ const Header = ({handleWorkScroll, handleAboutScroll, isBlog}) => {
 
 						<Button onClick={() => window.open('mailto:mjadhav19@outlook.com')}>Contact</Button>
 
-						{mounted && theme && data.darkMode && (
-							<Button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
-								<img
-									className='h-6'
-									src={`/images/${theme === 'dark' ? 'moon.svg' : 'sun.svg'}`}></img>
-							</Button>
-						)}
+						{data.darkMode && renderThemeChanger()}
 					</div>
 				)}
 			</div>
