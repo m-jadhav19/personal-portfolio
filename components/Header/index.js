@@ -66,9 +66,9 @@ const Header = ({handleWorkScroll, handleAboutScroll, isBlog}) => {
 									<Button onClick={handleWorkScroll}>Work</Button>
 									<Button onClick={handleAboutScroll}>About</Button>
 									{showBlog && <Button onClick={() => router.push('/blog')}>Blog</Button>}
-									{showResume && <Button onClick={() => window.open('mailto:mjadhav19@outlook.com')}>Resume</Button>}
+									{showResume && <Button onClick={() => window.open('mailto:jadhavmandar44@gmail.com')}>Resume</Button>}
 
-									<Button onClick={() => window.open('mailto:mjadhav19@outlook.com')}>Contact</Button>
+									<Button onClick={() => window.open('mailto:jadhavmandar44@gmail.com')}>Contact</Button>
 								</div>
 							) : (
 								<div className='grid grid-cols-1'>
@@ -86,7 +86,7 @@ const Header = ({handleWorkScroll, handleAboutScroll, isBlog}) => {
 										</Button>
 									)}
 
-									<Button onClick={() => window.open('mailto:mjadhav19@outlook.com')}>Contact</Button>
+									<Button onClick={() => window.open('mailto:jadhavmandar44@gmail.com')}>Contact</Button>
 								</div>
 							)}
 						</Popover.Panel>
@@ -112,7 +112,7 @@ const Header = ({handleWorkScroll, handleAboutScroll, isBlog}) => {
 							</Button>
 						)}
 
-						<Button onClick={() => window.open('mailto:mjadhav19@outlook.com')}>Contact</Button>
+						<Button onClick={() => window.open('mailto:jadhavmandar44@gmail.com')}>Contact</Button>
 						{data.darkMode && renderThemeChanger()}
 					</div>
 				) : (
@@ -127,7 +127,7 @@ const Header = ({handleWorkScroll, handleAboutScroll, isBlog}) => {
 							</Button>
 						)}
 
-						<Button onClick={() => window.open('mailto:mjadhav19@outlook.com')}>Contact</Button>
+						<Button onClick={() => window.open('mailto:jadhavmandar44@gmail.com')}>Contact</Button>
 
 						{data.darkMode && renderThemeChanger()}
 					</div>
