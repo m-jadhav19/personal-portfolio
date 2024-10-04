@@ -43,10 +43,10 @@
 		},
 		{
 			"id": "4",
-			"title": "3D Portfolio",
-			"description": "A User portfolio bulit using Three.js",
-			"imageSrc": "/images/3dportfolio.png",
-			"url": "https://3d-portfolio-zeta-ten.vercel.app/"
+			"title": "Parallax Wallpapers",
+			"description": "On-stop site for Mobile Wallpapers",
+			"imageSrc": "/images/parallax.png",
+			"url": "https://parallax-wallpapers-ten.vercel.app/home"
 		}
 	],
 	"services": [
