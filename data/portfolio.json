@@ -44,7 +44,7 @@
 		{
 			"id": "4",
 			"title": "Parallax Wallpapers",
-			"description": "On-stop site for Mobile Wallpapers",
+			"description": "A Wallpaper web app that offers a curated collection of high-quality images for download, categorized by resolution and style",
 			"imageSrc": "/images/parallax.png",
 			"url": "https://parallax-wallpapers-ten.vercel.app/home"
 		}
