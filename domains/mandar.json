@@ -4,7 +4,7 @@
         "email": "mjadhav19@outlook.com"
     },
     "records": {
-        "CNAME": "mandar"
+        "CNAME": "mandar.vercel-dns.com"
     },
     "services": {
         "vercel": "_vercel.mandar.is-a.dev"
