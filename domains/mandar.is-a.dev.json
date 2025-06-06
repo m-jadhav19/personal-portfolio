@@ -7,6 +7,6 @@
         "CNAME": "mandar"
     },
     "services": {
-        "vercel": "_vercel.mandar"
+        "vercel": "_vercel.mandar.is-a.dev"
     }
 }
