@@ -40,7 +40,7 @@ const Header = ({handleWorkScroll, handleAboutScroll, isBlog}) => {
 
 	return (
 		<>
-			<Popover className='block tablet:hidden mt-5'>
+			<Popover className='block tablet:hidden px-2 mt-2'>
 				{({open}) => (
 					<>
 						<div className={`header-mobile ${theme === 'dark' ? 'dark' : ''} flex items-center justify-between p-2 laptop:p-0`}>
@@ -55,7 +55,7 @@ const Header = ({handleWorkScroll, handleAboutScroll, isBlog}) => {
 
 								<Popover.Button>
 									<Image
-										className='h-5 transition-transform duration-300 transform'
+										className='h-6 my-auto transition-transform duration-300 transform'
 										style={{
 											transform: !open ? 'rotate(0deg)' : 'rotate(360deg)',
 										}}
