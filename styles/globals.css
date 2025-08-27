@@ -28,10 +28,10 @@ body.dark-mode {
 	position: absolute;
 	pointer-events: none;
 	z-index: 100;
-	width: 100vw;
+	width: 100%;
 	opacity: 0.5;
 	filter: blur(40px);
-	background: radial-gradient(circle, #00cdac 0%, #00cdac 100%);
+	background: radial-gradient(circle, var(--selected-color) 0%, var(--selected-color) 100%);
 }
 
 .gradient-circle {
@@ -44,6 +44,14 @@ body.dark-mode {
 	height: 50px;
 }
 
+/* CSS Custom Properties for dynamic colors */
+:root {
+	--selected-color: #00cdac;
+	--selected-color-rgb: 0, 205, 172;
+	--current-theme: dark;
+}
+
+/* Dynamic gradient shadows based on selected color */
 .gradient-shadow:hover::before {
 	content: '';
 	z-index: -1;
@@ -52,7 +60,7 @@ body.dark-mode {
 	right: 0;
 	bottom: 0;
 	left: 0;
-	background: linear-gradient(-45deg, #00cdac 0%, #00cdac 100%);
+	background: linear-gradient(-45deg, var(--selected-color) 0%, var(--selected-color) 100%);
 	transform: translate3d(0px, 20px, 0) scale(0.95);
 	filter: blur(20px);
 	opacity: 0.7;
@@ -70,4 +78,297 @@ body.dark-mode {
 	left: 0;
 	background: inherit;
 	border-radius: inherit;
+}
+
+/* Liquid Glass Effect for Header */
+.liquid-glass-header {
+	position: relative;
+	overflow: hidden;
+	background: rgba(255, 255, 255, 0.1);
+	-webkit-backdrop-filter: blur(20px);
+	backdrop-filter: blur(20px);
+	border: 1px solid rgba(255, 255, 255, 0.2);
+	padding: 0.5rem;
+	/* border-radius: 0.5rem; */
+	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.liquid-glass-header.dark {
+	background: rgba(0, 0, 0, 0.2);
+	border: 1px solid rgba(255, 255, 255, 0.1);
+	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.liquid-glass-header::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: -100%;
+	width: 100%;
+	height: 100%;
+	background: linear-gradient(
+		90deg,
+		transparent,
+		rgba(255, 255, 255, 0.1),
+		transparent
+	);
+	transition: left 0.5s;
+}
+
+.liquid-glass-header:hover::before {
+	left: 100%;
+}
+
+/* Header-specific liquid glass styles */
+.header-mobile {
+	background: rgba(255, 255, 255, 0.1);
+	-webkit-backdrop-filter: blur(20px);
+	backdrop-filter: blur(20px);
+	border: 1px solid rgba(255, 255, 255, 0.2);
+	border-radius: 0.5rem;
+	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+	overflow: hidden;
+}
+
+.header-mobile.dark {
+	background: rgba(0, 0, 0, 0.2);
+	border: 1px solid rgba(255, 255, 255, 0.1);
+	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.header-desktop {
+	background: rgba(255, 255, 255, 0.1);
+	-webkit-backdrop-filter: blur(20px);
+	backdrop-filter: blur(20px);
+	border: 1px solid rgba(255, 255, 255, 0.2);
+	border-radius: 0.5rem;
+	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+	overflow: hidden;
+}
+
+.header-desktop.dark {
+	background: rgba(0, 0, 0, 0.2);
+	border: 1px solid rgba(255, 255, 255, 0.1);
+	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.header-mobile::before,
+.header-desktop::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: -100%;
+	width: 100%;
+	height: 100%;
+	background: linear-gradient(
+		90deg,
+		transparent,
+		rgba(255, 255, 255, 0.1),
+		transparent
+	);
+	transition: left 0.5s ease-out;
+	pointer-events: none;
+}
+
+.header-mobile:hover::before,
+.header-desktop:hover::before {
+	left: 0;
+}
+
+/* Ripple Effect for WorkCard */
+.ripple-container {
+  position: relative;
+  overflow: hidden;
+}
+
+.ripple-container:hover .ripple-effect {
+  animation: ripple 0.8s ease-out;
+}
+
+.ripple-effect {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.1) 70%, transparent 100%);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  opacity: 0;
+}
+
+@keyframes ripple {
+  0% {
+    width: 0;
+    height: 0;
+    opacity: 0.8;
+  }
+  100% {
+    width: 300px;
+    height: 300px;
+    opacity: 0;
+  }
+}
+
+/* Dark mode ripple effect */
+.dark .ripple-effect {
+  background: radial-gradient(circle, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.1) 70%, transparent 100%);
+}
+
+/* Enhanced hover effects */
+.ripple-container:hover img {
+  transform: scale(1.05);
+  filter: brightness(1.1);
+}
+
+.ripple-container img {
+  transition: all 0.3s ease-out;
+}
+
+/* Enhanced Button hover effects with dynamic colors */
+.button-hover-effect {
+	position: relative;
+	overflow: hidden;
+}
+
+.button-hover-effect::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: -100%;
+	width: 100%;
+	height: 100%;
+	background: linear-gradient(
+		90deg,
+		transparent,
+		var(--selected-color),
+		transparent
+	);
+	transition: left 0.5s ease-out;
+	opacity: 0.1;
+}
+
+.button-hover-effect:hover::before {
+	left: 100%;
+}
+
+/* Dynamic color transitions */
+.color-transition {
+	transition: all 0.3s ease;
+}
+
+.color-transition:hover {
+	box-shadow: 0 8px 25px rgba(var(--selected-color-rgb), 0.3);
+}
+
+/* FAB-specific animations */
+.fab-color-change {
+	animation: colorPulse 2s ease-in-out infinite alternate;
+}
+
+@keyframes colorPulse {
+	0% {
+		box-shadow: 0 0 20px rgba(var(--selected-color-rgb), 0.4);
+	}
+	100% {
+		box-shadow: 0 0 30px rgba(var(--selected-color-rgb), 0.6);
+	}
+}
+
+/* Button liquid glass hover effects */
+.button-liquid-glass {
+	position: relative;
+	overflow: hidden;
+	transition: all 0.3s ease-out;
+}
+
+.button-liquid-glass::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: -100%;
+	width: 100%;
+	height: 100%;
+	background: linear-gradient(
+		90deg,
+		transparent,
+		rgba(255, 255, 255, 0.1),
+		transparent
+	);
+	transition: left 0.5s ease-out;
+	pointer-events: none;
+}
+
+.button-liquid-glass:hover::before {
+	left: 100%;
+}
+
+/* Dark mode button liquid glass */
+.button-liquid-glass.dark::before {
+	background: linear-gradient(
+		90deg,
+		transparent,
+		rgba(255, 255, 255, 0.05),
+		transparent
+	);
+}
+
+/* Force theme persistence */
+html[data-theme="dark"] {
+	--current-theme: dark;
+}
+
+html[data-theme="light"] {
+	--current-theme: light;
+}
+
+/* Ensure dark mode colors persist */
+.dark-mode-persist {
+	color-scheme: dark;
+}
+
+/* Override any light mode flashes */
+html[data-theme="dark"] * {
+	color-scheme: dark;
+}
+
+/* Aggressive dark mode enforcement */
+html[data-theme="dark"],
+html.dark {
+	color-scheme: dark !important;
+}
+
+html[data-theme="dark"] body,
+html.dark body {
+	background-color: #000000 !important;
+	color: #fafafa !important;
+}
+
+/* Prevent any light mode text colors in dark mode */
+html[data-theme="dark"] *,
+html.dark * {
+	color: inherit !important;
+}
+
+/* Force dark mode text colors */
+html[data-theme="dark"] h1,
+html[data-theme="dark"] h2,
+html[data-theme="dark"] h3,
+html[data-theme="dark"] h4,
+html[data-theme="dark"] h5,
+html[data-theme="dark"] h6,
+html[data-theme="dark"] p,
+html[data-theme="dark"] span,
+html[data-theme="dark"] div,
+html.dark h1,
+html.dark h2,
+html.dark h3,
+html.dark h4,
+html.dark h5,
+html.dark h6,
+html.dark p,
+html.dark span,
+html.dark div {
+	color: #fafafa !important;
 }

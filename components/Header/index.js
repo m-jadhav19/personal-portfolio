@@ -5,6 +5,7 @@ import React, {useEffect, useState} from 'react'
 import Button from '../Button'
 
 import data from '../../data/portfolio.json'
+import Image from 'next/image'
 
 const Header = ({handleWorkScroll, handleAboutScroll, isBlog}) => {
 	const router = useRouter()
@@ -23,12 +24,15 @@ const Header = ({handleWorkScroll, handleAboutScroll, isBlog}) => {
 
 		return (
 			<Button onClick={() => setTheme(currentTheme === 'dark' ? 'light' : 'dark')}>
-				<img
+				<Image
 					className='h-6 transition-transform duration-300 transform'
 					style={{
 						transform: currentTheme === 'dark' ? 'rotate(0deg)' : 'rotate(360deg)',
 					}}
 					src={`/images/${currentTheme === 'dark' ? 'moon.svg' : 'sun.svg'}`}
+					alt='Theme Switcher'
+					width={24}
+					height={24}
 				/>
 			</Button>
 		)
@@ -39,7 +43,7 @@ const Header = ({handleWorkScroll, handleAboutScroll, isBlog}) => {
 			<Popover className='block tablet:hidden mt-5'>
 				{({open}) => (
 					<>
-						<div className='flex items-center justify-between p-2 laptop:p-0'>
+						<div className={`header-mobile ${theme === 'dark' ? 'dark' : ''} flex items-center justify-between p-2 laptop:p-0`}>
 							<h1
 								onClick={() => router.push('/')}
 								className='font-medium p-2 laptop:p-0 link'>
@@ -50,17 +54,20 @@ const Header = ({handleWorkScroll, handleAboutScroll, isBlog}) => {
 								{data.darkMode && renderThemeChanger()}
 
 								<Popover.Button>
-									<img
+									<Image
 										className='h-5 transition-transform duration-300 transform'
 										style={{
 											transform: !open ? 'rotate(0deg)' : 'rotate(360deg)',
 										}}
 										src={`/images/${!open ? 'menu.svg' : 'cancel.svg'}`}
+										alt='Menu'
+										width={24}
+										height={24}
 									/>
 								</Popover.Button>
 							</div>
 						</div>
-						<Popover.Panel className={`absolute right-0 z-10 w-11/12 p-4 ${theme === 'dark' ? 'bg-slate-800' : 'bg-white'} shadow-md rounded-md`}>
+						<Popover.Panel className={`absolute right-0 z-10 w-11/12 p-4 header-mobile ${theme === 'dark' ? 'dark' : ''} shadow-md rounded-md`}>
 							{!isBlog ? (
 								<div className='grid grid-cols-1'>
 									<Button onClick={handleWorkScroll}>Work</Button>
@@ -93,10 +100,10 @@ const Header = ({handleWorkScroll, handleAboutScroll, isBlog}) => {
 					</>
 				)}
 			</Popover>
-			<div className={`mt-10 hidden flex-row items-center justify-between sticky ${theme === 'light' && 'bg-white'} dark:text-white top-0 z-10 tablet:flex`}>
+			<div className={`header-desktop ${theme === 'dark' ? 'dark' : ''} mt-10 hidden flex-row items-center justify-between sticky top-0 z-10 tablet:flex`}>
 				<h1
 					onClick={() => router.push('/')}
-					className='font-medium cursor-pointer mob:p-2 laptop:p-0'>
+					className='font-medium cursor-pointer ml-4 mob:p-2 laptop:p-0'>
 					{name}
 				</h1>
 				{!isBlog ? (

@@ -71,7 +71,7 @@
 			"description": "We combine creative design and technical skills to build striking 3D visualisations that bring your project to life."
 		}
 	],
-	"aboutParaLine1": "I am an enthusiastic and devoted Frontend Developer with nearly two years of experience building responsive, user-friendly online apps as a professional. With a strong background in HTML, CSS, and JavaScript, I specialize in creating dynamic and engaging user interfaces using modern frameworks like as React.js, Vue.js and Next.js. ",
+	"aboutParaLine1": "I am an enthusiastic and devoted Frontend Developer with experience in building responsive, user-friendly online apps as a professional and as a hobby. With a strong background in HTML, CSS, and JavaScript, I specialize in creating dynamic and engaging user interfaces using modern frameworks like as React.js, Vue.js and Next.js. ",
 	"aboutParaLine2": "In my recent projects, I've been working on constructing interactive 3D model viewers with Three.js, as well as complex property search functions that allow users to easily filter properties. My expertise includes increasing site performance and guaranteeing cross-browser compatibility, which improves the overall user experience.",
 	"aboutParaLine3": "Aside from coding, I enjoy gaming and game creation, and I am always searching for new methods to merge complex graphics and interactivity into web applications. I also love football, and when I have free time, I like to play and watch the game. I'm always willing to pick up new skills and take on challenging projects that test the boundaries of web development. My objective is to grow as a developer and support innovative projects that make a big difference.",
 	"resume": {
@@ -84,6 +84,13 @@
 				"type": "Full Time",
 				"position": "IoT Engineer",
 				"bullets": ["Worked on building Web applications for IoT purposes", "Worked with IoT devices"]
+			},
+			{
+				"id": "2",
+				"dates": "January 2025 - Present",
+				"type": "Full Time",
+				"position": "Frontend Developer",
+				"bullets": ["Worked on building Web applications for post-purchase platform and solutions for the clients", "Worked with Nuxt, Vue.js Tailwind CSS, and Javascript"]
 			}
 		],
 		"education": {
@@ -92,7 +99,7 @@
 			"universityPara": ""
 		},
 		"languages": ["Javascript", "HTML5", "CSS", "Java", "C#", "C++"],
-		"frameworks": ["React", "Typescript", "Javascript"],
+		"frameworks": ["React", "Nuxt", "Vue.js", "Tailwind CSS"],
 		"others": ["Figma", "AdobeXD", "AWS"]
 	}
 }

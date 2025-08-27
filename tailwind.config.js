@@ -12,7 +12,15 @@ module.exports = {
       desktop: "1280px",
       laptopl: "1440px",
     },
-    extend: {},
+    extend: {
+      colors: {
+        primary: "#00295b",
+        secondary: "#0093e9",
+        tertiary: "#80d0c7",
+        quaternary: "#ffc3a0",
+        quinary: "#ff5f6d",
+      },
+    },
   },
   plugins: [],
 };
