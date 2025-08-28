@@ -40,14 +40,14 @@ const Header = ({handleWorkScroll, handleAboutScroll, isBlog}) => {
 
 	return (
 		<>
-			<Popover className='block tablet:hidden px-2 mt-2'>
+			<Popover className='block tablet:hidden px-2 mt-2 sticky top-4 z-10'>
 				{({open}) => (
 					<>
-						<div className={`header-mobile ${theme === 'dark' ? 'dark' : ''} flex items-center justify-between p-2 laptop:p-0`}>
+						<div className={`header-mobile header-extra-wide ${theme === 'dark' ? 'dark' : ''} flex items-center justify-between p-2 laptop:p-0 mx-auto`}>
 							<h1
 								onClick={() => router.push('/')}
-								className='font-medium p-2 laptop:p-0 link'>
-								{name}
+								className='logo-code liquid-glass-logo font-fira-code text-xl font-bold p-2 laptop:p-0 link cursor-pointer'>
+								&lt;/MJ&gt;
 							</h1>
 
 							<div className='flex items-center'>
@@ -100,11 +100,11 @@ const Header = ({handleWorkScroll, handleAboutScroll, isBlog}) => {
 					</>
 				)}
 			</Popover>
-			<div className={`header-desktop ${theme === 'dark' ? 'dark' : ''} mt-10 hidden flex-row items-center justify-between sticky top-0 z-10 tablet:flex`}>
+			<div className={`header-desktop header-extra-wide ${theme === 'dark' ? 'dark' : ''} mt-10 hidden flex-row items-center justify-between sticky top-4 z-10 tablet:flex mx-auto px-12`}>
 				<h1
 					onClick={() => router.push('/')}
-					className='font-medium cursor-pointer ml-4 mob:p-2 laptop:p-0'>
-					{name}
+					className='logo-code liquid-glass-logo font-fira-code text-2xl font-bold cursor-pointer ml-4 mob:p-2 laptop:p-0'>
+					&lt;/MJ&gt;
 				</h1>
 				{!isBlog ? (
 					<div className='flex'>

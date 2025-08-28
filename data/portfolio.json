@@ -1,9 +1,9 @@
 {
 	"name": "Mandar",
-	"headerTaglineOne": "Hello ",
+	"headerTaglineOne": "Hello,",
 	"headerTaglineTwo": "I'm Mandar Jadhav",
-	"headerTaglineThree": "Frontend Devloper",
-	"headerTaglineFour": " based in Pune, India.",
+	"headerTaglineThree": "Frontend Developer",
+	"headerTaglineFour": "based in Pune, India.",
 	"showBlog": false,
 	"darkMode": true,
 	"socials": [
@@ -47,6 +47,13 @@
 			"description": "A Wallpaper web app that offers a curated collection of high-quality images for download, categorized by resolution and style",
 			"imageSrc": "/images/parallax.png",
 			"url": "https://parallax-wallpapers-ten.vercel.app/home"
+		},
+		{
+			"id": "5",
+			"title": "3D Model Viewer",
+			"description": "A 3D model viewer that allows users to view 3D models in a 3D environment",
+			"imageSrc": "/images/3dportfolio.png",
+			"url": "https://3d-portfolio-zeta-ten.vercel.app/"
 		}
 	],
 	"services": [
