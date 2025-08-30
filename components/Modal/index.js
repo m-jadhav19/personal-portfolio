@@ -1,10 +1,26 @@
-import React, {useEffect} from 'react'
+import React, {useEffect, useState} from 'react'
 import { createPortal } from 'react-dom'
 
 const Modal = ({isOpen, onClose, title, description, url, children}) => {
-	// Prevent background scrolling when modal is open
+	const [isAnimating, setIsAnimating] = useState(false)
+	const [shouldRender, setShouldRender] = useState(false)
+
+	// Handle modal open/close with animations
 	useEffect(() => {
 		if (isOpen) {
+			setShouldRender(true)
+			// Start animation after render
+			setTimeout(() => setIsAnimating(true), 10)
+		} else {
+			setIsAnimating(false)
+			// Wait for exit animation before unmounting
+			setTimeout(() => setShouldRender(false), 300)
+		}
+	}, [isOpen])
+
+	// Prevent background scrolling when modal is open
+	useEffect(() => {
+		if (shouldRender) {
 			document.body.style.overflow = 'hidden'
 			document.documentElement.style.overflow = 'hidden'
 		} else {
@@ -17,70 +33,36 @@ const Modal = ({isOpen, onClose, title, description, url, children}) => {
 			document.body.style.overflow = 'unset'
 			document.documentElement.style.overflow = 'unset'
 		}
-	}, [isOpen])
+	}, [shouldRender])
 
 	// Handle escape key
 	useEffect(() => {
 		const handleEscape = (e) => {
-			if (e.key === 'Escape' && isOpen) {
-				onClose()
+			if (e.key === 'Escape' && shouldRender) {
+				handleClose()
 			}
 		}
 
-		if (isOpen) {
+		if (shouldRender) {
 			document.addEventListener('keydown', handleEscape)
 		}
 
 		return () => {
 			document.removeEventListener('keydown', handleEscape)
 		}
-	}, [isOpen, onClose])
+	}, [shouldRender])
 
-	if (!isOpen) return null
+	const handleClose = () => {
+		setIsAnimating(false)
+		// Wait for exit animation before calling onClose
+		setTimeout(() => {
+			onClose()
+		}, 300)
+	}
+
+	if (!shouldRender) return null
 
 	// Inline styles to ensure no CSS conflicts
-	const overlayStyle = {
-		position: 'fixed',
-		top: 0,
-		left: 0,
-		width: '100vw',
-		height: '100vh',
-		zIndex: 9999,
-		display: 'flex',
-		alignItems: 'center',
-		justifyContent: 'center',
-		padding: '20px',
-		boxSizing: 'border-box'
-	}
-
-	const backdropStyle = {
-		position: 'absolute',
-		top: 0,
-		left: 0,
-		width: '100%',
-		height: '100%',
-		background: 'rgba(0, 0, 0, 0.7)',
-		backdropFilter: 'blur(8px)',
-		WebkitBackdropFilter: 'blur(8px)'
-	}
-
-	const modalStyle = {
-		position: 'relative',
-		width: '90vw',
-		maxWidth: '1200px',
-		height: '80vh',
-		background: 'rgba(255, 255, 255, 0.1)',
-		backdropFilter: 'blur(20px)',
-		WebkitBackdropFilter: 'blur(20px)',
-		border: '1px solid rgba(255, 255, 255, 0.2)',
-		borderRadius: '1rem',
-		boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
-		overflow: 'hidden',
-		display: 'flex',
-		flexDirection: 'column',
-		zIndex: 10000
-	}
-
 	const headerStyle = {
 		display: 'flex',
 		alignItems: 'center',
@@ -168,14 +150,14 @@ const Modal = ({isOpen, onClose, title, description, url, children}) => {
 	}
 
 	const modalContent = (
-		<div style={overlayStyle}>
+		<div className="modal-overlay-animated">
 			{/* Backdrop */}
 			<div
-				style={backdropStyle}
-				onClick={onClose}></div>
+				className={`modal-backdrop-animated ${isAnimating ? 'animate-in' : ''}`}
+				onClick={handleClose}></div>
 
 			{/* Modal Content */}
-			<div style={modalStyle}>
+			<div className={`modal-content-animated ${isAnimating ? 'animate-in' : ''}`}>
 				{/* Modal Header */}
 				<div style={headerStyle}>
 					<div>
@@ -193,7 +175,7 @@ const Modal = ({isOpen, onClose, title, description, url, children}) => {
 							</a>
 						)}
 						<button
-							onClick={onClose}
+							onClick={handleClose}
 							style={closeButtonStyle}>
 							✕
 						</button>

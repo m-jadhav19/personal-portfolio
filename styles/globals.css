@@ -1085,3 +1085,73 @@ html[data-theme="light"] body {
 		transform: translate(-50%, -50%) scale(1);
 	}
 }
+
+/* Modal Animation Classes */
+.modal-overlay-animated {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100vw;
+	height: 100vh;
+	z-index: 9999;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 20px;
+	box-sizing: border-box;
+}
+
+.modal-backdrop-animated {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background: rgba(0, 0, 0, 0);
+	backdrop-filter: blur(0px);
+	-webkit-backdrop-filter: blur(0px);
+	transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.modal-backdrop-animated.animate-in {
+	background: rgba(0, 0, 0, 0.7);
+	backdrop-filter: blur(8px);
+	-webkit-backdrop-filter: blur(8px);
+}
+
+.modal-content-animated {
+	position: relative;
+	width: 90vw;
+	max-width: 1200px;
+	height: 80vh;
+	background: rgba(255, 255, 255, 0.1);
+	backdrop-filter: blur(20px);
+	-webkit-backdrop-filter: blur(20px);
+	border: 1px solid rgba(255, 255, 255, 0.2);
+	border-radius: 1rem;
+	box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+	overflow: hidden;
+	display: flex;
+	flex-direction: column;
+	z-index: 10000;
+	opacity: 0;
+	transform: scale(0.9) translateY(20px);
+	transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.modal-content-animated.animate-in {
+	opacity: 1;
+	transform: scale(1) translateY(0);
+}
+
+/* Modal exit animations */
+.modal-backdrop-animated.animate-out {
+	background: rgba(0, 0, 0, 0);
+	backdrop-filter: blur(0px);
+	-webkit-backdrop-filter: blur(0px);
+}
+
+.modal-content-animated.animate-out {
+	opacity: 0;
+	transform: scale(0.95) translateY(10px);
+}
