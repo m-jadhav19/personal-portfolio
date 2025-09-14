@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Hind:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@400;700;900&family=VT323&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,7 +6,7 @@
 @import './markdown.css';
 
 * {
-	font-family: 'Hind', sans-serif !important;
+	font-family: 'Exo 2', sans-serif !important;
 }
 
 /* Modern Font Family Classes */
@@ -20,6 +20,14 @@
 
 .font-orbitron {
 	font-family: 'Orbitron', monospace !important;
+}
+
+.font-exo {
+	font-family: 'Exo 2', sans-serif !important;
+}
+
+.font-vt323 {
+	font-family: 'VT323', monospace !important;
 }
 
 .font-poppins {
@@ -1084,6 +1092,333 @@ html[data-theme="light"] body {
 		opacity: 1;
 		transform: translate(-50%, -50%) scale(1);
 	}
+}
+
+/* Cyberpunk 2077 Specific Styles */
+/* Prominent Glitch Animation - Matching Reference */
+@keyframes glitch {
+	0%, 100% { 
+		transform: translate(0); 
+		filter: hue-rotate(0deg);
+	}
+	10% { 
+		transform: translate(-2px, 1px); 
+		filter: hue-rotate(90deg);
+	}
+	20% { 
+		transform: translate(2px, -1px); 
+		filter: hue-rotate(180deg);
+	}
+	30% { 
+		transform: translate(-1px, 2px); 
+		filter: hue-rotate(270deg);
+	}
+	40% { 
+		transform: translate(1px, -2px); 
+		filter: hue-rotate(360deg);
+	}
+	50% { 
+		transform: translate(-2px, 1px); 
+		filter: hue-rotate(0deg);
+	}
+	60% { 
+		transform: translate(2px, -1px); 
+		filter: hue-rotate(90deg);
+	}
+	70% { 
+		transform: translate(-1px, 2px); 
+		filter: hue-rotate(180deg);
+	}
+	80% { 
+		transform: translate(1px, -2px); 
+		filter: hue-rotate(270deg);
+	}
+	90% { 
+		transform: translate(-2px, 1px); 
+		filter: hue-rotate(360deg);
+	}
+}
+
+/* Optimized Scanline Animation */
+@keyframes scanline {
+	0% { transform: translateY(-100%); }
+	100% { transform: translateY(100vh); }
+}
+
+/* Optimized Flicker Animation */
+@keyframes flicker {
+	0%, 90%, 100% { opacity: 1; }
+	95% { opacity: 0.7; }
+}
+
+/* Cyberpunk 2077 Authentic Animations */
+@keyframes cyberpunkPulse {
+	0%, 100% { opacity: 1; }
+	50% { opacity: 0.8; }
+}
+
+@keyframes dataStream {
+	0% { transform: translateY(-100%); opacity: 0; }
+	10% { opacity: 1; }
+	90% { opacity: 1; }
+	100% { transform: translateY(100vh); opacity: 0; }
+}
+
+@keyframes hudGlow {
+	0%, 100% { box-shadow: 0 0 5px currentColor; }
+	50% { box-shadow: 0 0 15px currentColor, 0 0 25px currentColor; }
+}
+
+/* Neon Glow Effects */
+.neon-glow-yellow {
+	box-shadow: 0 0 5px #fcee09, 0 0 10px #fcee09, 0 0 20px #fcee09;
+}
+
+.neon-glow-cyan {
+	box-shadow: 0 0 5px #00f6ff, 0 0 10px #00f6ff, 0 0 20px #00f6ff;
+}
+
+.neon-glow-magenta {
+	box-shadow: 0 0 5px #ff00ff, 0 0 10px #ff00ff, 0 0 20px #ff00ff;
+}
+
+/* Prominent Glitch Text Effects - Matching Reference */
+.cyberpunk-text {
+	text-shadow: 0 0 10px currentColor, 0 0 20px currentColor, 0 0 30px currentColor;
+	filter: drop-shadow(0 0 5px currentColor);
+	position: relative;
+}
+
+.glitch-text {
+	animation: glitch 0.3s infinite;
+	text-shadow: 
+		0 0 5px currentColor,
+		0 0 10px currentColor,
+		0 0 15px currentColor,
+		0 0 20px currentColor;
+}
+
+.glitch-text::before,
+.glitch-text::after {
+	content: attr(data-text);
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+}
+
+.glitch-text::before {
+	animation: glitch 0.3s infinite;
+	color: #ff00ff;
+	z-index: -1;
+	transform: translate(-2px, 0);
+}
+
+.glitch-text::after {
+	animation: glitch 0.3s infinite reverse;
+	color: #00f6ff;
+	z-index: -2;
+	transform: translate(2px, 0);
+}
+
+/* HUD Panel Styles */
+.hud-panel {
+	background: rgba(0, 0, 0, 0.8);
+	border: 2px solid #fcee09;
+	position: relative;
+	overflow: hidden;
+}
+
+.hud-panel::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: -100%;
+	width: 100%;
+	height: 100%;
+	background: linear-gradient(90deg, transparent, rgba(252, 238, 9, 0.1), transparent);
+	animation: scanline 3s linear infinite;
+}
+
+/* Terminal Text Effect */
+.terminal-text {
+	font-family: 'VT323', monospace;
+	color: #00f6ff;
+	text-shadow: 0 0 5px #00f6ff;
+}
+
+/* Glitch Button Effect */
+.glitch-button {
+	position: relative;
+	overflow: hidden;
+	transition: all 0.3s ease;
+}
+
+.glitch-button:hover {
+	animation: glitch 0.3s infinite;
+	box-shadow: 0 0 20px #fcee09;
+}
+
+/* Cyberpunk Grid Background */
+.cyberpunk-grid {
+	background-image: 
+		linear-gradient(rgba(252, 238, 9, 0.1) 1px, transparent 1px),
+		linear-gradient(90deg, rgba(252, 238, 9, 0.1) 1px, transparent 1px);
+	background-size: 20px 20px;
+}
+
+/* Circuit Lines Animation */
+@keyframes circuitFlow {
+	0% { stroke-dashoffset: 0; }
+	100% { stroke-dashoffset: 100; }
+}
+
+.circuit-line {
+	stroke-dasharray: 10 5;
+	animation: circuitFlow 2s linear infinite;
+}
+
+/* Holographic Effect */
+.holographic {
+	background: linear-gradient(45deg, 
+		rgba(0, 246, 255, 0.1), 
+		rgba(255, 0, 255, 0.1), 
+		rgba(252, 238, 9, 0.1)
+	);
+	background-size: 200% 200%;
+	animation: gradientShift 3s ease infinite;
+}
+
+/* Authentic Cyberpunk 2077 Card Effects - Optimized */
+.cyberpunk-card {
+	transition: transform 0.2s ease, box-shadow 0.2s ease;
+	border: 2px solid transparent;
+	position: relative;
+	overflow: hidden;
+	will-change: transform;
+}
+
+.cyberpunk-card:hover {
+	border-color: #00f6ff;
+	box-shadow: 0 0 15px rgba(0, 246, 255, 0.4);
+	transform: translateY(-3px);
+}
+
+.cyberpunk-card::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: -100%;
+	width: 100%;
+	height: 100%;
+	background: linear-gradient(90deg, transparent, rgba(0, 246, 255, 0.1), transparent);
+	transition: left 0.3s ease;
+	pointer-events: none;
+}
+
+.cyberpunk-card:hover::before {
+	left: 100%;
+}
+
+/* Authentic CP77 UI Elements */
+.cp77-button {
+	background: linear-gradient(135deg, #fcee09 0%, #ff6b00 100%);
+	border: 2px solid #fcee09;
+	color: #000;
+	font-weight: bold;
+	text-transform: uppercase;
+	position: relative;
+	overflow: hidden;
+	transition: all 0.2s ease;
+}
+
+.cp77-button:hover {
+	background: linear-gradient(135deg, #ff6b00 0%, #fcee09 100%);
+	box-shadow: 0 0 20px rgba(252, 238, 9, 0.6);
+	transform: translateY(-1px);
+}
+
+.cp77-button::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: -100%;
+	width: 100%;
+	height: 100%;
+	background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+	transition: left 0.3s ease;
+}
+
+.cp77-button:hover::before {
+	left: 100%;
+}
+
+/* CP77 HUD Elements */
+.cp77-hud {
+	background: rgba(0, 0, 0, 0.9);
+	border: 1px solid #fcee09;
+	position: relative;
+	backdrop-filter: blur(10px);
+}
+
+.cp77-hud::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background: linear-gradient(45deg, transparent 30%, rgba(252, 238, 9, 0.05) 50%, transparent 70%);
+	pointer-events: none;
+}
+
+/* CP77 Status Indicators */
+.cp77-status {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	padding: 4px 8px;
+	background: rgba(0, 0, 0, 0.8);
+	border: 1px solid currentColor;
+	font-size: 12px;
+	font-weight: bold;
+	text-transform: uppercase;
+}
+
+.cp77-status::before {
+	content: '';
+	width: 6px;
+	height: 6px;
+	border-radius: 50%;
+	background: currentColor;
+	animation: cyberpunkPulse 2s infinite;
+}
+
+/* CP77 Data Stream Effect */
+.cp77-data-stream {
+	position: absolute;
+	width: 2px;
+	height: 20px;
+	background: linear-gradient(to bottom, transparent, #00f6ff, transparent);
+	animation: dataStream 3s linear infinite;
+}
+
+/* Optimized Neon Effects */
+.neon-text {
+	text-shadow: 0 0 5px currentColor;
+	filter: drop-shadow(0 0 3px currentColor);
+}
+
+.neon-border {
+	border: 1px solid currentColor;
+	box-shadow: 0 0 5px currentColor;
+}
+
+.neon-border:hover {
+	box-shadow: 0 0 15px currentColor;
+	animation: hudGlow 1s infinite alternate;
 }
 
 /* Modal Animation Classes */

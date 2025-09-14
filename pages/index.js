@@ -1,16 +1,16 @@
-import {useRef} from 'react'
+import {useRef, useCallback} from 'react'
 import {gsap} from 'gsap'
 import {useGSAP} from '@gsap/react'
 import {ScrollTrigger} from 'gsap/ScrollTrigger'
 import data from '../data/portfolio.json'
-import Header from '../components/Header'
-import HeroSection from '../components/HeroSection'
-import WorkCard from '../components/WorkCard'
+import CP77Navigation from '../components/CP77Navigation'
+import CyberpunkHero from '../components/CyberpunkHero'
+import CP77Projects from '../components/CP77Projects'
+import CyberpunkAbout from '../components/CyberpunkAbout'
+import CyberpunkContact from '../components/CyberpunkContact'
 import FAB from '../components/FAB'
 import CustomCursor from '../components/Cursor'
 import Head from 'next/head'
-import Footer from '../components/Footer'
-import Socials from '../components/Socials'
 
 // Register GSAP plugins
 if (typeof window !== 'undefined') {
@@ -18,18 +18,22 @@ if (typeof window !== 'undefined') {
 }
 
 export default function Home() {
-	const textOne = useRef()
-	const textTwo = useRef()
-	const textThree = useRef()
-	const textFour = useRef()
+	const projectsRef = useRef()
+	const aboutRef = useRef()
+	const contactRef = useRef()
 
-	const handleWorkScroll = () => {
-		textOne.current.scrollIntoView({behavior: 'smooth'})
-	}
+	// Optimize scroll handlers with useCallback
+	const handleWorkScroll = useCallback(() => {
+		projectsRef.current?.scrollIntoView({behavior: 'smooth'})
+	}, [])
 
-	const handleAboutScroll = () => {
-		textTwo.current.scrollIntoView({behavior: 'smooth'})
-	}
+	const handleAboutScroll = useCallback(() => {
+		aboutRef.current?.scrollIntoView({behavior: 'smooth'})
+	}, [])
+
+	const handleContactScroll = useCallback(() => {
+		contactRef.current?.scrollIntoView({behavior: 'smooth'})
+	}, [])
 
 	useGSAP(() => {
 		// Scroll animations for sections
@@ -71,81 +75,35 @@ export default function Home() {
 	}, [])
 
 	return (
-		<div className={`relative ${data.showCursor && 'cursor-none'}`}>
+		<div className={`relative bg-cyber-black min-h-screen ${data.showCursor && 'cursor-none'}`}>
 			<Head>
-				<title>{data.name}</title>
+				<title>{data.name} - Cyberpunk Portfolio</title>
+				<meta name="description" content="Mandar Jadhav - Frontend Developer with Cyberpunk 2077 inspired portfolio" />
 			</Head>
 			{data.showCursor && <CustomCursor />}
-			
-			<div className='gradient-circle'></div>
-			<div className='gradient-circle-bottom'></div>
 
-			<Header
+			{/* Cyberpunk Navigation */}
+			<CP77Navigation
 				handleWorkScroll={handleWorkScroll}
 				handleAboutScroll={handleAboutScroll}
 			/>
 			
-			<HeroSection />
+			{/* Cyberpunk Hero Section */}
+			<CyberpunkHero />
 
-			{/* Work Section */}
-			<div className='gsap-fade-in' ref={textOne}>
-				<div className="container mx-auto px-4 py-16">
-					<h2 className="section-heading font-space-grotesk">Work.</h2>
-					<div className='grid grid-cols-1 tablet:grid-cols-2 laptop:grid-cols-3 gap-6'>
-						{data.projects.map((project, index) => (
-							<WorkCard
-								key={project.id}
-								img={project.imageSrc}
-								name={project.title}
-								description={project.description}
-								url={project.url}
-							/>
-						))}
-					</div>
-				</div>
+			{/* Projects Section */}
+			<div ref={projectsRef}>
+				<CP77Projects />
 			</div>
 
 			{/* About Section */}
-			<div className='gsap-fade-in' ref={textTwo}>
-				<div className="container mx-auto px-4 py-16">
-					<h2 className="section-heading font-space-grotesk">About.</h2>
-					<div className='max-w-4xl mx-auto'>
-						<p className='section-body mb-8 font-dm-sans'>{data.aboutParaLine1}</p>
-						<p className='section-body font-dm-sans'>{data.aboutParaLine2}</p>
-					</div>
-				</div>
+			<div ref={aboutRef}>
+				<CyberpunkAbout />
 			</div>
 
 			{/* Contact Section */}
-			<div className='gsap-fade-in' ref={textThree}>
-				<div className="container mx-auto px-4 py-16">
-					<h2 className="section-heading font-space-grotesk">Contact.</h2>
-					<div className='text-center max-w-2xl mx-auto'>
-						<p className='section-body mb-8 font-dm-sans'>Let&apos;s work together on your next project.</p>
-						<div className='flex flex-col tablet:flex-row gap-4 justify-center'>
-							<a
-								href={`mailto:${data.email}`}
-								className='px-8 py-4 rounded-lg transition-all duration-300 font-medium font-dm-sans relative overflow-hidden backdrop-blur-[15px] border-2 hover:scale-105 hover:shadow-2xl'
-								style={{
-									background: `linear-gradient(135deg, var(--selected-color, #00cdac)20, var(--selected-color, #00cdac)40)`,
-									borderColor: `var(--selected-color, #00cdac)`,
-									color: 'white',
-									boxShadow: `0 8px 25px rgba(var(--selected-color-rgb, 0, 0, 0), 0.3)`,
-								}}
-							>
-								Get In Touch
-							</a>
-							<a
-								href={data.socials.find(social => social.title === 'LinkedIn')?.link || '#'}
-								target='_blank'
-								rel='noopener noreferrer'
-								className='contact-btn-secondary liquid-glass-btn px-8 py-4 rounded-lg transition-all duration-300 font-medium font-dm-sans'
-							>
-								LinkedIn
-							</a>
-						</div>
-					</div>
-				</div>
+			<div ref={contactRef}>
+				<CyberpunkContact />
 			</div>
 
 			<FAB />
