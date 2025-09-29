@@ -47,9 +47,41 @@ body.light-mode {
 	color: #000000;
 }
 
+body.light-mode .text-white {
+	color: #000000 !important;
+}
+
+body.light-mode .text-white\/70 {
+	color: #000000cc !important;
+}
+
+body.light-mode .text-white\/80 {
+	color: #000000dd !important;
+}
+
+body.light-mode .text-white\/90 {
+	color: #000000ee !important;
+}
+
 body.dark-mode {
 	background-color: #000000;
 	color: #fafafa;
+}
+
+body.dark-mode .text-white {
+	color: #ffffff !important;
+}
+
+body.dark-mode .text-white\/70 {
+	color: #ffffffb3 !important;
+}
+
+body.dark-mode .text-white\/80 {
+	color: #ffffffcc !important;
+}
+
+body.dark-mode .text-white\/90 {
+	color: #ffffffe6 !important;
 }
 
 .gradient-circle,
@@ -1083,6 +1115,318 @@ html[data-theme="light"] body {
 	to {
 		opacity: 1;
 		transform: translate(-50%, -50%) scale(1);
+	}
+}
+
+/* Pill Header Styles */
+.pill-header-mobile,
+.pill-header-desktop {
+	position: relative;
+	overflow: hidden;
+	transition: all 0.3s ease;
+}
+
+.pill-header-mobile::before,
+.pill-header-desktop::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: -100%;
+	width: 100%;
+	height: 100%;
+	background: linear-gradient(
+		90deg,
+		transparent,
+		rgba(255, 255, 255, 0.1),
+		transparent
+	);
+	transition: left 0.5s ease-out;
+	pointer-events: none;
+}
+
+.pill-header-mobile:hover::before,
+.pill-header-desktop:hover::before {
+	left: 100%;
+}
+
+/* Dark mode pill header */
+.pill-header-mobile.dark,
+.pill-header-desktop.dark {
+	background: rgba(0, 0, 0, 0.2) !important;
+	border: 1px solid rgba(255, 255, 255, 0.1) !important;
+	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+}
+
+.pill-header-mobile.dark::before,
+.pill-header-desktop.dark::before {
+	background: linear-gradient(
+		90deg,
+		transparent,
+		rgba(255, 255, 255, 0.05),
+		transparent
+	);
+}
+
+/* Nav link styles */
+.nav-link {
+	color: rgba(255, 255, 255, 0.7);
+	text-decoration: none;
+	position: relative;
+	overflow: hidden;
+}
+
+.nav-link:hover {
+	color: white;
+}
+
+.nav-link::after {
+	content: '';
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	width: 100%;
+	height: 1px;
+	background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
+	transform: scaleX(0);
+	transform-origin: left;
+	transition: transform 0.3s ease;
+}
+
+.nav-link:hover::after {
+	transform: scaleX(1);
+}
+
+/* Nav underline animation */
+.nav-underline-work,
+.nav-underline-about,
+.nav-underline-blog,
+.nav-underline-resume,
+.nav-underline-contact,
+.nav-underline-home {
+	transform: scaleX(0);
+	transform-origin: left;
+	transition: transform 0.3s ease;
+}
+
+.nav-underline-work.active,
+.nav-underline-about.active,
+.nav-underline-blog.active,
+.nav-underline-resume.active,
+.nav-underline-contact.active,
+.nav-underline-home.active {
+	transform: scaleX(1);
+}
+
+/* Modern Portfolio Styles */
+.work-card-wrapper {
+	opacity: 0;
+	transform: translateY(60px) scale(0.9);
+}
+
+.work-card-wrapper.gsap-revealed {
+	opacity: 1;
+	transform: translateY(0) scale(1);
+}
+
+/* Gradient Text Animation */
+@keyframes gradientShift {
+	0% {
+		background-position: 0% 50%;
+	}
+	50% {
+		background-position: 100% 50%;
+	}
+	100% {
+		background-position: 0% 50%;
+	}
+}
+
+.gradient-text {
+	background: linear-gradient(135deg, #00cdac, #ff6b6b, #4ecdc4);
+	background-size: 400% 400%;
+	background-clip: text;
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
+	animation: gradientShift 8s ease-in-out infinite;
+}
+
+/* Glassmorphism Effects */
+.glass-card {
+	background: rgba(255, 255, 255, 0.05);
+	backdrop-filter: blur(20px);
+	-webkit-backdrop-filter: blur(20px);
+	border: 1px solid rgba(255, 255, 255, 0.1);
+	border-radius: 1rem;
+	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.glass-card:hover {
+	background: rgba(255, 255, 255, 0.1);
+	border-color: rgba(255, 255, 255, 0.2);
+	box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+}
+
+/* Smooth Scroll */
+html {
+	scroll-behavior: smooth;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+	width: 8px;
+}
+
+::-webkit-scrollbar-track {
+	background: rgba(255, 255, 255, 0.1);
+}
+
+::-webkit-scrollbar-thumb {
+	background: rgba(255, 255, 255, 0.3);
+	border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+	background: rgba(255, 255, 255, 0.5);
+}
+
+/* Loading Animation */
+@keyframes fadeInUp {
+	from {
+		opacity: 0;
+		transform: translateY(30px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+.fade-in-up {
+	animation: fadeInUp 0.6s ease-out;
+}
+
+/* Hover Effects */
+.hover-lift {
+	transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hover-lift:hover {
+	transform: translateY(-5px);
+	box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+}
+
+/* Pulse Animation */
+@keyframes pulse {
+	0%, 100% {
+		opacity: 1;
+	}
+	50% {
+		opacity: 0.5;
+	}
+}
+
+.pulse {
+	animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Floating Animation */
+@keyframes float {
+	0%, 100% {
+		transform: translateY(0px);
+	}
+	50% {
+		transform: translateY(-10px);
+	}
+}
+
+.float {
+	animation: float 3s ease-in-out infinite;
+}
+
+/* Glow Effect */
+.glow {
+	box-shadow: 0 0 20px rgba(0, 205, 172, 0.3);
+}
+
+.glow:hover {
+	box-shadow: 0 0 30px rgba(0, 205, 172, 0.5);
+}
+
+/* Text Selection */
+::selection {
+	background: rgba(0, 205, 172, 0.3);
+	color: white;
+}
+
+::-moz-selection {
+	background: rgba(0, 205, 172, 0.3);
+	color: white;
+}
+
+/* Prevent Horizontal Overflow - Conservative Approach */
+html, body {
+	overflow-x: hidden;
+}
+
+/* Fix background blobs that might cause overflow */
+.blur-3xl {
+	max-width: 100vw;
+}
+
+/* Fix specific elements that cause horizontal overflow */
+.scale-150 {
+	max-width: 100vw;
+}
+
+/* Fix floating elements in about section */
+.absolute.-top-4, .absolute.-right-4, .absolute.-bottom-4, .absolute.-left-4 {
+	max-width: calc(100vw - 2rem);
+}
+
+/* Work Card Hover Effects */
+.work-card-wrapper {
+	transform-style: preserve-3d;
+}
+
+/* Ensure Work Cards are visible */
+.work-card-wrapper > div {
+	opacity: 1 !important;
+	visibility: visible !important;
+}
+
+/* Light mode work card styling */
+body.light-mode .work-card-wrapper > div {
+	background-color: rgba(255, 255, 255, 0.8) !important;
+	border-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+body.light-mode .work-card-wrapper > div:hover {
+	background-color: rgba(255, 255, 255, 0.9) !important;
+	border-color: rgba(59, 130, 246, 0.5) !important;
+}
+
+/* Dark mode work card styling */
+body.dark-mode .work-card-wrapper > div {
+	background-color: rgba(255, 255, 255, 0.05) !important;
+	border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+body.dark-mode .work-card-wrapper > div:hover {
+	background-color: rgba(255, 255, 255, 0.1) !important;
+	border-color: rgba(96, 165, 250, 0.5) !important;
+}
+
+@media (min-width: 640px) {
+	.container, .max-w-7xl, .max-w-6xl, .max-w-5xl, .max-w-4xl, .max-w-3xl, .max-w-2xl, .max-w-xl, .max-w-lg, .max-w-md, .max-w-sm, .max-w-xs {
+		padding-left: 1.5rem;
+		padding-right: 1.5rem;
+	}
+}
+
+@media (min-width: 1024px) {
+	.container, .max-w-7xl, .max-w-6xl, .max-w-5xl, .max-w-4xl, .max-w-3xl, .max-w-2xl, .max-w-xl, .max-w-lg, .max-w-md, .max-w-sm, .max-w-xs {
+		padding-left: 2rem;
+		padding-right: 2rem;
 	}
 }
 

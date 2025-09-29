@@ -23,37 +23,62 @@
 		{
 			"id": "1",
 			"title": "Product Configurator",
-			"description": "Simple web app using Three.js to configure a 3D chair model",
+			"description": "An interactive 3D product configurator that allows users to customize chair models in real-time. Features include material selection, color changes, and 360-degree viewing with smooth animations.",
 			"imageSrc": "/images/product-config.png",
-			"url": "https://product-configurator-one.vercel.app/"
+			"images": ["/images/product-config.png"],
+			"url": "https://product-configurator-one.vercel.app/",
+			"liveUrl": "https://product-configurator-one.vercel.app/",
+			"githubUrl": "https://github.com/m-jadhav19/product-configurator",
+			"role": "Full-Stack Developer",
+			"technologies": ["Three.js", "React", "JavaScript", "CSS3", "Vercel"]
 		},
 		{
 			"id": "2",
 			"title": "T-Shirt Configurator",
-			"description": "Simple web app that uses Fabric Js and Three.js to customize a Tshirt model",
+			"description": "A creative web application that combines Fabric.js and Three.js to provide an immersive T-shirt customization experience. Users can add text, upload images, and see real-time 3D previews.",
 			"imageSrc": "/images/tshirt-config.png",
-			"url": "https://t-shirt-config.vercel.app/"
+			"images": ["/images/tshirt-config.png"],
+			"url": "https://t-shirt-config.vercel.app/",
+			"liveUrl": "https://t-shirt-config.vercel.app/",
+			"githubUrl": "https://github.com/m-jadhav19/t-shirt-config",
+			"role": "Frontend Developer",
+			"technologies": ["Three.js", "Fabric.js", "React", "JavaScript", "HTML5 Canvas"]
 		},
 		{
 			"id": "3",
 			"title": "Property Search",
-			"description": "A web application that uses Maptiler maps to search Properties",
+			"description": "A comprehensive property search platform integrated with MapTiler maps. Features include location-based filtering, interactive maps, property details, and advanced search capabilities.",
 			"imageSrc": "/images/property-search.png",
-			"url": "https://property-search-web.vercel.app/"
+			"images": ["/images/property-search.png"],
+			"url": "https://property-search-web.vercel.app/",
+			"liveUrl": "https://property-search-web.vercel.app/",
+			"githubUrl": "https://github.com/m-jadhav19/property-search",
+			"role": "Full-Stack Developer",
+			"technologies": ["React", "MapTiler", "JavaScript", "CSS3", "API Integration"]
 		},
 		{
 			"id": "4",
 			"title": "Parallax Wallpapers",
-			"description": "A Wallpaper web app that offers a curated collection of high-quality images for download, categorized by resolution and style",
+			"description": "A curated wallpaper gallery featuring high-quality images with smooth parallax scrolling effects. Includes categorization by resolution, style, and download functionality with responsive design.",
 			"imageSrc": "/images/parallax.png",
-			"url": "https://parallax-wallpapers-ten.vercel.app/home"
+			"images": ["/images/parallax.png"],
+			"url": "https://parallax-wallpapers-ten.vercel.app/home",
+			"liveUrl": "https://parallax-wallpapers-ten.vercel.app/home",
+			"githubUrl": "https://github.com/m-jadhav19/parallax-wallpapers",
+			"role": "Frontend Developer",
+			"technologies": ["React", "GSAP", "JavaScript", "CSS3", "Responsive Design"]
 		},
 		{
 			"id": "5",
 			"title": "3D Model Viewer",
-			"description": "A 3D model viewer that allows users to view 3D models in a 3D environment",
+			"description": "An innovative 3D portfolio website showcasing projects in an immersive three-dimensional environment. Features interactive 3D models, smooth animations, and modern UI/UX design.",
 			"imageSrc": "/images/3dportfolio.png",
-			"url": "https://3d-portfolio-zeta-ten.vercel.app/"
+			"images": ["/images/3dportfolio.png"],
+			"url": "https://3d-portfolio-zeta-ten.vercel.app/",
+			"liveUrl": "https://3d-portfolio-zeta-ten.vercel.app/",
+			"githubUrl": "https://github.com/m-jadhav19/3d-portfolio",
+			"role": "Frontend Developer",
+			"technologies": ["Three.js", "React", "GSAP", "JavaScript", "WebGL"]
 		}
 	],
 	"services": [
