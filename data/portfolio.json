@@ -106,7 +106,83 @@
 			"universityPara": ""
 		},
 		"languages": ["Javascript", "HTML5", "CSS", "Java", "C#", "C++"],
-		"frameworks": ["React", "Nuxt", "Vue.js", "Tailwind CSS"],
+		"frameworks": ["React", "Next.js", "Vue.js", "Tailwind CSS"],
 		"others": ["Figma", "AdobeXD", "AWS"]
-	}
+	},
+	"stats": [
+		{
+			"id": "1",
+			"icon": "Code2",
+			"label": "Projects",
+			"value": "40+",
+			"color": "#A3D8F4",
+			"description": "Portfolio projects completed"
+		},
+		{
+			"id": "2",
+			"icon": "Palette",
+			"label": "Designs",
+			"value": "20+",
+			"color": "#FFC8DD",
+			"description": "UI/UX designs created"
+		},
+		{
+			"id": "3",
+			"icon": "Zap",
+			"label": "Experience",
+			"value": "2.5+ Yrs",
+			"color": "#B8F3D2",
+			"description": "Professional experience"
+		}
+	],
+	"aboutSkills": [
+		{
+			"id": "1",
+			"icon": "Code",
+			"title": "Development",
+			"description": "React, Next.js, TypeScript, Node.js",
+			"color": "#4A9FD8"
+		},
+		{
+			"id": "2",
+			"icon": "Palette",
+			"title": "Design",
+			"description": "UI/UX, Pixel Art, Animation",
+			"color": "#FDB813"
+		},
+		{
+			"id": "3",
+			"icon": "Heart",
+			"title": "Passion",
+			"description": "Building great experiences",
+			"color": "#FFC8DD"
+		},
+		{
+			"id": "4",
+			"icon": "Zap",
+			"title": "Performance",
+			"description": "Optimization, Best Practices",
+			"color": "#5CC167"
+		}
+	],
+	"aboutStats": [
+		{
+			"id": "1",
+			"label": "Projects",
+			"value": "50+",
+			"color": "#4A9FD8"
+		},
+		{
+			"id": "2",
+			"label": "Experience",
+			"value": "5Y",
+			"color": "#FDB813"
+		},
+		{
+			"id": "3",
+			"label": "Coffee",
+			"value": "∞",
+			"color": "#5CC167"
+		}
+	]
 }
