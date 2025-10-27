@@ -16,7 +16,7 @@ const WorkCard = ({img, name, description, onClick, url}) => {
 	return (
 		<>
 			<div
-				className='overflow-hidden rounded-lg p-2 laptop:p-4 first:ml-0 link cursor-pointer'
+				className='work-card overflow-hidden rounded-lg p-2 laptop:p-4 first:ml-0 link cursor-pointer'
 				onClick={handleCardClick}>
 				<div className='relative rounded-lg overflow-hidden transition-all ease-out duration-300 h-48 mob:h-auto ripple-container'>
 					<img

@@ -81,6 +81,39 @@
 	"aboutParaLine1": "I am an enthusiastic and devoted Frontend Developer with experience in building responsive, user-friendly online apps as a professional and as a hobby. With a strong background in HTML, CSS, and JavaScript, I specialize in creating dynamic and engaging user interfaces using modern frameworks like as React.js, Vue.js and Next.js. ",
 	"aboutParaLine2": "In my recent projects, I've been working on constructing interactive 3D model viewers with Three.js, as well as complex property search functions that allow users to easily filter properties. My expertise includes increasing site performance and guaranteeing cross-browser compatibility, which improves the overall user experience.",
 	"aboutParaLine3": "Aside from coding, I enjoy gaming and game creation, and I am always searching for new methods to merge complex graphics and interactivity into web applications. I also love football, and when I have free time, I like to play and watch the game. I'm always willing to pick up new skills and take on challenging projects that test the boundaries of web development. My objective is to grow as a developer and support innovative projects that make a big difference.",
+	"stats": {
+		"yearsExperience": "2+",
+		"projectsCompleted": 5,
+		"technologiesMastered": 12,
+		"happyClients": 3
+	},
+	"featuredSkills": [
+		{
+			"name": "React",
+			"icon": "CodeBracketIcon",
+			"color": "pastelCyan"
+		},
+		{
+			"name": "Next.js",
+			"icon": "CommandLineIcon",
+			"color": "pastelLavender"
+		},
+		{
+			"name": "Node.js",
+			"icon": "CpuChipIcon",
+			"color": "pastelMint"
+		},
+		{
+			"name": "Figma",
+			"icon": "PaintBrushIcon",
+			"color": "pastelPink"
+		},
+		{
+			"name": "Coffee",
+			"icon": "InfinityIcon",
+			"color": "pastelCyan"
+		}
+	],
 	"resume": {
 		"tagline": "👋  I'm a Frontend Developer and Gamer.",
 		"description": "I created top-class user experiences using modern Frontend tools and design principals. Well-versed with React, Javascript, and most of the Web frameworks.",

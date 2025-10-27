@@ -5,7 +5,7 @@ import data from '../../data/portfolio.json'
 
 const HeroSection = () => {
 	const tagline1Ref = useRef()
-	const tagline2Ref = useRef()
+	const nameRef = useRef()
 	const tagline3Ref = useRef()
 	const tagline4Ref = useRef()
 
@@ -24,7 +24,56 @@ const HeroSection = () => {
 			}
 		)
 		
-		tl.fromTo(tagline2Ref.current,
+		// Split text into characters with gradient animation
+		const animateName = () => {
+			const target = nameRef.current
+			if (!target) return
+			
+			const finalText = "I'm Mandar Jadhav"
+			
+			// Split the entire text character by character including spaces
+			let html = ''
+			let charIndex = 0
+			
+			finalText.split('').forEach((char, index) => {
+				if (char === ' ') {
+					// Add space with gradient class
+					html += '<span class="gradient-text" style="display: inline-block; user-select: none;">&nbsp;</span>'
+				} else {
+					// Add character with gradient class
+					html += `<span class="gradient-text" style="display: inline-block;" data-char-index="${charIndex}">${char}</span>`
+					charIndex++
+				}
+			})
+			
+			target.innerHTML = html
+			
+			// Animate each character with staggered effect
+			const spans = target.querySelectorAll('span[data-char-index]')
+			spans.forEach((span, index) => {
+				gsap.fromTo(span, 
+					{ 
+						opacity: 0, 
+						y: 50,
+						rotationX: 90
+					},
+					{
+						opacity: 1,
+						y: 0,
+						rotationX: 0,
+						duration: 0.5,
+						delay: index * 0.05,
+						ease: "back.out(1.2)"
+					}
+				)
+			})
+		}
+		
+		// Trigger split text animation immediately
+		animateName()
+		
+		// Then fade in the container
+		tl.fromTo(nameRef.current,
 			{ opacity: 0, y: 20 },
 			{ 
 				opacity: 1, 
@@ -62,29 +111,32 @@ const HeroSection = () => {
 	return (
 		<div className="container mx-auto mb-10">
 			<div className='laptop:mt-20 mt-10 px-2 tablet:px-12'>
-				<div className='mt-5'>
-					{/* <h1
-						ref={nameRef}
-						className='text-3xl tablet:text-6xl laptop:text-6xl laptopl:text-8xl p-1 tablet:p-2 text-bold w-4/5 mob:w-full laptop:w-4/5 liquid-cursor font-orbitron'>
-					</h1> */}
+				<div className='mt-5 space-y-2'>
+					{/* First line - Greeting */}
 					<h1
 						ref={tagline1Ref}
-						className='text-3xl tablet:text-6xl laptop:text-6xl laptopl:text-8xl p-1 tablet:p-2 text-bold w-full laptop:w-4/5 font-syne'>
+						className='text-4xl tablet:text-7xl laptop:text-8xl laptopl:text-9xl font-bold w-full laptop:w-4/5 font-space-grotesk opacity-90 hero-element'>
 						{data.headerTaglineOne}
 					</h1>
+					
+					{/* Second line - Name with split text gradient effect */}
 					<h1
-						ref={tagline2Ref}
-						className='text-3xl tablet:text-6xl laptop:text-6xl laptopl:text-8xl p-1 tablet:p-2 text-bold w-full laptop:w-4/5 font-outfit'>
-						{data.headerTaglineTwo}
+						ref={nameRef}
+						className='text-4xl tablet:text-7xl laptop:text-8xl laptopl:text-9xl font-bold w-full laptop:w-4/5 font-orbitron hero-element'>
+						&nbsp;
 					</h1>
+					
+					{/* Third line - Title */}
 					<h1
 						ref={tagline3Ref}
-						className='text-3xl tablet:text-6xl laptop:text-6xl laptopl:text-8xl p-1 tablet:p-2 text-bold w-full laptop:w-4/5 font-outfit'>
+						className='text-3xl tablet:text-6xl laptop:text-7xl laptopl:text-8xl font-bold w-full laptop:w-4/5 font-outfit hero-element'>
 						{data.headerTaglineThree}
 					</h1>
+					
+					{/* Fourth line - Location */}
 					<h1
 						ref={tagline4Ref}
-						className='text-3xl tablet:text-6xl laptop:text-8xl p-1 tablet:p-2 text-bold w-full laptop:w-4/5 font-outfit'>
+						className='text-2xl tablet:text-5xl laptop:text-6xl laptopl:text-7xl font-bold w-full laptop:w-4/5 font-space-grotesk opacity-70 hero-element'>
 						{data.headerTaglineFour}
 					</h1>
 				</div>

@@ -110,7 +110,7 @@ const Modal = ({isOpen, onClose, title, description, url, children}) => {
 		...buttonStyle,
 		background: 'rgba(var(--selected-color-rgb, 0, 205, 172), 0.15)',
 		border: '1px solid rgba(var(--selected-color-rgb, 0, 205, 172), 0.4)',
-		color: 'var(--selected-color, #00cdac)',
+		color: 'var(--selected-color, #339AF0)',
 		textShadow: '0 0 10px rgba(var(--selected-color-rgb, 0, 205, 172), 0.5)'
 	}
 

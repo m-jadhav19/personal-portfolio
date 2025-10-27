@@ -4,7 +4,7 @@ import data from '../../data/portfolio.json'
 
 const Button = ({children, type, onClick, classes}) => {
 	const {theme} = useTheme()
-	const [selectedColor, setSelectedColor] = useState('#00cdac')
+	const [selectedColor, setSelectedColor] = useState('#339AF0')
 	const [isHovered, setIsHovered] = useState(false)
 
 	useEffect(() => {

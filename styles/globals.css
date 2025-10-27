@@ -1,5 +1,24 @@
 @import url('https://fonts.googleapis.com/css2?family=Hind:wght@300;400;500;600;700&display=swap');
 
+/* Critical: Apply dark theme styles immediately to prevent flash */
+@media (prefers-color-scheme: dark) {
+	html:not([data-theme="light"]) {
+		color-scheme: dark;
+	}
+}
+
+html[data-theme="dark"],
+html.dark {
+	color-scheme: dark !important;
+	background-color: #000000 !important;
+}
+
+html[data-theme="dark"] body,
+html.dark body {
+	background-color: #000000 !important;
+	color: #fafafa !important;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -75,7 +94,7 @@ body.dark-mode {
 
 /* CSS Custom Properties for dynamic colors */
 :root {
-	--selected-color: #00cdac;
+	--selected-color: #339AF0;
 	--selected-color-rgb: 0, 205, 172;
 	--current-theme: dark;
 }
@@ -111,10 +130,10 @@ body.dark-mode {
 
 /* Gradient Text Animation for Name */
 .gradient-text {
-	background: linear-gradient(45deg, #00cdac, #ff6b6b, #4ecdc4, #45b7d1);
+	background: linear-gradient(45deg, #339AF0, #ff6b6b, #4ecdc4, #45b7d1);
 	background-size: 400% 400%;
-	background-clip: text;
 	-webkit-background-clip: text;
+	background-clip: text;
 	-webkit-text-fill-color: transparent;
 	animation: gradientShift 8s ease-in-out infinite;
 }
@@ -172,35 +191,119 @@ body.dark-mode {
 
 /* Header-specific liquid glass styles */
 .header-mobile {
-	background: rgba(255, 255, 255, 0.1);
+	background: rgba(255, 255, 255, 0.2);
 	-webkit-backdrop-filter: blur(20px);
 	backdrop-filter: blur(20px);
-	border: 1px solid rgba(255, 255, 255, 0.2);
+	border: 1px solid rgba(255, 255, 255, 0.3);
 	border-radius: 0.5rem;
-	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+	box-shadow: 
+		0 8px 32px rgba(0, 0, 0, 0.1),
+		inset 0 1px 0 rgba(255, 255, 255, 0.5),
+		inset 0 -1px 0 rgba(255, 255, 255, 0.1),
+		inset 0 0 16px 8px rgba(255, 255, 255, 0.8);
 	overflow: hidden;
+	position: relative;
 }
 
 .header-mobile.dark {
-	background: rgba(0, 0, 0, 0.2);
-	border: 1px solid rgba(255, 255, 255, 0.1);
-	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+	background: rgba(0, 0, 0, 0.3);
+	border: 1px solid rgba(255, 255, 255, 0.15);
+	box-shadow: 
+		0 8px 32px rgba(0, 0, 0, 0.3),
+		inset 0 1px 0 rgba(255, 255, 255, 0.2),
+		inset 0 -1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.header-mobile::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 1px;
+	background: linear-gradient(
+		90deg,
+		transparent,
+		rgba(255, 255, 255, 0.8),
+		transparent
+	);
+	pointer-events: none;
+	z-index: 1;
+}
+
+.header-mobile::after {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 1px;
+	height: 100%;
+	background: linear-gradient(
+		180deg,
+		rgba(255, 255, 255, 0.8),
+		transparent,
+		rgba(255, 255, 255, 0.3)
+	);
+	pointer-events: none;
+	z-index: 1;
 }
 
 .header-desktop {
-	background: rgba(255, 255, 255, 0.1);
+	background: rgba(255, 255, 255, 0.2);
 	-webkit-backdrop-filter: blur(20px);
 	backdrop-filter: blur(20px);
-	border: 1px solid rgba(255, 255, 255, 0.2);
+	border: 1px solid rgba(255, 255, 255, 0.3);
 	border-radius: 0.5rem;
-	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+	box-shadow: 
+		0 8px 32px rgba(0, 0, 0, 0.1),
+		inset 0 1px 0 rgba(255, 255, 255, 0.5),
+		inset 0 -1px 0 rgba(255, 255, 255, 0.1),
+		inset 0 0 16px 8px rgba(255, 255, 255, 0.8);
 	overflow: hidden;
+	position: relative;
 }
 
 .header-desktop.dark {
-	background: rgba(0, 0, 0, 0.2);
-	border: 1px solid rgba(255, 255, 255, 0.1);
-	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+	background: rgba(0, 0, 0, 0.3);
+	border: 1px solid rgba(255, 255, 255, 0.15);
+	box-shadow: 
+		0 8px 32px rgba(0, 0, 0, 0.3),
+		inset 0 1px 0 rgba(255, 255, 255, 0.2),
+		inset 0 -1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.header-desktop::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 1px;
+	background: linear-gradient(
+		90deg,
+		transparent,
+		rgba(255, 255, 255, 0.8),
+		transparent
+	);
+	pointer-events: none;
+	z-index: 1;
+}
+
+.header-desktop::after {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 1px;
+	height: 100%;
+	background: linear-gradient(
+		180deg,
+		rgba(255, 255, 255, 0.8),
+		transparent,
+		rgba(255, 255, 255, 0.3)
+	);
+	pointer-events: none;
+	z-index: 1;
 }
 
 /* Custom Wide Header Styles */
@@ -220,9 +323,9 @@ body.dark-mode {
 	max-width: none !important;
 }
 
-.header-mobile::before,
-.header-desktop::before {
-	content: '';
+/* Shine animation effect */
+.header-mobile .shine-effect,
+.header-desktop .shine-effect {
 	position: absolute;
 	top: 0;
 	left: -100%;
@@ -231,16 +334,17 @@ body.dark-mode {
 	background: linear-gradient(
 		90deg,
 		transparent,
-		rgba(255, 255, 255, 0.1),
+		rgba(255, 255, 255, 0.15),
 		transparent
 	);
-	transition: left 0.5s ease-out;
+	transition: left 0.6s ease-out;
 	pointer-events: none;
+	z-index: 2;
 }
 
-.header-mobile:hover::before,
-.header-desktop:hover::before {
-	left: 0;
+.header-mobile:hover .shine-effect,
+.header-desktop:hover .shine-effect {
+	left: 100%;
 }
 
 /* Ripple Effect for WorkCard */
@@ -391,6 +495,24 @@ html[data-theme="light"] {
 	--current-theme: light;
 }
 
+/* Aggressive dark mode enforcement - Apply immediately before React loads */
+html[data-theme="dark"] .liquid-glass-header,
+html.dark .liquid-glass-header,
+html[data-theme="dark"] .modal-content-animated,
+html.dark .modal-content-animated,
+html[data-theme="dark"] .header-mobile,
+html.dark .header-mobile,
+html[data-theme="dark"] .header-desktop,
+html.dark .header-desktop {
+	background: rgba(0, 0, 0, 0.4) !important;
+	border: 1px solid rgba(255, 255, 255, 0.15) !important;
+	box-shadow: 
+		0 8px 32px rgba(0, 0, 0, 0.4),
+		inset 0 1px 0 rgba(255, 255, 255, 0.2),
+		inset 0 -1px 0 rgba(255, 255, 255, 0.05),
+		inset 0 0 16px 8px rgba(255, 255, 255, 0.3) !important;
+}
+
 /* Ensure dark mode colors persist */
 .dark-mode-persist {
 	color-scheme: dark;
@@ -503,7 +625,7 @@ html[data-theme="light"] body {
 .contact-btn-primary {
 	background: rgba(0, 205, 172, 0.15);
 	border-color: rgba(0, 205, 172, 0.4);
-	color: #00cdac;
+	color: #339AF0;
 	text-shadow: 0 0 10px rgba(0, 205, 172, 0.5);
 }
 
@@ -674,6 +796,141 @@ html[data-theme="light"] body {
 	min-height: 600px !important;
 	border: none !important;
 	border-radius: 0.5rem;
+}
+
+/* Pixel Grid Background Styles */
+.pixel-grid-background {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	z-index: 0;
+	pointer-events: auto;
+	overflow: hidden;
+}
+
+.grid-container {
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	background-image: 
+		linear-gradient(rgba(139, 92, 246, 0.08) 1px, transparent 1px),
+		linear-gradient(90deg, rgba(139, 92, 246, 0.08) 1px, transparent 1px);
+	background-size: 50px 50px;
+	animation: gridMove 30s linear infinite;
+	opacity: 0.6;
+}
+
+@keyframes gridMove {
+	0% {
+		background-position: 0 0;
+	}
+	100% {
+		background-position: 50px 50px;
+	}
+}
+
+.floating-blob {
+	position: fixed;
+	width: 500px;
+	height: 350px;
+	border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+	filter: blur(60px);
+	pointer-events: none;
+	z-index: 1;
+	background: radial-gradient(
+		ellipse 250px 150px at center,
+		rgba(255, 107, 107, 0.7),
+		rgba(78, 205, 196, 0.6),
+		rgba(69, 183, 209, 0.4),
+		transparent
+	);
+	transition: background 2s ease, box-shadow 2s ease, transform 0.2s ease-out, filter 0.2s ease-out;
+	box-shadow: 0 0 120px rgba(255, 107, 107, 0.5), 0 0 180px rgba(78, 205, 196, 0.3);
+	opacity: 0.9;
+}
+
+.grid-ripple {
+	position: fixed;
+	width: 0;
+	height: 0;
+	border-radius: 50%;
+	border: 2px solid rgba(139, 92, 246, 0.6);
+	animation: rippleExpand 0.6s ease-out forwards;
+	transform: translate(-50%, -50%);
+	pointer-events: none;
+	z-index: 1000;
+}
+
+@keyframes rippleExpand {
+	0% {
+		width: 0;
+		height: 0;
+		opacity: 1;
+	}
+	100% {
+		width: 400px;
+		height: 400px;
+		opacity: 0;
+	}
+}
+
+/* Work card animation styles */
+.work-card {
+	transform-origin: center;
+}
+
+/* Hero Section Enhanced Styles */
+.hero-element {
+	line-height: 1.1;
+	letter-spacing: -0.02em;
+}
+
+.hero-element span {
+	display: inline-block;
+	transition: all 0.3s ease;
+}
+
+/* Subtle text glow effect */
+@keyframes textGlow {
+	0%, 100% {
+		text-shadow: 0 0 5px currentColor;
+	}
+	50% {
+		text-shadow: 0 0 8px currentColor;
+	}
+}
+
+/* Enhanced gradient text */
+.gradient-text {
+	background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #4facfe 75%, #00f2fe 100%);
+	background-size: 300% 300%;
+	-webkit-background-clip: text;
+	background-clip: text;
+	-webkit-text-fill-color: transparent;
+	animation: gradientShift 8s ease infinite;
+}
+
+/* Hero name text with rainbow effect */
+.hero-name-text {
+	background: linear-gradient(
+		90deg,
+		#FF6B6B 0%,
+		#4ECDC4 14.28%,
+		#45B7D1 28.56%,
+		#96CEB4 42.84%,
+		#FFEAA7 57.12%,
+		#DDA0DD 71.4%,
+		#98D8C8 85.68%,
+		#FF6B6B 100%
+	);
+	background-size: 200% 100%;
+	-webkit-background-clip: text;
+	background-clip: text;
+	-webkit-text-fill-color: transparent;
+	animation: gradientShift 6s ease infinite;
+	filter: brightness(1.2);
 }
 
 /* New Modal Component Styles */
@@ -1086,6 +1343,158 @@ html[data-theme="light"] body {
 	}
 }
 
+/* Advanced Glass Card */
+.glass-card {
+	width: 240px;
+	height: 360px;
+	background: rgba(255, 255, 255, 0.2);
+	-webkit-backdrop-filter: blur(10px);
+	backdrop-filter: blur(10px);
+	border-radius: 20px;
+	border: 1px solid rgba(255, 255, 255, 0.3);
+	box-shadow: 
+		0 8px 32px rgba(0, 0, 0, 0.1),
+		inset 0 1px 0 rgba(255, 255, 255, 0.5),
+		inset 0 -1px 0 rgba(255, 255, 255, 0.1),
+		inset 0 0 16px 8px rgba(255, 255, 255, 0.8);
+	position: relative;
+	overflow: hidden;
+}
+
+/* Dark theme glass card */
+.dark .glass-card,
+html[data-theme="dark"] .glass-card {
+	background: rgba(0, 0, 0, 0.3);
+	border: 1px solid rgba(255, 255, 255, 0.15);
+	box-shadow: 
+		0 8px 32px rgba(0, 0, 0, 0.4),
+		inset 0 1px 0 rgba(255, 255, 255, 0.2),
+		inset 0 -1px 0 rgba(255, 255, 255, 0.05),
+		inset 0 0 16px 8px rgba(255, 255, 255, 0.3);
+}
+
+.glass-card::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 1px;
+	background: linear-gradient(
+		90deg,
+		transparent,
+		rgba(255, 255, 255, 0.8),
+		transparent
+	);
+}
+
+.dark .glass-card::before,
+html[data-theme="dark"] .glass-card::before {
+	background: linear-gradient(
+		90deg,
+		transparent,
+		rgba(255, 255, 255, 0.4),
+		transparent
+	);
+}
+
+.glass-card::after {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 1px;
+	height: 100%;
+	background: linear-gradient(
+		180deg,
+		rgba(255, 255, 255, 0.8),
+		transparent,
+		rgba(255, 255, 255, 0.3)
+	);
+}
+
+.dark .glass-card::after,
+html[data-theme="dark"] .glass-card::after {
+	background: linear-gradient(
+		180deg,
+		rgba(255, 255, 255, 0.4),
+		transparent,
+		rgba(255, 255, 255, 0.15)
+	);
+}
+
+/* Advanced Liquid Glass Header Styles */
+.liquid-glass-header {
+	position: relative;
+	overflow: hidden;
+	background: rgba(255, 255, 255, 0.2);
+	-webkit-backdrop-filter: blur(20px);
+	backdrop-filter: blur(20px);
+	border: 1px solid rgba(255, 255, 255, 0.3);
+	padding: 0.5rem;
+	box-shadow: 
+		0 8px 32px rgba(0, 0, 0, 0.1),
+		inset 0 1px 0 rgba(255, 255, 255, 0.5),
+		inset 0 -1px 0 rgba(255, 255, 255, 0.1),
+		inset 0 0 16px 8px rgba(255, 255, 255, 0.8);
+}
+
+/* Immediately apply dark theme before React loads */
+html[data-theme="dark"] .liquid-glass-header,
+html.dark .liquid-glass-header {
+	background: rgba(0, 0, 0, 0.4) !important;
+	border: 1px solid rgba(255, 255, 255, 0.15) !important;
+	box-shadow: 
+		0 8px 32px rgba(0, 0, 0, 0.4),
+		inset 0 1px 0 rgba(255, 255, 255, 0.2),
+		inset 0 -1px 0 rgba(255, 255, 255, 0.05),
+		inset 0 0 16px 8px rgba(255, 255, 255, 0.3) !important;
+}
+
+.liquid-glass-header.dark {
+	background: rgba(0, 0, 0, 0.3);
+	border: 1px solid rgba(255, 255, 255, 0.15);
+	box-shadow: 
+		0 8px 32px rgba(0, 0, 0, 0.3),
+		inset 0 1px 0 rgba(255, 255, 255, 0.2),
+		inset 0 -1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.liquid-glass-header::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: -100%;
+	width: 100%;
+	height: 100%;
+	background: linear-gradient(
+		90deg,
+		transparent,
+		rgba(255, 255, 255, 0.3),
+		transparent
+	);
+	transition: left 0.5s;
+}
+
+.liquid-glass-header:hover::before {
+	left: 100%;
+}
+
+.liquid-glass-header::after {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 1px;
+	background: linear-gradient(
+		90deg,
+		transparent,
+		rgba(255, 255, 255, 0.8),
+		transparent
+	);
+}
+
 /* Modal Animation Classes */
 .modal-overlay-animated {
 	position: fixed;
@@ -1108,15 +1517,15 @@ html[data-theme="light"] body {
 	width: 100%;
 	height: 100%;
 	background: rgba(0, 0, 0, 0);
-	backdrop-filter: blur(0px);
 	-webkit-backdrop-filter: blur(0px);
+	backdrop-filter: blur(0px);
 	transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .modal-backdrop-animated.animate-in {
 	background: rgba(0, 0, 0, 0.7);
-	backdrop-filter: blur(8px);
 	-webkit-backdrop-filter: blur(8px);
+	backdrop-filter: blur(8px);
 }
 
 .modal-content-animated {
@@ -1125,11 +1534,15 @@ html[data-theme="light"] body {
 	max-width: 1200px;
 	height: 80vh;
 	background: rgba(255, 255, 255, 0.1);
-	backdrop-filter: blur(20px);
 	-webkit-backdrop-filter: blur(20px);
-	border: 1px solid rgba(255, 255, 255, 0.2);
+	backdrop-filter: blur(20px);
+	border: 1px solid rgba(255, 255, 255, 0.3);
 	border-radius: 1rem;
-	box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+	box-shadow: 
+		0 25px 50px -12px rgba(0, 0, 0, 0.5),
+		inset 0 1px 0 rgba(255, 255, 255, 0.5),
+		inset 0 -1px 0 rgba(255, 255, 255, 0.1),
+		inset 0 0 16px 8px rgba(255, 255, 255, 0.8);
 	overflow: hidden;
 	display: flex;
 	flex-direction: column;
@@ -1137,6 +1550,38 @@ html[data-theme="light"] body {
 	opacity: 0;
 	transform: scale(0.9) translateY(20px);
 	transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.modal-content-animated::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 1px;
+	background: linear-gradient(
+		90deg,
+		transparent,
+		rgba(255, 255, 255, 0.8),
+		transparent
+	);
+	pointer-events: none;
+}
+
+.modal-content-animated::after {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 1px;
+	height: 100%;
+	background: linear-gradient(
+		180deg,
+		rgba(255, 255, 255, 0.8),
+		transparent,
+		rgba(255, 255, 255, 0.3)
+	);
+	pointer-events: none;
 }
 
 .modal-content-animated.animate-in {
@@ -1147,11 +1592,43 @@ html[data-theme="light"] body {
 /* Modal exit animations */
 .modal-backdrop-animated.animate-out {
 	background: rgba(0, 0, 0, 0);
-	backdrop-filter: blur(0px);
 	-webkit-backdrop-filter: blur(0px);
+	backdrop-filter: blur(0px);
 }
 
 .modal-content-animated.animate-out {
 	opacity: 0;
 	transform: scale(0.95) translateY(10px);
+}
+
+/* Dark theme modal content */
+.dark .modal-content-animated,
+html[data-theme="dark"] .modal-content-animated {
+	background: rgba(0, 0, 0, 0.4);
+	border: 1px solid rgba(255, 255, 255, 0.15);
+	box-shadow: 
+		0 25px 50px -12px rgba(0, 0, 0, 0.7),
+		inset 0 1px 0 rgba(255, 255, 255, 0.2),
+		inset 0 -1px 0 rgba(255, 255, 255, 0.05),
+		inset 0 0 16px 8px rgba(255, 255, 255, 0.3);
+}
+
+.dark .modal-content-animated::before,
+html[data-theme="dark"] .modal-content-animated::before {
+	background: linear-gradient(
+		90deg,
+		transparent,
+		rgba(255, 255, 255, 0.4),
+		transparent
+	);
+}
+
+.dark .modal-content-animated::after,
+html[data-theme="dark"] .modal-content-animated::after {
+	background: linear-gradient(
+		180deg,
+		rgba(255, 255, 255, 0.4),
+		transparent,
+		rgba(255, 255, 255, 0.15)
+	);
 }

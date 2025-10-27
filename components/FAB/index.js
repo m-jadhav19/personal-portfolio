@@ -49,7 +49,7 @@ const useReliableTheme = () => {
 
 const FAB = () => {
 	const [selectedTab, setSelectedTab] = useState('Preset')
-	const [selectedColor, setSelectedColor] = useState('#00cdac')
+	const [selectedColor, setSelectedColor] = useState('#339AF0')
 	const {currentTheme, mounted} = useReliableTheme()
 
 	// Update Button component colors when color changes
@@ -84,7 +84,7 @@ const FAB = () => {
 		'#FFEAA7',
 		'#DDA0DD',
 		'#98D8C8',
-		'#00cdac',
+		'#339AF0',
 		'#133A41',
 		'#344532',
 		'#6A2A5B',

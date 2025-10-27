@@ -8,6 +8,7 @@ import HeroSection from '../components/HeroSection'
 import WorkCard from '../components/WorkCard'
 import FAB from '../components/FAB'
 import CustomCursor from '../components/Cursor'
+import PixelGridBackground from '../components/PixelGridBackground'
 import Head from 'next/head'
 import Footer from '../components/Footer'
 import Socials from '../components/Socials'
@@ -32,8 +33,8 @@ export default function Home() {
 	}
 
 	useGSAP(() => {
-		// Scroll animations for sections
-		gsap.utils.toArray('.gsap-fade-in').forEach(element => {
+		// Enhanced Scroll animations for sections with stagger
+		gsap.utils.toArray('.gsap-fade-in').forEach((element, index) => {
 			// Set initial state to hidden
 			gsap.set(element, { opacity: 0, y: 50 })
 			
@@ -44,6 +45,7 @@ export default function Home() {
 					y: 0,
 					duration: 0.8,
 					ease: "power2.out",
+					delay: index * 0.1,
 					onStart: () => {
 						element.classList.add('gsap-revealed')
 					},
@@ -52,6 +54,59 @@ export default function Home() {
 						start: "top 80%",
 						end: "bottom 20%",
 						toggleActions: "play none none reverse"
+					}
+				}
+			)
+		})
+
+		// Enhanced scroll parallax for hero section
+		const heroElements = document.querySelectorAll('.hero-element')
+		heroElements.forEach(element => {
+			gsap.fromTo(element,
+				{ y: 0 },
+				{
+					y: 100,
+					ease: "none",
+					scrollTrigger: {
+						trigger: element,
+						start: "top bottom",
+						end: "bottom top",
+						scrub: true
+					}
+				}
+			)
+		})
+
+		// Rotating gradient text animation
+		const gradientTexts = document.querySelectorAll('.gradient-text')
+		gradientTexts.forEach(text => {
+			gsap.to(text, {
+				backgroundPosition: "200% center",
+				ease: "none",
+				scrollTrigger: {
+					trigger: text,
+					start: "top bottom",
+					end: "bottom top",
+					scrub: true
+				}
+			})
+		})
+
+		// Scale animation on scroll for work cards
+		const workCards = document.querySelectorAll('.work-card')
+		workCards.forEach((card, index) => {
+			gsap.fromTo(card,
+				{ scale: 0.9, opacity: 0 },
+				{
+					scale: 1,
+					opacity: 1,
+					duration: 0.5,
+					ease: "back.out(1.7)",
+					delay: index * 0.1,
+					scrollTrigger: {
+						trigger: card,
+						start: "top 85%",
+						toggleActions: "play none none none"
 					}
 				}
 			)
@@ -77,8 +132,14 @@ export default function Home() {
 			</Head>
 			{data.showCursor && <CustomCursor />}
 			
+			{/* Pixel Grid Background with floating blob */}
+			<PixelGridBackground />
+			
 			<div className='gradient-circle'></div>
 			<div className='gradient-circle-bottom'></div>
+			
+			{/* Content wrapper with proper z-index */}
+			<div className='relative z-10'>
 
 			<Header
 				handleWorkScroll={handleWorkScroll}
@@ -127,8 +188,8 @@ export default function Home() {
 								href={`mailto:${data.email}`}
 								className='px-8 py-4 rounded-lg transition-all duration-300 font-medium font-dm-sans relative overflow-hidden backdrop-blur-[15px] border-2 hover:scale-105 hover:shadow-2xl'
 								style={{
-									background: `linear-gradient(135deg, var(--selected-color, #00cdac)20, var(--selected-color, #00cdac)40)`,
-									borderColor: `var(--selected-color, #00cdac)`,
+									background: `linear-gradient(135deg, var(--selected-color, #339AF0)20, var(--selected-color, #339AF0)40)`,
+									borderColor: `var(--selected-color, #339AF0)`,
 									color: 'white',
 									boxShadow: `0 8px 25px rgba(var(--selected-color-rgb, 0, 0, 0), 0.3)`,
 								}}
@@ -149,6 +210,7 @@ export default function Home() {
 			</div>
 
 			<FAB />
+			</div>
 		</div>
 	)
 }

@@ -28,7 +28,7 @@ const Header = ({handleWorkScroll, handleAboutScroll, isBlog}) => {
 					className='h-6 w-6 transition-transform duration-300 transform'
 					style={{
 						transform: currentTheme === 'dark' ? 'rotate(0deg)' : 'rotate(360deg)',
-						color: 'var(--selected-color, #00cdac)'
+						color: 'var(--selected-color, #339AF0)'
 					}}>
 					{currentTheme === 'dark' ? (
 						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-full h-full">
@@ -53,7 +53,7 @@ const Header = ({handleWorkScroll, handleAboutScroll, isBlog}) => {
 							<h1
 								onClick={() => router.push('/')}
 								className='logo-code liquid-glass-logo font-fira-code text-xl font-bold p-2 laptop:p-0 link cursor-pointer'
-								style={{ color: 'var(--selected-color, #00cdac)' }}>
+								style={{ color: 'var(--selected-color, #339AF0)' }}>
 								&lt;/MJ&gt;
 							</h1>
 
@@ -65,7 +65,7 @@ const Header = ({handleWorkScroll, handleAboutScroll, isBlog}) => {
 										className='h-6 w-6 my-auto transition-transform duration-300 transform'
 										style={{
 											transform: !open ? 'rotate(0deg)' : 'rotate(360deg)',
-											color: 'var(--selected-color, #00cdac)'
+											color: 'var(--selected-color, #339AF0)'
 										}}>
 										{!open ? (
 											<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-full h-full">
@@ -117,7 +117,7 @@ const Header = ({handleWorkScroll, handleAboutScroll, isBlog}) => {
 				<h1
 					onClick={() => router.push('/')}
 					className='logo-code liquid-glass-logo font-fira-code text-2xl font-bold cursor-pointer ml-4 mob:p-2 laptop:p-0'
-					style={{ color: 'var(--selected-color, #00cdac)' }}>
+					style={{ color: 'var(--selected-color, #339AF0)' }}>
 					&lt;/MJ&gt;
 				</h1>
 				{!isBlog ? (
