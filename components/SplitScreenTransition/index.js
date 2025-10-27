@@ -72,7 +72,7 @@ export default function SplitScreenTransition({ onComplete }) {
 
 	return (
 		<>
-			<style jsx>{`
+			<style>{`
 				.split-transition {
 					position: fixed;
 					top: 0;

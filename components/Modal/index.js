@@ -1,9 +1,17 @@
-import React, {useEffect, useState} from 'react'
+import React, {useEffect, useState, useCallback} from 'react'
 import { createPortal } from 'react-dom'
 
 const Modal = ({isOpen, onClose, title, description, url, children}) => {
 	const [isAnimating, setIsAnimating] = useState(false)
 	const [shouldRender, setShouldRender] = useState(false)
+
+	const handleClose = useCallback(() => {
+		setIsAnimating(false)
+		// Wait for exit animation before calling onClose
+		setTimeout(() => {
+			onClose()
+		}, 300)
+	}, [onClose])
 
 	// Handle modal open/close with animations
 	useEffect(() => {
@@ -50,15 +58,7 @@ const Modal = ({isOpen, onClose, title, description, url, children}) => {
 		return () => {
 			document.removeEventListener('keydown', handleEscape)
 		}
-	}, [shouldRender])
-
-	const handleClose = () => {
-		setIsAnimating(false)
-		// Wait for exit animation before calling onClose
-		setTimeout(() => {
-			onClose()
-		}, 300)
-	}
+	}, [shouldRender, handleClose])
 
 	if (!shouldRender) return null
 

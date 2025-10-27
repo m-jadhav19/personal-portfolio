@@ -21,7 +21,7 @@ const Resume = () => {
 		if (!showResume) {
 			router.push('/')
 		}
-	}, [])
+	}, [router, showResume])
 	return (
 		<>
 			{process.env.NODE_ENV === 'development' && (
