@@ -97,6 +97,8 @@ body.dark-mode {
 	--selected-color: #339AF0;
 	--selected-color-rgb: 0, 205, 172;
 	--current-theme: dark;
+	--startColor: hsl(0, 100%, 75%);
+	--stopColor: hsl(0, 100%, 75%);
 }
 
 /* Dynamic gradient shadows based on selected color */
@@ -831,24 +833,38 @@ html[data-theme="light"] body {
 	}
 }
 
-.floating-blob {
+/* Animated Blob Container */
+.animated-blob-container {
 	position: fixed;
-	width: 500px;
-	height: 350px;
-	border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+	top: 0;
+	left: 0;
+	width: 72vmin;
+	height: 72vmin;
 	filter: blur(60px);
-	pointer-events: none;
 	z-index: 1;
-	background: radial-gradient(
-		ellipse 250px 150px at center,
-		rgba(255, 107, 107, 0.7),
-		rgba(78, 205, 196, 0.6),
-		rgba(69, 183, 209, 0.4),
-		transparent
-	);
-	transition: background 2s ease, box-shadow 2s ease, transform 0.2s ease-out, filter 0.2s ease-out;
-	box-shadow: 0 0 120px rgba(255, 107, 107, 0.5), 0 0 180px rgba(78, 205, 196, 0.3);
-	opacity: 0.9;
+	opacity: 0.8;
+	pointer-events: auto;
+	-webkit-user-select: none;
+	user-select: none;
+	will-change: transform;
+	transform: translateZ(0);
+}
+
+.animated-blob-container svg {
+	width: 100%;
+	height: 100%;
+	pointer-events: none;
+}
+
+.animated-blob-container path {
+	cursor: pointer;
+	transition: all 0.3s ease;
+	pointer-events: auto;
+}
+
+.animated-blob-container path:hover {
+	opacity: 1;
+	filter: blur(40px);
 }
 
 .grid-ripple {

@@ -111,7 +111,7 @@ const HeroSection = () => {
 	return (
 		<div className="container mx-auto mb-10">
 			<div className='laptop:mt-20 mt-10 px-2 tablet:px-12'>
-				<div className='mt-5 space-y-2'>
+				<div className='mt-5 space-y-4 tablet:space-y-6 laptop:space-y-8'>
 					{/* First line - Greeting */}
 					<h1
 						ref={tagline1Ref}
@@ -142,7 +142,7 @@ const HeroSection = () => {
 				</div>
 				
 				{/* Socials Section */}
-				<div className='mt-12 flex flex-wrap gap-6 justify-center tablet:justify-start'>
+				<div className='mt-16 tablet:mt-20 laptop:mt-24 flex flex-wrap gap-6 justify-center tablet:justify-start'>
 					{data.socials.map((social) => (
 						<a
 							key={social.id}
