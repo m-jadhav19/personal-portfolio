@@ -18,7 +18,7 @@ const WorkCard = ({img, name, description, onClick, url}) => {
 			<div
 				className='work-card overflow-hidden rounded-lg p-2 laptop:p-4 first:ml-0 link cursor-pointer'
 				onClick={handleCardClick}>
-				<div className='relative rounded-lg overflow-hidden transition-all ease-out duration-300 h-48 mob:h-auto ripple-container'>
+				<div className='relative rounded-lg overflow-hidden transition-all ease-out duration-300 h-64 laptop:h-80 ripple-container'>
 					<img
 						alt={name}
 						className='w-full h-full object-cover transition-all ease-out duration-300'

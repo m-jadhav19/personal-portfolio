@@ -1,7 +1,8 @@
-import {useRef} from 'react'
+import {useRef, useEffect} from 'react'
 import {gsap} from 'gsap'
 import {useGSAP} from '@gsap/react'
 import {ScrollTrigger} from 'gsap/ScrollTrigger'
+import Lenis from '@studio-freight/lenis'
 import data from '../data/portfolio.json'
 import Header from '../components/Header'
 import HeroSection from '../components/HeroSection'
@@ -23,42 +24,49 @@ export default function Home() {
 	const textTwo = useRef()
 	const textThree = useRef()
 	const textFour = useRef()
+	const lenisRef = useRef(null)
+
+	// Access Lenis instance for smooth scrolling
+	useEffect(() => {
+		if (typeof window !== 'undefined') {
+			// Access the global Lenis instance created in _app.js
+			const getLenis = () => {
+				if (window.__lenis__) {
+					lenisRef.current = window.__lenis__
+				} else {
+					// Retry after a short delay if not ready yet
+					setTimeout(getLenis, 50)
+				}
+			}
+			getLenis()
+		}
+	}, [])
 
 	const handleWorkScroll = () => {
-		textOne.current.scrollIntoView({behavior: 'smooth'})
+		if (lenisRef.current && textOne.current) {
+			lenisRef.current.scrollTo(textOne.current, {
+				offset: -100,
+				duration: 1.5,
+			})
+		} else if (textOne.current) {
+			// Fallback to native scroll
+			textOne.current.scrollIntoView({behavior: 'smooth'})
+		}
 	}
 
 	const handleAboutScroll = () => {
-		textTwo.current.scrollIntoView({behavior: 'smooth'})
+		if (lenisRef.current && textTwo.current) {
+			lenisRef.current.scrollTo(textTwo.current, {
+				offset: -100,
+				duration: 1.5,
+			})
+		} else if (textTwo.current) {
+			// Fallback to native scroll
+			textTwo.current.scrollIntoView({behavior: 'smooth'})
+		}
 	}
 
 	useGSAP(() => {
-		// Enhanced Scroll animations for sections with stagger
-		gsap.utils.toArray('.gsap-fade-in').forEach((element, index) => {
-			// Set initial state to hidden
-			gsap.set(element, { opacity: 0, y: 50 })
-			
-			gsap.fromTo(element,
-				{ opacity: 0, y: 50 },
-				{
-					opacity: 1,
-					y: 0,
-					duration: 0.8,
-					ease: "power2.out",
-					delay: index * 0.1,
-					onStart: () => {
-						element.classList.add('gsap-revealed')
-					},
-					scrollTrigger: {
-						trigger: element,
-						start: "top 80%",
-						end: "bottom 20%",
-						toggleActions: "play none none reverse"
-					}
-				}
-			)
-		})
-
 		// Enhanced scroll parallax for hero section
 		const heroElements = document.querySelectorAll('.hero-element')
 		heroElements.forEach(element => {
@@ -92,25 +100,158 @@ export default function Home() {
 			})
 		})
 
-		// Scale animation on scroll for work cards
-		const workCards = document.querySelectorAll('.work-card')
-		workCards.forEach((card, index) => {
-			gsap.fromTo(card,
-				{ scale: 0.9, opacity: 0 },
-				{
-					scale: 1,
-					opacity: 1,
-					duration: 0.5,
-					ease: "back.out(1.7)",
-					delay: index * 0.1,
-					scrollTrigger: {
-						trigger: card,
-						start: "top 85%",
-						toggleActions: "play none none none"
-					}
+		// Horizontal Scroll for Work Section
+		const workSection = document.querySelector('.work-section-wrapper')
+		const workCardsContainer = document.querySelector('.work-cards-container')
+		
+		if (workSection && workCardsContainer) {
+			const cards = workCardsContainer.querySelectorAll('.work-card')
+			let horizontalScrollTrigger = null
+			
+			const setupHorizontalScroll = () => {
+				if (cards.length === 0) return
+				
+				if (horizontalScrollTrigger) {
+					horizontalScrollTrigger.kill()
+					horizontalScrollTrigger = null
 				}
-			)
-		})
+				
+				setTimeout(() => {
+					const cardWidth = cards[0]?.offsetWidth || 400
+					const gap = 24
+					const padding = window.innerWidth >= 1024 ? 96 : 64
+					const totalWidth = (cardWidth + gap) * cards.length - gap + (padding * 2)
+					
+					workCardsContainer.style.width = `${totalWidth}px`
+					
+					const scrollDistance = Math.max(0, totalWidth - window.innerWidth)
+					
+					const horizontalScroll = gsap.to(workCardsContainer, {
+						x: -scrollDistance,
+						ease: "none",
+						scrollTrigger: {
+							trigger: workSection,
+							start: "top top",
+							end: () => `+=${scrollDistance || window.innerHeight}`,
+							pin: true,
+							pinSpacing: true,
+							scrub: 1,
+							invalidateOnRefresh: true,
+							anticipatePin: 1,
+							onUpdate: (self) => {
+								const progress = self.progress
+								cards.forEach((card, index) => {
+									const cardCenter = (index + 0.5) / cards.length
+									const distance = Math.abs(progress - cardCenter)
+									const visibility = Math.max(0.4, 1 - distance * 2)
+									
+									gsap.to(card, {
+										scale: 0.85 + (visibility * 0.15),
+										opacity: visibility,
+										duration: 0.1,
+										ease: "none"
+									})
+								})
+							},
+							onLeave: () => {
+								cards.forEach((card) => {
+									gsap.to(card, {
+										scale: 1,
+										opacity: 1,
+										duration: 0.3,
+										ease: "power2.out"
+									})
+								})
+							},
+							onLeaveBack: () => {
+								cards.forEach((card) => {
+									gsap.to(card, {
+										scale: 1,
+										opacity: 1,
+										duration: 0.3,
+										ease: "power2.out"
+									})
+								})
+							}
+						}
+					})
+					
+					horizontalScrollTrigger = horizontalScroll.scrollTrigger
+					ScrollTrigger.refresh()
+				}, 200)
+			}
+			
+			setupHorizontalScroll()
+			
+			let resizeTimeout
+			const handleResize = () => {
+				clearTimeout(resizeTimeout)
+				resizeTimeout = setTimeout(() => {
+					setupHorizontalScroll()
+					ScrollTrigger.refresh()
+				}, 250)
+			}
+			
+			window.addEventListener('resize', handleResize)
+			
+			gsap.utils.toArray(cards).forEach((card, index) => {
+				gsap.set(card, { scale: 0.9, opacity: 0.6, x: 20 })
+			})
+			
+			// Refresh ScrollTrigger after horizontal scroll is set up
+			setTimeout(() => {
+				ScrollTrigger.refresh()
+			}, 500)
+		}
+
+		// Smooth fade-in for About section
+		const aboutSection = document.querySelector('.about-section')
+		if (aboutSection) {
+			// Ensure section is visible by default
+			gsap.set(aboutSection, { opacity: 1, y: 0 })
+			
+			// Wait for ScrollTrigger to be fully initialized
+			setTimeout(() => {
+				gsap.fromTo(aboutSection,
+					{ opacity: 0, y: 60 },
+					{
+						opacity: 1,
+						y: 0,
+						duration: 1,
+						ease: "power3.out",
+						scrollTrigger: {
+							trigger: aboutSection,
+							start: "top 85%",
+							end: "bottom 20%",
+							toggleActions: "play none none reverse",
+							refreshPriority: -1,
+						}
+					}
+				)
+				
+				// Force refresh
+				ScrollTrigger.refresh()
+			}, 600)
+		}
+
+		// Smooth fade-in for Contact section
+		const contactSection = document.querySelector('.contact-section')
+		if (contactSection) {
+			// Set initial state
+			gsap.set(contactSection, { opacity: 0, y: 60 })
+			
+			gsap.to(contactSection, {
+				opacity: 1,
+				y: 0,
+				duration: 1,
+				ease: "power3.out",
+				scrollTrigger: {
+					trigger: contactSection,
+					start: "top 80%",
+					toggleActions: "play none none reverse"
+				}
+			})
+		}
 
 		// Liquid cursor effect
 		const handleMouseMove = (e) => {
@@ -148,26 +289,30 @@ export default function Home() {
 			
 			<HeroSection />
 
-			{/* Work Section */}
-			<div className='gsap-fade-in' ref={textOne}>
-				<div className="container mx-auto px-4 py-16">
-					<h2 className="section-heading font-space-grotesk">Work.</h2>
-					<div className='grid grid-cols-1 tablet:grid-cols-2 laptop:grid-cols-3 gap-6'>
-						{data.projects.map((project, index) => (
-							<WorkCard
-								key={project.id}
-								img={project.imageSrc}
-								name={project.title}
-								description={project.description}
-								url={project.url}
-							/>
-						))}
+			{/* Work Section with Horizontal Scroll */}
+			<div className='work-section-wrapper' ref={textOne}>
+				<div className="work-section-inner">
+					<div className="container mx-auto px-4 py-16">
+						<h2 className="section-heading font-space-grotesk mb-8">Work.</h2>
+					</div>
+					<div className='work-cards-horizontal-scroll'>
+						<div className='work-cards-container'>
+							{data.projects.map((project, index) => (
+								<WorkCard
+									key={project.id}
+									img={project.imageSrc}
+									name={project.title}
+									description={project.description}
+									url={project.url}
+								/>
+							))}
+						</div>
 					</div>
 				</div>
 			</div>
 
 			{/* About Section */}
-			<div className='gsap-fade-in' ref={textTwo}>
+			<div className='about-section' ref={textTwo}>
 				<div className="container mx-auto px-4 py-16">
 					<h2 className="section-heading font-space-grotesk">About.</h2>
 					<div className='max-w-4xl mx-auto'>
@@ -178,7 +323,7 @@ export default function Home() {
 			</div>
 
 			{/* Contact Section */}
-			<div className='gsap-fade-in' ref={textThree}>
+			<div className='contact-section' ref={textThree}>
 				<div className="container mx-auto px-4 py-16">
 					<h2 className="section-heading font-space-grotesk">Contact.</h2>
 					<div className='text-center max-w-2xl mx-auto'>
