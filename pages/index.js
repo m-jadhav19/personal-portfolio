@@ -25,6 +25,7 @@ export default function Home() {
 	const textThree = useRef()
 	const textFour = useRef()
 	const lenisRef = useRef(null)
+	const isManualNavigation = useRef(false)
 
 	// Access Lenis instance for smooth scrolling
 	useEffect(() => {
@@ -43,14 +44,235 @@ export default function Home() {
 	}, [])
 
 	const handleWorkScroll = () => {
+		// Set flag to prevent automatic horizontal scrolling
+		isManualNavigation.current = true
+		
 		if (lenisRef.current && textOne.current) {
-			lenisRef.current.scrollTo(textOne.current, {
-				offset: -100,
-				duration: 1.5,
+			const workSection = textOne.current
+			const workCardsContainer = document.querySelector('.work-cards-container')
+			
+			// Get ScrollTrigger - try multiple ways to find it
+			let scrollTrigger = ScrollTrigger.getById('work-horizontal-scroll')
+			if (!scrollTrigger) {
+				scrollTrigger = window.__workHorizontalScrollTrigger__
+			}
+			
+			// STEP 1: Set flag FIRST, then disable ScrollTrigger
+			// This prevents it from activating during scroll
+			
+			// Disable ScrollTrigger before doing anything
+			if (scrollTrigger) {
+				scrollTrigger.disable(false)
+				scrollTrigger.progress(0)
+				
+				// Unpin immediately
+				if (scrollTrigger.pinnedContainer) {
+					gsap.set(scrollTrigger.pinnedContainer, { clearProps: "all" })
+				}
+				
+				// Remove pin spacers
+				const allPinSpacers = document.querySelectorAll('.pin-spacer')
+				allPinSpacers.forEach(spacer => {
+					const sectionInside = spacer.querySelector('.work-section-wrapper')
+					if (sectionInside) {
+						spacer.remove()
+					}
+				})
+			}
+			
+			// Reset horizontal position immediately
+			if (workCardsContainer) {
+				gsap.set(workCardsContainer, { 
+					x: 0, 
+					immediateRender: true,
+					clearProps: "transform"
+				})
+			}
+			
+			// Reset all cards
+			const cards = workCardsContainer?.querySelectorAll('.work-card')
+			if (cards) {
+				cards.forEach(card => {
+					gsap.set(card, { scale: 1, opacity: 1 })
+				})
+			}
+			
+			// STEP 2: Calculate position that keeps section top ABOVE viewport top
+			// The ScrollTrigger starts at "top top" - when section.offsetTop === scrollY
+			// So we need scrollY < section.offsetTop to prevent activation
+			const sectionTop = workSection.offsetTop
+			const sectionHeading = workSection.querySelector('.section-heading')
+			
+			// Find heading position
+			let headingTop
+			if (sectionHeading) {
+				const headingRect = sectionHeading.getBoundingClientRect()
+				headingTop = window.scrollY + headingRect.top
+			} else {
+				// Approximate heading position (inside section, after padding)
+				headingTop = sectionTop + 100
+			}
+			
+			// Calculate safe position: heading visible but section top still above viewport
+			// We want: scrollY < sectionTop (to prevent trigger)
+			// And: heading visible (scrollY + viewportHeight > headingTop)
+			const viewportHeight = window.innerHeight
+			const maxScrollForHeading = headingTop - viewportHeight + 200 // 200px buffer
+			const maxScrollForTrigger = sectionTop - 50 // Stay 50px before trigger
+			
+			// Target position: show heading but don't trigger ScrollTrigger
+			const targetPosition = Math.min(maxScrollForHeading, maxScrollForTrigger)
+			
+			// STEP 3: Completely disable ScrollTrigger and pause updates
+			const st = ScrollTrigger.getById('work-horizontal-scroll')
+			
+			if (st) {
+				// Kill it completely
+				st.kill()
+			}
+			
+			// Remove all pin spacers immediately
+			const allPinSpacers = document.querySelectorAll('.pin-spacer')
+			allPinSpacers.forEach(spacer => {
+				const sectionInside = spacer.querySelector('.work-section-wrapper')
+				if (sectionInside) {
+					spacer.remove()
+				}
 			})
+			
+			// Reset horizontal immediately
+			if (workCardsContainer) {
+				gsap.set(workCardsContainer, { x: 0, clearProps: "transform" })
+			}
+			
+			// Stop Lenis
+			if (lenisRef.current) {
+				lenisRef.current.stop()
+			}
+			
+			// Calculate final safe scroll position
+			// Must be less than sectionTop to prevent ScrollTrigger activation
+			let finalSafePosition
+			if (sectionHeading) {
+				const headingRect = sectionHeading.getBoundingClientRect()
+				const headingAbsTop = window.scrollY + headingRect.top
+				// Position to show heading but keep section top above viewport
+				finalSafePosition = Math.min(headingAbsTop - 120, sectionTop - 100)
+			} else {
+				finalSafePosition = sectionTop - 150
+			}
+			
+			finalSafePosition = Math.max(0, finalSafePosition)
+			
+			// Jump to safe position immediately
+			window.scrollTo({ top: finalSafePosition, behavior: 'auto' })
+			
+			// Wait a frame, then smooth scroll to heading
+			requestAnimationFrame(() => {
+				// Double-check ScrollTrigger is dead
+				const checkSt = ScrollTrigger.getById('work-horizontal-scroll')
+				if (checkSt) {
+					checkSt.kill()
+				}
+				
+				// Reset horizontal position
+				if (workCardsContainer) {
+					gsap.set(workCardsContainer, { x: 0 })
+				}
+				
+				// Smooth scroll to heading position (still keeping section top above viewport)
+				if (lenisRef.current && sectionHeading) {
+					lenisRef.current.start()
+					
+					// Calculate heading position relative to current scroll
+					const newHeadingRect = sectionHeading.getBoundingClientRect()
+					const newHeadingTop = window.scrollY + newHeadingRect.top
+					
+					// Final position: show heading but ensure section top stays above viewport
+					const headingTarget = newHeadingTop - 120
+					const maxSafeScroll = sectionTop - 80 // Stay 80px before trigger
+					const safeHeadingPos = Math.min(headingTarget, maxSafeScroll)
+					
+					lenisRef.current.scrollTo(safeHeadingPos, {
+						duration: 0.6,
+						offset: 0,
+					})
+				}
+			})
+			
+			// STEP 4: Recreate ScrollTrigger ONLY when user manually scrolls
+			let hasRecreated = false
+			
+			const recreateOnScroll = () => {
+				if (!hasRecreated) {
+					hasRecreated = true
+					isManualNavigation.current = false
+					
+					// Clean up listeners
+					window.removeEventListener('wheel', recreateOnScroll)
+					window.removeEventListener('scroll', recreateOnScroll)
+					window.removeEventListener('touchstart', recreateOnScroll)
+					if (lenisRef.current) {
+						lenisRef.current.off('scroll', recreateOnScroll)
+					}
+					
+					// Recreate ScrollTrigger by calling setup function
+					if (window.__setupWorkHorizontalScroll__) {
+						setTimeout(() => {
+							window.__setupWorkHorizontalScroll__()
+							ScrollTrigger.refresh()
+						}, 300)
+					} else {
+						ScrollTrigger.refresh()
+					}
+				}
+			}
+			
+			// Listen for ANY user interaction to recreate
+			window.addEventListener('wheel', recreateOnScroll, { once: true, passive: true })
+			window.addEventListener('scroll', recreateOnScroll, { once: true, passive: true })
+			window.addEventListener('touchstart', recreateOnScroll, { once: true, passive: true })
+			
+			if (lenisRef.current) {
+				lenisRef.current.on('scroll', recreateOnScroll)
+			}
+			
+			// Fallback: recreate after longer delay if no interaction
+			setTimeout(() => {
+				if (!hasRecreated) {
+					recreateOnScroll()
+				}
+			}, 5000)
+			
 		} else if (textOne.current) {
 			// Fallback to native scroll
-			textOne.current.scrollIntoView({behavior: 'smooth'})
+			const scrollTrigger = ScrollTrigger.getById('work-horizontal-scroll')
+			const workCardsContainer = document.querySelector('.work-cards-container')
+			
+			if (scrollTrigger) {
+				scrollTrigger.disable()
+				scrollTrigger.progress(0)
+				if (workCardsContainer) {
+					gsap.set(workCardsContainer, { x: 0 })
+				}
+			}
+			
+			// Scroll to section heading if available
+			const sectionHeading = textOne.current.querySelector('.section-heading')
+			const targetElement = sectionHeading || textOne.current
+			
+			targetElement.scrollIntoView({
+				behavior: 'smooth',
+				block: 'start'
+			})
+			
+			setTimeout(() => {
+				if (scrollTrigger) {
+					scrollTrigger.enable()
+					ScrollTrigger.refresh()
+				}
+				isManualNavigation.current = false
+			}, 1000)
 		}
 	}
 
@@ -107,6 +329,7 @@ export default function Home() {
 		if (workSection && workCardsContainer) {
 			const cards = workCardsContainer.querySelectorAll('.work-card')
 			let horizontalScrollTrigger = null
+			let horizontalScrollAnimation = null
 			
 			const setupHorizontalScroll = () => {
 				if (cards.length === 0) return
@@ -114,6 +337,11 @@ export default function Home() {
 				if (horizontalScrollTrigger) {
 					horizontalScrollTrigger.kill()
 					horizontalScrollTrigger = null
+				}
+				
+				if (horizontalScrollAnimation) {
+					horizontalScrollAnimation.kill()
+					horizontalScrollAnimation = null
 				}
 				
 				setTimeout(() => {
@@ -126,10 +354,11 @@ export default function Home() {
 					
 					const scrollDistance = Math.max(0, totalWidth - window.innerWidth)
 					
-					const horizontalScroll = gsap.to(workCardsContainer, {
+					horizontalScrollAnimation = gsap.to(workCardsContainer, {
 						x: -scrollDistance,
 						ease: "none",
 						scrollTrigger: {
+							id: 'work-horizontal-scroll',
 							trigger: workSection,
 							start: "top top",
 							end: () => `+=${scrollDistance || window.innerHeight}`,
@@ -138,7 +367,42 @@ export default function Home() {
 							scrub: 1,
 							invalidateOnRefresh: true,
 							anticipatePin: 1,
+							// Prevent activation if flag is set
+							refreshPriority: 1,
+							onEnter: (self) => {
+								// Prevent activation during manual navigation
+								if (isManualNavigation.current) {
+									self.disable()
+									self.progress(0)
+									// Force unpin
+									if (self.pinnedContainer) {
+										gsap.set(self.pinnedContainer, { clearProps: "all" })
+									}
+									return false
+								}
+							},
+							onEnterBack: (self) => {
+								// Prevent activation during manual navigation
+								if (isManualNavigation.current) {
+									self.disable()
+									self.progress(0)
+									// Force unpin
+									if (self.pinnedContainer) {
+										gsap.set(self.pinnedContainer, { clearProps: "all" })
+									}
+									return false
+								}
+							},
 							onUpdate: (self) => {
+								// Skip updates during manual navigation
+								if (isManualNavigation.current) {
+									self.disable()
+									self.progress(0)
+									if (workCardsContainer) {
+										gsap.set(workCardsContainer, { x: 0 })
+									}
+									return
+								}
 								const progress = self.progress
 								cards.forEach((card, index) => {
 									const cardCenter = (index + 0.5) / cards.length
@@ -154,6 +418,7 @@ export default function Home() {
 								})
 							},
 							onLeave: () => {
+								// Reset cards when leaving section
 								cards.forEach((card) => {
 									gsap.to(card, {
 										scale: 1,
@@ -164,6 +429,7 @@ export default function Home() {
 								})
 							},
 							onLeaveBack: () => {
+								// Reset cards when leaving section backwards
 								cards.forEach((card) => {
 									gsap.to(card, {
 										scale: 1,
@@ -176,7 +442,11 @@ export default function Home() {
 						}
 					})
 					
-					horizontalScrollTrigger = horizontalScroll.scrollTrigger
+					horizontalScrollTrigger = horizontalScrollAnimation.scrollTrigger
+					
+					// Store reference globally for easy access
+					window.__workHorizontalScrollTrigger__ = horizontalScrollTrigger
+					
 					ScrollTrigger.refresh()
 				}, 200)
 			}
