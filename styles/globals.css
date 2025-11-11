@@ -152,43 +152,55 @@ body.dark-mode {
 	}
 }
 
-/* Liquid Glass Effect for Header - Polished */
+/* Liquid Glass Effect for Header - Highly Visible */
 .liquid-glass-header {
 	position: relative;
 	overflow: hidden;
-	background: rgba(255, 255, 255, 0.1);
+	background: rgba(255, 255, 255, 0.25);
 	-webkit-backdrop-filter: blur(20px) saturate(180%);
 	backdrop-filter: blur(20px) saturate(180%);
-	border: 1px solid rgba(255, 255, 255, 0.2);
+	border: 1.5px solid rgba(255, 255, 255, 0.4);
 	padding: 0.5rem;
 	box-shadow: 
-		0 8px 32px rgba(0, 0, 0, 0.1),
-		inset 0 1px 0 rgba(255, 255, 255, 0.4);
-	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+		0 10px 40px rgba(0, 0, 0, 0.25),
+		0 4px 12px rgba(0, 0, 0, 0.15),
+		0 0 0 1px rgba(255, 255, 255, 0.1),
+		inset 0 1px 0 rgba(255, 255, 255, 0.5),
+		inset 0 -1px 0 rgba(255, 255, 255, 0.1);
+	transition: all 0.3s ease-out;
 }
 
 .liquid-glass-header.dark {
-	background: rgba(0, 0, 0, 0.25);
-	border: 1px solid rgba(255, 255, 255, 0.12);
+	background: rgba(0, 0, 0, 0.65);
+	border: 1.5px solid rgba(255, 255, 255, 0.25);
 	box-shadow: 
-		0 8px 32px rgba(0, 0, 0, 0.4),
-		inset 0 1px 0 rgba(255, 255, 255, 0.15);
+		0 10px 40px rgba(0, 0, 0, 0.7),
+		0 4px 12px rgba(0, 0, 0, 0.5),
+		0 0 0 1px rgba(255, 255, 255, 0.05),
+		inset 0 1px 0 rgba(255, 255, 255, 0.25),
+		inset 0 -1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .liquid-glass-header:hover {
-	background: rgba(255, 255, 255, 0.15);
-	border-color: rgba(255, 255, 255, 0.3);
+	background: rgba(255, 255, 255, 0.3);
+	border-color: rgba(255, 255, 255, 0.5);
 	box-shadow: 
-		0 12px 40px rgba(0, 0, 0, 0.15),
-		inset 0 1px 0 rgba(255, 255, 255, 0.5);
+		0 16px 60px rgba(0, 0, 0, 0.3),
+		0 6px 20px rgba(0, 0, 0, 0.2),
+		0 0 0 1px rgba(255, 255, 255, 0.15),
+		inset 0 1px 0 rgba(255, 255, 255, 0.6),
+		inset 0 -1px 0 rgba(255, 255, 255, 0.15);
 }
 
 .liquid-glass-header.dark:hover {
-	background: rgba(0, 0, 0, 0.35);
-	border-color: rgba(255, 255, 255, 0.18);
+	background: rgba(0, 0, 0, 0.75);
+	border-color: rgba(255, 255, 255, 0.3);
 	box-shadow: 
-		0 12px 40px rgba(0, 0, 0, 0.5),
-		inset 0 1px 0 rgba(255, 255, 255, 0.2);
+		0 16px 60px rgba(0, 0, 0, 0.8),
+		0 6px 20px rgba(0, 0, 0, 0.6),
+		0 0 0 1px rgba(255, 255, 255, 0.08),
+		inset 0 1px 0 rgba(255, 255, 255, 0.3),
+		inset 0 -1px 0 rgba(255, 255, 255, 0.08);
 }
 
 .liquid-glass-header::before {
@@ -201,10 +213,10 @@ body.dark-mode {
 	background: linear-gradient(
 		90deg,
 		transparent,
-		rgba(255, 255, 255, 0.15),
+		rgba(255, 255, 255, 0.1),
 		transparent
 	);
-	transition: left 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+	transition: left 0.5s ease-out;
 	pointer-events: none;
 	z-index: 1;
 }
@@ -213,151 +225,186 @@ body.dark-mode {
 	left: 100%;
 }
 
-/* Header-specific liquid glass styles - Polished */
+.liquid-glass-header.dark::before {
+	background: linear-gradient(
+		90deg,
+		transparent,
+		rgba(255, 255, 255, 0.05),
+		transparent
+	);
+}
+
+/* Header-specific liquid glass styles - Highly Visible */
 .header-mobile {
-	background: rgba(255, 255, 255, 0.15);
+	background: rgba(255, 255, 255, 0.25);
 	-webkit-backdrop-filter: blur(20px) saturate(180%);
 	backdrop-filter: blur(20px) saturate(180%);
-	border: 1px solid rgba(255, 255, 255, 0.25);
+	border: 1.5px solid rgba(255, 255, 255, 0.4);
 	border-radius: 0.75rem;
 	box-shadow: 
-		0 8px 32px rgba(0, 0, 0, 0.1),
+		0 10px 40px rgba(0, 0, 0, 0.25),
+		0 4px 12px rgba(0, 0, 0, 0.15),
+		0 0 0 1px rgba(255, 255, 255, 0.1),
 		inset 0 1px 0 rgba(255, 255, 255, 0.5),
 		inset 0 -1px 0 rgba(255, 255, 255, 0.1);
 	overflow: hidden;
 	position: relative;
-	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+	transition: all 0.3s ease-out;
 }
 
 .header-mobile:hover {
-	background: rgba(255, 255, 255, 0.2);
-	border-color: rgba(255, 255, 255, 0.35);
+	background: rgba(255, 255, 255, 0.3);
+	border-color: rgba(255, 255, 255, 0.5);
 	box-shadow: 
-		0 12px 40px rgba(0, 0, 0, 0.15),
-		inset 0 1px 0 rgba(255, 255, 255, 0.6);
+		0 16px 60px rgba(0, 0, 0, 0.3),
+		0 6px 20px rgba(0, 0, 0, 0.2),
+		0 0 0 1px rgba(255, 255, 255, 0.15),
+		inset 0 1px 0 rgba(255, 255, 255, 0.6),
+		inset 0 -1px 0 rgba(255, 255, 255, 0.15);
 }
 
 .header-mobile.dark {
-	background: rgba(0, 0, 0, 0.35);
-	border: 1px solid rgba(255, 255, 255, 0.12);
+	background: rgba(0, 0, 0, 0.65);
+	border: 1.5px solid rgba(255, 255, 255, 0.25);
 	box-shadow: 
-		0 8px 32px rgba(0, 0, 0, 0.4),
-		inset 0 1px 0 rgba(255, 255, 255, 0.2),
+		0 10px 40px rgba(0, 0, 0, 0.7),
+		0 4px 12px rgba(0, 0, 0, 0.5),
+		0 0 0 1px rgba(255, 255, 255, 0.05),
+		inset 0 1px 0 rgba(255, 255, 255, 0.25),
 		inset 0 -1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .header-mobile.dark:hover {
-	background: rgba(0, 0, 0, 0.45);
-	border-color: rgba(255, 255, 255, 0.18);
+	background: rgba(0, 0, 0, 0.75);
+	border-color: rgba(255, 255, 255, 0.3);
 	box-shadow: 
-		0 12px 40px rgba(0, 0, 0, 0.5),
-		inset 0 1px 0 rgba(255, 255, 255, 0.25);
+		0 16px 60px rgba(0, 0, 0, 0.8),
+		0 6px 20px rgba(0, 0, 0, 0.6),
+		0 0 0 1px rgba(255, 255, 255, 0.08),
+		inset 0 1px 0 rgba(255, 255, 255, 0.3),
+		inset 0 -1px 0 rgba(255, 255, 255, 0.08);
 }
 
+/* Shine effect like buttons */
 .header-mobile::before {
 	content: '';
 	position: absolute;
 	top: 0;
-	left: 0;
-	right: 0;
-	height: 1px;
+	left: -100%;
+	width: 100%;
+	height: 100%;
 	background: linear-gradient(
 		90deg,
 		transparent,
-		rgba(255, 255, 255, 0.2),
+		rgba(255, 255, 255, 0.1),
 		transparent
 	);
+	transition: left 0.5s ease-out;
 	pointer-events: none;
 	z-index: 1;
+}
+
+.header-mobile:hover::before {
+	left: 100%;
+}
+
+.header-mobile.dark::before {
+	background: linear-gradient(
+		90deg,
+		transparent,
+		rgba(255, 255, 255, 0.05),
+		transparent
+	);
 }
 
 .header-mobile::after {
-	content: '';
-	position: absolute;
-	top: 0;
-	left: 0;
-	width: 1px;
-	height: 100%;
-	background: linear-gradient(
-		180deg,
-		rgba(255, 255, 255, 0.2),
-		transparent
-	);
-	pointer-events: none;
-	z-index: 1;
+	display: none;
 }
 
 .header-desktop {
-	background: rgba(255, 255, 255, 0.15);
+	background: rgba(255, 255, 255, 0.25);
 	-webkit-backdrop-filter: blur(20px) saturate(180%);
 	backdrop-filter: blur(20px) saturate(180%);
-	border: 1px solid rgba(255, 255, 255, 0.25);
+	border: 1.5px solid rgba(255, 255, 255, 0.4);
 	border-radius: 0.75rem;
 	box-shadow: 
-		0 8px 32px rgba(0, 0, 0, 0.1),
+		0 10px 40px rgba(0, 0, 0, 0.25),
+		0 4px 12px rgba(0, 0, 0, 0.15),
+		0 0 0 1px rgba(255, 255, 255, 0.1),
 		inset 0 1px 0 rgba(255, 255, 255, 0.5),
 		inset 0 -1px 0 rgba(255, 255, 255, 0.1);
 	overflow: hidden;
 	position: relative;
-	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+	transition: all 0.3s ease-out;
 }
 
 .header-desktop:hover {
-	background: rgba(255, 255, 255, 0.2);
-	border-color: rgba(255, 255, 255, 0.35);
+	background: rgba(255, 255, 255, 0.3);
+	border-color: rgba(255, 255, 255, 0.5);
 	box-shadow: 
-		0 12px 40px rgba(0, 0, 0, 0.15),
-		inset 0 1px 0 rgba(255, 255, 255, 0.6);
+		0 16px 60px rgba(0, 0, 0, 0.3),
+		0 6px 20px rgba(0, 0, 0, 0.2),
+		0 0 0 1px rgba(255, 255, 255, 0.15),
+		inset 0 1px 0 rgba(255, 255, 255, 0.6),
+		inset 0 -1px 0 rgba(255, 255, 255, 0.15);
 }
 
 .header-desktop.dark {
-	background: rgba(0, 0, 0, 0.35);
-	border: 1px solid rgba(255, 255, 255, 0.12);
+	background: rgba(0, 0, 0, 0.65);
+	border: 1.5px solid rgba(255, 255, 255, 0.25);
 	box-shadow: 
-		0 8px 32px rgba(0, 0, 0, 0.4),
-		inset 0 1px 0 rgba(255, 255, 255, 0.2),
+		0 10px 40px rgba(0, 0, 0, 0.7),
+		0 4px 12px rgba(0, 0, 0, 0.5),
+		0 0 0 1px rgba(255, 255, 255, 0.05),
+		inset 0 1px 0 rgba(255, 255, 255, 0.25),
 		inset 0 -1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .header-desktop.dark:hover {
-	background: rgba(0, 0, 0, 0.45);
-	border-color: rgba(255, 255, 255, 0.18);
+	background: rgba(0, 0, 0, 0.75);
+	border-color: rgba(255, 255, 255, 0.3);
 	box-shadow: 
-		0 12px 40px rgba(0, 0, 0, 0.5),
-		inset 0 1px 0 rgba(255, 255, 255, 0.25);
+		0 16px 60px rgba(0, 0, 0, 0.8),
+		0 6px 20px rgba(0, 0, 0, 0.6),
+		0 0 0 1px rgba(255, 255, 255, 0.08),
+		inset 0 1px 0 rgba(255, 255, 255, 0.3),
+		inset 0 -1px 0 rgba(255, 255, 255, 0.08);
 }
 
+/* Shine effect like buttons */
 .header-desktop::before {
 	content: '';
 	position: absolute;
 	top: 0;
-	left: 0;
-	right: 0;
-	height: 1px;
+	left: -100%;
+	width: 100%;
+	height: 100%;
 	background: linear-gradient(
 		90deg,
 		transparent,
-		rgba(255, 255, 255, 0.2),
+		rgba(255, 255, 255, 0.1),
 		transparent
 	);
+	transition: left 0.5s ease-out;
 	pointer-events: none;
 	z-index: 1;
 }
 
-.header-desktop::after {
-	content: '';
-	position: absolute;
-	top: 0;
-	left: 0;
-	width: 1px;
-	height: 100%;
+.header-desktop:hover::before {
+	left: 100%;
+}
+
+.header-desktop.dark::before {
 	background: linear-gradient(
-		180deg,
-		rgba(255, 255, 255, 0.2),
+		90deg,
+		transparent,
+		rgba(255, 255, 255, 0.05),
 		transparent
 	);
-	pointer-events: none;
-	z-index: 1;
+}
+
+.header-desktop::after {
+	display: none;
 }
 
 /* Custom Wide Header Styles */
@@ -558,13 +605,16 @@ html[data-theme="dark"] .header-mobile,
 html.dark .header-mobile,
 html[data-theme="dark"] .header-desktop,
 html.dark .header-desktop {
-	background: rgba(0, 0, 0, 0.4) !important;
-	border: 1px solid rgba(255, 255, 255, 0.15) !important;
+	background: rgba(0, 0, 0, 0.65) !important;
+	border: 1.5px solid rgba(255, 255, 255, 0.25) !important;
 	box-shadow: 
-		0 8px 32px rgba(0, 0, 0, 0.4),
-		inset 0 1px 0 rgba(255, 255, 255, 0.2),
-		inset 0 -1px 0 rgba(255, 255, 255, 0.05),
-		inset 0 0 16px 8px rgba(255, 255, 255, 0.3) !important;
+		0 10px 40px rgba(0, 0, 0, 0.7),
+		0 4px 12px rgba(0, 0, 0, 0.5),
+		0 0 0 1px rgba(255, 255, 255, 0.05),
+		inset 0 1px 0 rgba(255, 255, 255, 0.25),
+		inset 0 -1px 0 rgba(255, 255, 255, 0.05) !important;
+	backdrop-filter: blur(20px) saturate(180%) !important;
+	-webkit-backdrop-filter: blur(20px) saturate(180%) !important;
 }
 
 /* Ensure dark mode colors persist */
@@ -1615,33 +1665,19 @@ html[data-theme="dark"] .glass-card::after {
 /* Immediately apply dark theme before React loads */
 html[data-theme="dark"] .liquid-glass-header,
 html.dark .liquid-glass-header {
-	background: rgba(0, 0, 0, 0.4) !important;
-	border: 1px solid rgba(255, 255, 255, 0.15) !important;
+	background: rgba(0, 0, 0, 0.65) !important;
+	border: 1.5px solid rgba(255, 255, 255, 0.25) !important;
 	box-shadow: 
-		0 8px 32px rgba(0, 0, 0, 0.4),
-		inset 0 1px 0 rgba(255, 255, 255, 0.2),
-		inset 0 -1px 0 rgba(255, 255, 255, 0.05),
-		inset 0 0 16px 8px rgba(255, 255, 255, 0.3) !important;
+		0 10px 40px rgba(0, 0, 0, 0.7),
+		0 4px 12px rgba(0, 0, 0, 0.5),
+		0 0 0 1px rgba(255, 255, 255, 0.05),
+		inset 0 1px 0 rgba(255, 255, 255, 0.25),
+		inset 0 -1px 0 rgba(255, 255, 255, 0.05) !important;
+	backdrop-filter: blur(20px) saturate(180%) !important;
+	-webkit-backdrop-filter: blur(20px) saturate(180%) !important;
 }
 
-/* Duplicate removed - using polished version defined above */
-
-.liquid-glass-header::after {
-	content: '';
-	position: absolute;
-	top: 0;
-	left: 0;
-	right: 0;
-	height: 1px;
-	background: linear-gradient(
-		90deg,
-		transparent,
-		rgba(255, 255, 255, 0.2),
-		transparent
-	);
-	pointer-events: none;
-	z-index: 1;
-}
+/* Duplicate removed - using clean version defined above */
 
 /* Modal Animation Classes */
 .modal-overlay-animated {

@@ -29,17 +29,17 @@
 		},
 		{
 			"id": "2",
-			"title": "T-Shirt Configurator",
-			"description": "Simple web app that uses Fabric Js and Three.js to customize a Tshirt model",
-			"imageSrc": "/images/tshirt-config.png",
-			"url": "https://t-shirt-config.vercel.app/"
+			"title": "Brutalist UI",
+			"description": "Brutalist UI components library for a Raw. Bold. Minimalist. Design.",
+			"imageSrc": "/images/brutualist.png",
+			"url": "https://brutalist-components-7hf861sbm-m-jadhav19s-projects.vercel.app/"
 		},
 		{
 			"id": "3",
-			"title": "Property Search",
-			"description": "A web application that uses Maptiler maps to search Properties",
-			"imageSrc": "/images/property-search.png",
-			"url": "https://property-search-web.vercel.app/"
+			"title": "Ply - Digital Workspace",
+			"description": "A tactile digital workspace where ideas come to life through motion, intuition, and design.",
+			"imageSrc": "/images/ply-app.png",
+			"url": "https://ply-2d8fukkh4-m-jadhav19s-projects.vercel.app/"
 		},
 		{
 			"id": "4",
@@ -50,8 +50,8 @@
 		},
 		{
 			"id": "5",
-			"title": "3D Model Viewer",
-			"description": "A 3D model viewer that allows users to view 3D models in a 3D environment",
+			"title": "3D Portfolio Websit (WIP)",
+			"description": "A 3D portfolio website that allows users to view 3D models in a 3D environment",
 			"imageSrc": "/images/3dportfolio.png",
 			"url": "https://3d-portfolio-zeta-ten.vercel.app/"
 		}
