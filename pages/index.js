@@ -1,8 +1,9 @@
-import {useRef, useEffect} from 'react'
+import {useRef, useEffect, useState} from 'react'
 import {gsap} from 'gsap'
 import {useGSAP} from '@gsap/react'
 import {ScrollTrigger} from 'gsap/ScrollTrigger'
 import Lenis from '@studio-freight/lenis'
+import {useTheme} from 'next-themes'
 import data from '../data/portfolio.json'
 import Header from '../components/Header'
 import HeroSection from '../components/HeroSection'
@@ -20,12 +21,20 @@ if (typeof window !== 'undefined') {
 }
 
 export default function Home() {
+	const {theme} = useTheme()
+	const [mounted, setMounted] = useState(false)
 	const textOne = useRef()
 	const textTwo = useRef()
 	const textThree = useRef()
 	const textFour = useRef()
 	const lenisRef = useRef(null)
 	const isManualNavigation = useRef(false)
+
+	useEffect(() => {
+		setMounted(true)
+	}, [])
+
+	const isDark = mounted && (theme === 'dark' || (!theme && typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches))
 
 	// Access Lenis instance for smooth scrolling
 	useEffect(() => {
@@ -605,7 +614,7 @@ export default function Home() {
 								style={{
 									background: `linear-gradient(135deg, var(--selected-color, #339AF0)20, var(--selected-color, #339AF0)40)`,
 									borderColor: `var(--selected-color, #339AF0)`,
-									color: 'white',
+									color: isDark ? 'white' : '#000000',
 									boxShadow: `0 8px 25px rgba(var(--selected-color-rgb, 0, 0, 0), 0.3)`,
 								}}
 							>

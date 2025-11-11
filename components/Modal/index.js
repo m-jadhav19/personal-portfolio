@@ -1,9 +1,18 @@
 import React, {useEffect, useState, useCallback} from 'react'
 import { createPortal } from 'react-dom'
+import {useTheme} from 'next-themes'
 
 const Modal = ({isOpen, onClose, title, description, url, children}) => {
+	const {theme} = useTheme()
 	const [isAnimating, setIsAnimating] = useState(false)
 	const [shouldRender, setShouldRender] = useState(false)
+	const [mounted, setMounted] = useState(false)
+
+	useEffect(() => {
+		setMounted(true)
+	}, [])
+
+	const isDark = mounted && (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches))
 
 	const handleClose = useCallback(() => {
 		setIsAnimating(false)
@@ -62,26 +71,26 @@ const Modal = ({isOpen, onClose, title, description, url, children}) => {
 
 	if (!shouldRender) return null
 
-	// Inline styles to ensure no CSS conflicts
+	// Inline styles to ensure no CSS conflicts - Theme aware
 	const headerStyle = {
 		display: 'flex',
 		alignItems: 'center',
 		justifyContent: 'space-between',
 		padding: '1.5rem',
-		borderBottom: '1px solid rgba(255, 255, 255, 0.2)',
-		background: 'rgba(0, 0, 0, 0.2)',
+		borderBottom: isDark ? '1px solid rgba(255, 255, 255, 0.2)' : '1px solid rgba(0, 0, 0, 0.1)',
+		background: isDark ? 'rgba(0, 0, 0, 0.2)' : 'rgba(0, 0, 0, 0.02)',
 		flexShrink: 0
 	}
 
 	const titleStyle = {
 		fontSize: '1.5rem',
 		fontWeight: 'bold',
-		color: 'white',
+		color: isDark ? 'white' : '#000000',
 		margin: 0
 	}
 
 	const descriptionStyle = {
-		color: '#d1d5db',
+		color: isDark ? '#d1d5db' : '#4b5563',
 		margin: '0.5rem 0 0 0',
 		fontSize: '1rem'
 	}
@@ -110,16 +119,16 @@ const Modal = ({isOpen, onClose, title, description, url, children}) => {
 		...buttonStyle,
 		background: 'rgba(var(--selected-color-rgb, 0, 205, 172), 0.15)',
 		border: '1px solid rgba(var(--selected-color-rgb, 0, 205, 172), 0.4)',
-		color: 'var(--selected-color, #339AF0)',
-		textShadow: '0 0 10px rgba(var(--selected-color-rgb, 0, 205, 172), 0.5)'
+		color: isDark ? 'white' : '#000000',
+		textShadow: isDark ? '0 0 10px rgba(var(--selected-color-rgb, 0, 205, 172), 0.5)' : 'none'
 	}
 
 	const closeButtonStyle = {
 		...buttonStyle,
-		background: 'rgba(255, 255, 255, 0.08)',
-		border: '1px solid rgba(255, 255, 255, 0.3)',
-		color: '#ffffff',
-		textShadow: '0 0 10px rgba(255, 255, 255, 0.3)',
+		background: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)',
+		border: isDark ? '1px solid rgba(255, 255, 255, 0.3)' : '1px solid rgba(0, 0, 0, 0.2)',
+		color: isDark ? '#ffffff' : '#000000',
+		textShadow: isDark ? '0 0 10px rgba(255, 255, 255, 0.3)' : 'none',
 		width: '48px',
 		height: '48px',
 		padding: '0',
@@ -142,7 +151,7 @@ const Modal = ({isOpen, onClose, title, description, url, children}) => {
 	const iframeStyle = {
 		width: '100%',
 		height: '100%',
-		border: '1px solid rgba(255, 255, 255, 0.2)',
+		border: isDark ? '1px solid rgba(255, 255, 255, 0.2)' : '1px solid rgba(0, 0, 0, 0.1)',
 		borderRadius: '0.5rem',
 		background: 'white',
 		minHeight: '400px',
