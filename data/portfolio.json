@@ -22,10 +22,10 @@
 	"projects": [
 		{
 			"id": "1",
-			"title": "Product Configurator",
-			"description": "Simple web app using Three.js to configure a 3D chair model",
-			"imageSrc": "/images/product-config.png",
-			"url": "https://product-configurator-one.vercel.app/"
+			"title": "Retro Cassette",
+			"description": "A platform that allows users to search and stream their own retro cassette tapes",
+			"imageSrc": "/images/retro.png",
+			"url": "https://retrocasset.vercel.app/"
 		},
 		{
 			"id": "2",
@@ -50,17 +50,17 @@
 		},
 		{
 			"id": "5",
+			"title": "Product Configurator",
+			"description": "Simple web app using Three.js to configure a 3D chair model",
+			"imageSrc": "/images/product-config.png",
+			"url": "https://product-configurator-one.vercel.app/"
+		},
+		{
+			"id": "6",
 			"title": "3D Portfolio Websit (WIP)",
 			"description": "A 3D portfolio website that allows users to view 3D models in a 3D environment",
 			"imageSrc": "/images/3dportfolio.png",
 			"url": "https://3d-portfolio-zeta-ten.vercel.app/"
-		},
-		{
-			"id": "6",
-			"title": "RetroCassette",
-			"description": "A RetroCassette is a platform that allows users to search and stream their own retro cassette tapes",
-			"imageSrc": "/images/retro.png",
-			"url": "https://retrocasset.vercel.app/"
 		}
 	],
 	"services": [
