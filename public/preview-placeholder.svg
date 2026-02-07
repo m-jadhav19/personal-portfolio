@@ -1,6 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450" fill="none">
-  <rect width="800" height="450" fill="#1a1a1a"/>
-  <rect x="80" y="60" width="640" height="330" rx="8" stroke="#333" stroke-width="1" fill="none"/>
-  <path d="M320 180 L400 240 L360 240 L360 300 L280 300 L280 240 L240 240 Z" fill="#333"/>
-  <text x="400" y="380" text-anchor="middle" fill="#666" font-family="system-ui,sans-serif" font-size="14">Preview unavailable</text>
-</svg>
