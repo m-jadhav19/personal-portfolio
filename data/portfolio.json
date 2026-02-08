@@ -51,7 +51,7 @@
 		{
 			"id": "5",
 			"title": "AuraTry - Virtual Try On",
-			"description": "A web app that allows users to try on clothes virtually using Three.js",
+			"description": "A web app that allows users to try on AR Accessories virtually",
 			"imageSrc": "/images/auratry.png",
 			"url": "https://virtual-try-on-lac.vercel.app/"
 		},
