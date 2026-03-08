@@ -3,12 +3,12 @@ import React from 'react'
 
 const WorkCard = ({ img, name, description, url }) => {
 	const href = url || '#'
+	const isExternal = href !== '#'
 
 	return (
 		<a
 			href={href}
-			target={href === '#' ? undefined : '_blank'}
-			rel={href === '#' ? undefined : 'noopener noreferrer'}
+			{...(isExternal && { target: '_blank', rel: 'noopener noreferrer' })}
 			className='work-card block no-underline overflow-hidden rounded-lg p-2 laptop:p-4 first:ml-0 link cursor-pointer text-inherit'
 		>
 			<div className='relative rounded-lg overflow-hidden transition-all ease-out duration-300 h-64 laptop:h-80 ripple-container'>

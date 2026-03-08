@@ -12,7 +12,7 @@ export default function AnimatedBlob() {
 	const blobPosition = useRef({ x: 0, y: 0 })
 	const animationFrameId = useRef(null)
 	const frameSkip = useRef(0)
-	let hueNoiseOffset = 0
+	const hueNoiseOffsetRef = useRef(0)
 
 	// Helper function to map a value from one range to another
 	const map = (n, start1, end1, start2, end2) => {
@@ -118,7 +118,7 @@ export default function AnimatedBlob() {
 
 			// Update colors less frequently for performance
 			if (frameSkip.current % 3 === 0) {
-				const hueNoise = noise(hueNoiseOffset, hueNoiseOffset)
+				const hueNoise = noise(hueNoiseOffsetRef.current, hueNoiseOffsetRef.current)
 				const hue = map(hueNoise, -1, 1, 0, 360)
 
 				if (root) {
@@ -126,7 +126,7 @@ export default function AnimatedBlob() {
 					root.style.setProperty('--stopColor', `hsl(${hue + 60}, 100%, 75%)`)
 				}
 
-				hueNoiseOffset += noiseStepRef.current / 6
+				hueNoiseOffsetRef.current += noiseStepRef.current / 6
 			}
 
 			animationFrameId.current = requestAnimationFrame(animate)
