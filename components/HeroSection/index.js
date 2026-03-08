@@ -3,15 +3,13 @@ import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { useGSAP } from '@gsap/react'
 import data from '../../data/portfolio.json'
+import TypeWriter from '../TypeWriter'
 
 gsap.registerPlugin(ScrollTrigger)
 
 const HeroSection = () => {
-	const tagline1Ref = useRef()
 	const nameLineRef = useRef()
 	const nameRef = useRef()
-	const tagline3Ref = useRef()
-	const tagline4Ref = useRef()
 	const heroContainerRef = useRef()
 	const gradientTweenRef = useRef(null)
 
@@ -32,23 +30,6 @@ const HeroSection = () => {
 	}, [])
 
 	useGSAP(() => {
-		const tl = gsap.timeline()
-
-		// Tagline 1
-		tl.fromTo(
-			tagline1Ref.current,
-			{ opacity: 0, y: 20 },
-			{ opacity: 1, y: 0, duration: 0.8, ease: 'power2.out' }
-		)
-
-		// Name line: one clean reveal (entrance), then gradient runs in background
-		tl.fromTo(
-			nameLineRef.current,
-			{ y: 16, opacity: 0 },
-			{ y: 0, opacity: 1, duration: 0.8, ease: 'power3.out' },
-			'-=0.2'
-		)
-
 		// Gradient position animation — slow liquid shimmer (not color animation)
 		if (nameRef.current) {
 			gradientTweenRef.current = gsap.to(nameRef.current, {
@@ -67,75 +48,55 @@ const HeroSection = () => {
 				onEnterBack: () => gradientTweenRef.current?.resume(),
 			})
 		}
-
-		// Tagline 3
-		tl.fromTo(
-			tagline3Ref.current,
-			{ opacity: 0, y: 20 },
-			{ opacity: 1, y: 0, duration: 0.8, ease: 'power2.out' },
-			'-=0.2'
-		)
-
-		// Tagline 4
-		tl.fromTo(
-			tagline4Ref.current,
-			{ opacity: 0, y: 20 },
-			{ opacity: 1, y: 0, duration: 0.8, ease: 'power2.out' },
-			'-=0.2'
-		)
 	}, [])
 
 	return (
 		<div ref={heroContainerRef} className="container mx-auto mb-10">
 			<div className="laptop:mt-20 mt-10 px-2 tablet:px-12">
 				<div className="mt-5 space-y-4 tablet:space-y-6 laptop:space-y-8">
-					{/* First line - Greeting (Inter) */}
-					<h1
-						ref={tagline1Ref}
-						className="text-4xl tablet:text-7xl laptop:text-8xl laptopl:text-9xl font-bold w-full laptop:w-4/5 opacity-90 hero-element"
-					>
+					{/* First line - Greeting (static) */}
+					<h1 className="text-4xl tablet:text-7xl laptop:text-8xl laptopl:text-9xl font-bold w-full laptop:w-4/5 opacity-90 hero-element">
 						{data.headerTaglineOne}
 					</h1>
 
-					{/* Second line - "I'm" static + "Mandar Jadhav" animated gradient */}
+					{/* Second line - Name with typewriter + animated gradient */}
 					<h1
 						ref={nameLineRef}
 						className="text-4xl tablet:text-7xl laptop:text-8xl laptopl:text-9xl w-full laptop:w-4/5 font-hero-name hero-element flex flex-wrap items-baseline gap-x-2"
 						onMouseEnter={onNameLineEnter}
 						onMouseLeave={onNameLineLeave}
 					>
-						<span className="hero-im">I&apos;m</span>
 						<span ref={nameRef} className="hero-name">
-							Mandar Jadhav
+							<TypeWriter
+								text={data.headerTaglineTwo}
+								speed={70}
+								delay={0}
+								showCursor={true}
+								className="inline"
+							/>
 						</span>
 					</h1>
 
-					{/* Third line - Title (Inter) */}
-					<h1
-						ref={tagline3Ref}
-						className="text-3xl tablet:text-6xl laptop:text-7xl laptopl:text-8xl font-bold w-full laptop:w-4/5 hero-element"
-					>
+					{/* Third line - Title (static) */}
+					<h1 className="text-3xl tablet:text-6xl laptop:text-7xl laptopl:text-8xl font-bold w-full laptop:w-4/5 hero-element">
 						{data.headerTaglineThree}
 					</h1>
 
-					{/* Fourth line - Location (Inter) */}
-					<h1
-						ref={tagline4Ref}
-						className="text-2xl tablet:text-5xl laptop:text-6xl laptopl:text-7xl font-bold w-full laptop:w-4/5 opacity-70 hero-element"
-					>
+					{/* Fourth line - Location (static) */}
+					<h1 className="text-2xl tablet:text-5xl laptop:text-6xl laptopl:text-7xl font-bold w-full laptop:w-4/5 opacity-70 hero-element">
 						{data.headerTaglineFour}
 					</h1>
 				</div>
 
 				{/* Socials Section */}
-				<div className="mt-16 tablet:mt-20 laptop:mt-24 flex flex-wrap gap-6 justify-center tablet:justify-start">
+				<div className="mt-16 tablet:mt-20 laptop:mt-24 flex flex-wrap gap-4 sm:gap-6 justify-center tablet:justify-start items-center">
 					{data.socials.map((social) => (
 						<a
 							key={social.id}
 							href={social.link}
 							target={social.title === 'Email' ? '_self' : '_blank'}
 							rel="noopener noreferrer"
-							className="social-link group flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 hover:scale-105 backdrop-blur-[10px] border border-white/20 hover:border-white/40"
+							className="social-link group flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 hover:scale-[1.02] backdrop-blur-[10px] border border-white/20 hover:border-white/40 flex-shrink-0"
 						>
 							{social.title === 'Github' && (
 								<svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">

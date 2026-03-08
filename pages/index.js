@@ -11,6 +11,7 @@ import WorkCard from '../components/WorkCard'
 import FAB from '../components/FAB'
 import CustomCursor from '../components/Cursor'
 import PixelGridBackground from '../components/PixelGridBackground'
+import ParticleBackground from '../components/ParticleBackground'
 import Head from 'next/head'
 import Footer from '../components/Footer'
 import Socials from '../components/Socials'
@@ -334,7 +335,6 @@ export default function Home() {
 		// Horizontal Scroll for Work Section
 		const workSection = document.querySelector('.work-section-wrapper')
 		const workCardsContainer = document.querySelector('.work-cards-container')
-		
 		if (workSection && workCardsContainer) {
 			const cards = workCardsContainer.querySelectorAll('.work-card')
 			let horizontalScrollTrigger = null
@@ -369,7 +369,7 @@ export default function Home() {
 						scrollTrigger: {
 							id: 'work-horizontal-scroll',
 							trigger: workSection,
-							start: "top top",
+							start: "top top+=30",
 							end: () => `+=${scrollDistance || window.innerHeight}`,
 							pin: true,
 							pinSpacing: true,
@@ -552,6 +552,8 @@ export default function Home() {
 			</Head>
 			{data.showCursor && <CustomCursor />}
 			
+			{/* Particle background layer */}
+			<ParticleBackground />
 			{/* Pixel Grid Background with floating blob */}
 			<PixelGridBackground />
 			
