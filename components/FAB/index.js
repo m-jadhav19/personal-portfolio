@@ -67,29 +67,18 @@ const FAB = () => {
 	}
 
 	const presetColors = [
-		'#FF6B6B',
-		'#FF8E53',
-		'#F9D689',
-		'#51CF66',
-		'#339AF0',
-		'#845EF7',
-		'#F06595',
-		'#868E96',
-		'#495057',
-		'#CFDOD4',
-		'#FFE066',
-		'#4ECDC4',
-		'#45B7D1',
-		'#96CEB4',
-		'#FFEAA7',
-		'#DDA0DD',
-		'#98D8C8',
-		'#339AF0',
-		'#133A41',
-		'#344532',
-		'#6A2A5B',
-		'#00295B',
-		'#859CB6',
+		'#339AF0', // Azure Blue (Default)
+		'#FF6B6B', // Coral Red
+		'#51CF66', // Sage Green
+		'#845EF7', // Deep Violet
+		'#FF922B', // Sunset Orange
+		'#F06595', // Rose Pink
+		'#20C997', // Teal Mint
+		'#FCC419', // Amber Gold
+		'#94D82D', // Lime Green
+		'#5C7CFA', // Indigo Night
+		'#AE3EC9', // Orchid Purple
+		'#E03131', // Crimson Red
 	]
 
 	const PresetView = () => (
@@ -159,7 +148,7 @@ const FAB = () => {
 					<Popover.Button
 						className='w-14 h-14 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110 flex items-center justify-center'
 						style={{
-							background: currentTheme === 'dark' ? `linear-gradient(135deg, ${selectedColor}20, ${selectedColor}40)` : `linear-gradient(135deg, ${selectedColor}40, ${selectedColor}60)`,
+							background: currentTheme === 'dark' ? `linear-gradient(135deg, ${selectedColor}20, ${selectedColor}40)` : `linear-gradient(135deg, ${selectedColor}30, ${selectedColor}50)`,
 							border: `2px solid ${selectedColor}`,
 						}}>
 						<svg
@@ -167,7 +156,7 @@ const FAB = () => {
 							fill='none'
 							stroke='currentColor'
 							viewBox='0 0 24 24'
-							style={{color: currentTheme === 'dark' ? 'white' : 'black'}}>
+							style={{color: currentTheme === 'dark' ? 'white' : '#1a1a1a'}}>
 							<path
 								strokeLinecap='round'
 								strokeLinejoin='round'
@@ -178,9 +167,9 @@ const FAB = () => {
 					</Popover.Button>
 
 					<Popover.Panel
-						className={`absolute bottom-16 right-0 w-80 rounded-lg shadow-2xl border p-4 liquid-glass-header ${currentTheme === 'dark' ? 'dark' : ''}`}
+						className={`absolute bottom-16 right-0 w-80 rounded-lg shadow-2xl border p-4 backdrop-blur-3xl ${currentTheme === 'dark' ? 'dark bg-black/80 border-white/10' : 'bg-[#FDFBF7]/90 border-[#1a1a1a]/10'}`}
 						style={{
-							boxShadow: `0 25px 50px -12px ${selectedColor}20`,
+							boxShadow: `0 25px 50px -12px ${selectedColor}30`,
 						}}>
 						<div className='space-y-4'>
 							{/* Tab Navigation */}

@@ -20,6 +20,16 @@ html.dark body {
 	color: #fafafa !important;
 }
 
+html[data-theme="light"] {
+	color-scheme: light !important;
+	background-color: #F3EEE3 !important;
+}
+
+html[data-theme="light"] body {
+	background-color: #F3EEE3 !important;
+	color: #1a1a1a !important;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -64,8 +74,8 @@ body {
 }
 
 body.light-mode {
-	background-color: #fafafa;
-	color: #000000;
+	background-color: #F3EEE3;
+	color: #1a1a1a;
 }
 
 body.dark-mode {
@@ -79,9 +89,9 @@ body.dark-mode {
 	pointer-events: none;
 	z-index: 100;
 	width: 100%;
-	opacity: 0.5;
-	filter: blur(40px);
-	background: radial-gradient(circle, var(--selected-color) 0%, var(--selected-color) 100%);
+	opacity: 0.3;
+	filter: blur(60px);
+	background: radial-gradient(circle, var(--selected-color) 0%, transparent 70%);
 }
 
 .gradient-circle {
@@ -143,15 +153,18 @@ body.dark-mode {
 }
 
 @keyframes gradientShift {
-	0% {
-		background-position: 0% 50%;
-	}
-	50% {
-		background-position: 100% 50%;
-	}
 	100% {
 		background-position: 0% 50%;
 	}
+}
+
+/* 3D Carousel Utilities */
+.perspective-1000 {
+	perspective: 1000px;
+}
+
+.transform-style-3d {
+	transform-style: preserve-3d;
 }
 
 /* Liquid Glass Base Class */
@@ -1103,31 +1116,7 @@ html[data-theme="light"] body {
 }
 
 /* Top shadow so Work section fades in as you scroll into it */
-.work-section-wrapper::before {
-	content: '';
-	position: absolute;
-	top: 0;
-	left: 0;
-	right: 0;
-	height: 120px;
-	background: linear-gradient(
-		to bottom,
-		rgba(0, 0, 0, 0.5) 0%,
-		rgba(0, 0, 0, 0.15) 50%,
-		transparent 100%
-	);
-	pointer-events: none;
-	z-index: 5;
-}
 
-html[data-theme="light"] .work-section-wrapper::before {
-	background: linear-gradient(
-		to bottom,
-		rgba(250, 250, 250, 0.8) 0%,
-		rgba(250, 250, 250, 0.2) 50%,
-		transparent 100%
-	);
-}
 
 .work-section-inner {
 	width: 100%;
@@ -1174,32 +1163,7 @@ html[data-theme="light"] .work-section-wrapper::before {
 	}
 }
 
-/* Smooth horizontal scroll gradient fade */
-.work-cards-horizontal-scroll::after {
-	content: '';
-	position: absolute;
-	top: 0;
-	right: 0;
-	width: 100px;
-	height: 100%;
-	background: linear-gradient(
-		to left,
-		rgba(0, 0, 0, 0.4),
-		transparent
-	);
-	pointer-events: none;
-	z-index: 10;
-	opacity: 0;
-	transition: opacity 0.3s ease;
-}
 
-html[data-theme="light"] .work-cards-horizontal-scroll::after {
-	background: linear-gradient(
-		to left,
-		rgba(255, 255, 255, 0.8),
-		transparent
-	);
-}
 
 /* Hide scrollbar but keep functionality */
 .work-cards-horizontal-scroll {

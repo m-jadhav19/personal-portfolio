@@ -30,13 +30,15 @@ const SmoothScroll = () => {
 		if (typeof window === 'undefined') return;
 
 		const lenis = new Lenis({
-			duration: 1.2,
+			duration: 1.0,
 			easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
 			direction: 'vertical',
 			gestureDirection: 'vertical',
 			smooth: true,
 			smoothTouch: false,
-			touchMultiplier: 2,
+			touchMultiplier: 1.5,
+			wheelMultiplier: 1.2,
+			infinite: false,
 		});
 
 		// Store Lenis instance globally for access in other components

@@ -5,6 +5,7 @@
 	"headerTaglineThree": "Frontend Developer",
 	"headerTaglineFour": "based in Pune, India.",
 	"showBlog": false,
+	"showCursor": true,
 	"darkMode": true,
 	"socials": [
 		{
@@ -25,50 +26,56 @@
 			"title": "Retro Cassette",
 			"description": "A platform that allows users to search and stream their own retro cassette tapes",
 			"imageSrc": "/images/retro.png",
-			"url": "https://retro-cassette.vercel.app/"
+			"url": "https://retro-cassette.vercel.app/",
+			"tags": ["React", "Spotify API", "Framer Motion"]
 		},
 		{
 			"id": "2",
 			"title": "Brutalist UI",
 			"description": "Brutalist UI components library for a Raw. Bold. Minimalist. Design.",
 			"imageSrc": "/images/brutualist.png",
-			"url": "https://brutalist-components.vercel.app/"
+			"url": "https://brutalist-components.vercel.app/",
+			"tags": ["Next.js", "Tailwind CSS", "Storybook"]
 		},
 		{
 			"id": "3",
 			"title": "Ply - Digital Workspace",
 			"description": "A tactile digital workspace where ideas come to life through motion, intuition, and design.",
 			"imageSrc": "/images/ply-app.png",
-			"url": "https://ply-app-delta.vercel.app/"
+			"url": "https://ply-app-delta.vercel.app/",
+			"tags": ["React", "GSAP", "Canvas"]
 		},
 		{
 			"id": "4",
 			"title": "Epoch - World Timer",
 			"description": "A sleek world-time dashboard with an interactive time-travel experience.",
 			"imageSrc": "/images/epoch.png",
-			"url": "https://globalsync-world-timer.vercel.app/"
+			"url": "https://globalsync-world-timer.vercel.app/",
+			"tags": ["Next.js", "Luxon", "Radix UI"]
 		},
 		{
 			"id": "5",
 			"title": "AuraTry - Virtual Try On",
 			"description": "A web app that allows users to try on AR Accessories virtually",
 			"imageSrc": "/images/auratry.png",
-			"url": "https://virtual-try-on-lac.vercel.app/"
+			"url": "https://virtual-try-on-lac.vercel.app/",
+			"tags": ["Mediapipe", "Three.js", "React"]
 		},
 		{
 			"id": "6",
 			"title": "DitherBoy",
 			"description": "A Photo Dithering Effect Generator",
 			"imageSrc": "/images/ditherboy.png",
-			"url": "https://dithered-editor.vercel.app/"
-
+			"url": "https://dithered-editor.vercel.app/",
+			"tags": ["GLSL", "Three.js", "Next.js"]
 		},
 		{
 			"id": "7",
 			"title": "3D Portfolio Websit (WIP)",
 			"description": "A 3D portfolio website that allows users to view 3D models in a 3D environment",
 			"imageSrc": "/images/3dportfolio.png",
-			"url": "https://3d-portfolio-zeta-ten.vercel.app/"
+			"url": "https://3d-portfolio-zeta-ten.vercel.app/",
+			"tags": ["Three.js", "React Three Fiber", "GSAP"]
 		}
 	],
 	"services": [
