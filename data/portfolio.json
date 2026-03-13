@@ -57,6 +57,14 @@
 		},
 		{
 			"id": "6",
+			"title": "DitherBoy",
+			"description": "A Photo Dithering Effect Generator",
+			"imageSrc": "/images/ditherboy.png",
+			"url": "https://dithered-editor.vercel.app/"
+
+		},
+		{
+			"id": "7",
 			"title": "3D Portfolio Websit (WIP)",
 			"description": "A 3D portfolio website that allows users to view 3D models in a 3D environment",
 			"imageSrc": "/images/3dportfolio.png",
