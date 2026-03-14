@@ -113,7 +113,7 @@ const Header = ({handleWorkScroll, handleAboutScroll, isBlog}) => {
 					</>
 				)}
 			</Popover>
-			<div className={`header-desktop header-extra-wide ${theme === 'dark' ? 'dark' : ''} mt-10 hidden flex-row items-center justify-between sticky top-0 z-10 tablet:flex mx-auto px-12`}>
+			<div className={`header-desktop header-extra-wide ${theme === 'dark' ? 'dark' : ''} mt-10 hidden flex-row items-center justify-between sticky top-0 z-10 tablet:flex mx-auto px-2`}>
 				<h1
 					onClick={() => router.push('/')}
 					className='logo-code liquid-glass-logo font-fira-code text-2xl font-bold cursor-pointer ml-4 mob:p-2 laptop:p-0'
