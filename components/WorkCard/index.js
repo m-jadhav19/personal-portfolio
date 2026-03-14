@@ -1,3 +1,6 @@
+/* eslint-disable @next/next/no-img-element */
+import React, { useRef, useCallback, useEffect, useState } from 'react'
+import { gsap } from 'gsap'
 import { motion } from 'framer-motion'
 import { useTheme } from 'next-themes'
 
