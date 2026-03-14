@@ -20,6 +20,11 @@ module.exports = {
         quaternary: "#ffc3a0",
         quinary: "#ff5f6d",
       },
+      fontFamily: {
+        'instrument': ['"Instrument Serif"', 'serif'],
+        'geist': ['Geist', 'sans-serif'],
+        'geist-mono': ['"Geist Mono"', 'monospace'],
+      },
     },
   },
   plugins: [],

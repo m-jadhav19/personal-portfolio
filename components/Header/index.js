@@ -80,7 +80,7 @@ const Header = ({handleWorkScroll, handleAboutScroll, isBlog}) => {
 								</Popover.Button>
 							</div>
 						</div>
-						<Popover.Panel className={`absolute right-0 z-10 w-11/12 p-4 header-mobile ${theme === 'dark' ? 'dark' : ''} shadow-md rounded-md`}>
+						<Popover.Panel className={`absolute float-right right-0 z-10 w-fit px-4 py-2 mt-2 mr-3 header-mobile ${theme === 'dark' ? 'dark' : ''} shadow-md rounded-md`}>
 							{!isBlog ? (
 								<div className='grid grid-cols-1'>
 									<Button onClick={handleWorkScroll}>Work</Button>

@@ -8,7 +8,6 @@ import Header from '../components/Header'
 import HeroSection from '../components/HeroSection'
 import WorkCard from '../components/WorkCard'
 import FAB from '../components/FAB'
-import CustomCursor from '../components/Cursor'
 import FluidDitherBackground from '../components/FluidDitherBackground'
 import Head from 'next/head'
 import Footer from '../components/Footer'
@@ -239,12 +238,10 @@ export default function Home() {
 	const total = data.projects.length
 
 	return (
-		<div className={`relative ${data.showCursor && 'cursor-none'}`}>
+		<div className="relative">
 			<Head>
 				<title>{data.name}</title>
 			</Head>
-
-			{data.showCursor && <CustomCursor />}
 			<FluidDitherBackground />
 
 			<div className='relative z-10'>
@@ -259,82 +256,84 @@ export default function Home() {
 				</div>
 
 				{/* ── Work Section ───────────────────────────────────────── */}
-				<div className='work-section-wrapper' ref={workSectionRef}>
-					<div className='container mx-auto px-16 py-10'>
+				<div className='work-section-wrapper overflow-hidden' ref={workSectionRef}>
+					<div className='container mx-auto px-4 tablet:px-12 pt-10 pb-4'>
 						{/* Title */}
-						<h2 className='section-heading font-space-grotesk mb-6'>Work.</h2>
+						<h2 className='section-heading font-space-grotesk mb-2 text-center tablet:text-left'>Work.</h2>
+					</div>
 
-						{/* 3-D Carousel stage — large click zones at edges */}
-						<div
-							className='relative h-[460px] flex items-center'
-							style={{ perspective: '1100px' }}
-							onMouseEnter={() => { isHoveringCarousel.current = true }}
-							onMouseLeave={() => { isHoveringCarousel.current = false }}
+					{/* 3-D Carousel stage — full width, buttons at very edges */}
+					<div
+						className='relative w-full h-[460px] max-w-[100vw] flex items-center justify-center'
+						style={{ perspective: '1100px' }}
+						onMouseEnter={() => { isHoveringCarousel.current = true }}
+						onMouseLeave={() => { isHoveringCarousel.current = false }}
+					>
+						{/* Prev button — tall click zone on far left edge */}
+						<button
+							onClick={goPrev}
+							className='absolute left-0 tablet:left-2 z-30 h-full w-12 tablet:w-16 flex items-center justify-center transition-all duration-300 group/btn hover:bg-white/5 rounded-r-2xl'
+							aria-label='Previous project'
 						>
-							{/* Prev button — tall click zone on far left */}
-							<button
-								onClick={goPrev}
-								className='absolute left-0 z-20 h-full w-14 flex items-center justify-center transition-all duration-300 group/btn hover:bg-white/5 rounded-xl'
-								aria-label='Previous project'
-							>
-								<div
-									className='w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all duration-300 group-hover/btn:scale-110'
-									style={{ borderColor: 'var(--selected-color, #339AF0)' }}
-								>
-									<svg className='w-5 h-5 group-hover/btn:-translate-x-0.5 transition-transform' fill='none' stroke='currentColor' viewBox='0 0 24 24' style={{ color: 'var(--selected-color, #339AF0)' }}>
-										<path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M15 19l-7-7 7-7' />
-									</svg>
-								</div>
-							</button>
-
-							{/* Cards */}
 							<div
-								className='relative w-full max-w-lg mx-auto h-full flex items-center justify-center'
-								style={{ transformStyle: 'preserve-3d' }}
+								className='w-10 h-10 rounded-full border border-white/20 flex items-center justify-center transition-all duration-300 group-hover/btn:scale-110'
+								style={{ background: 'var(--selected-color, #339AF0)20', backdropFilter: 'blur(8px)' }}
 							>
-								{data.projects.map((project, index) => (
-									<div
-										key={index}
-										className='work-carousel-card absolute w-full will-change-transform'
-										style={{ transformStyle: 'preserve-3d', opacity: 0 }}
-									>
-										<WorkCard
-											img={project.imageSrc}
-											name={project.title}
-											description={project.description}
-											url={project.url}
-											tags={project.tags}
-										/>
-									</div>
-								))}
+								<svg className='w-5 h-5 group-hover/btn:-translate-x-0.5 transition-transform' fill='none' stroke='currentColor' viewBox='0 0 24 24' style={{ color: 'var(--selected-color, #339AF0)' }}>
+									<path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M15 19l-7-7 7-7' />
+								</svg>
 							</div>
+						</button>
 
-							{/* Next button — tall click zone on far right */}
-							<button
-								onClick={goNext}
-								className='absolute right-0 z-20 h-full w-14 flex items-center justify-center transition-all duration-300 group/btn hover:bg-white/5 rounded-xl'
-								aria-label='Next project'
-							>
+						{/* Cards */}
+						<div
+							className='relative w-full max-w-lg h-full flex items-center justify-center pointer-events-none'
+							style={{ transformStyle: 'preserve-3d' }}
+						>
+							{data.projects.map((project, index) => (
 								<div
-									className='w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all duration-300 group-hover/btn:scale-110'
-									style={{ borderColor: 'var(--selected-color, #339AF0)' }}
+									key={index}
+									className='work-carousel-card absolute w-full will-change-transform'
+									style={{ transformStyle: 'preserve-3d', opacity: 0 }}
 								>
-									<svg className='w-5 h-5 group-hover/btn:translate-x-0.5 transition-transform' fill='none' stroke='currentColor' viewBox='0 0 24 24' style={{ color: 'var(--selected-color, #339AF0)' }}>
-										<path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 5l7 7-7 7' />
-									</svg>
+									<WorkCard
+										img={project.imageSrc}
+										name={project.title}
+										description={project.description}
+										url={project.url}
+										tags={project.tags}
+									/>
 								</div>
-							</button>
+							))}
 						</div>
 
-						{/* Dot indicators — centered below */}
-						<div className='flex justify-center gap-2 mt-6'>
+						{/* Next button — tall click zone on far right edge */}
+						<button
+							onClick={goNext}
+							className='absolute right-0 tablet:right-2 z-30 h-full w-12 tablet:w-16 flex items-center justify-center transition-all duration-300 group/btn hover:bg-white/5 rounded-l-2xl'
+							aria-label='Next project'
+						>
+							<div
+								className='w-10 h-10 rounded-full border border-white/20 flex items-center justify-center transition-all duration-300 group-hover/btn:scale-110'
+								style={{ background: 'var(--selected-color, #339AF0)20', backdropFilter: 'blur(8px)' }}
+							>
+								<svg className='w-5 h-5 group-hover/btn:translate-x-0.5 transition-transform' fill='none' stroke='currentColor' viewBox='0 0 24 24' style={{ color: 'var(--selected-color, #339AF0)' }}>
+									<path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 5l7 7-7 7' />
+								</svg>
+							</div>
+						</button>
+					</div>
+
+					{/* Dot indicators — centered below */}
+					<div className='container mx-auto px-4 pb-12 pt-4'>
+						<div className='flex justify-center gap-2'>
 							{Array.from({ length: total }).map((_, i) => (
 								<button
 									key={i}
 									onClick={() => goToSlide(i)}
 									className='rounded-full transition-all duration-300'
 									style={{
-										width:  i === activeDisplay ? '20px' : '8px',
+										width:  i === activeDisplay ? '24px' : '8px',
 										height: '8px',
 										background: i === activeDisplay
 											? 'var(--selected-color, #339AF0)'

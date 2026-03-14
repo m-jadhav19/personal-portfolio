@@ -10,7 +10,21 @@ const WorkCard = ({ img, name, description, url, tags = [] }) => {
 	const glareRef = useRef(null)
 	const { theme } = useTheme()
 	const [mounted, setMounted] = useState(false)
+	const [isTouch, setIsTouch] = useState(false)
+	const [isTapped, setIsTapped] = useState(false)
+	const tapTimeoutRef = useRef(null)
+
 	useEffect(() => setMounted(true), [])
+
+	// Detect touch devices
+	useEffect(() => {
+		const checkTouch = () => {
+			setIsTouch(('ontouchstart' in window) || (navigator.maxTouchPoints > 0))
+		}
+		checkTouch()
+		window.addEventListener('resize', checkTouch)
+		return () => window.removeEventListener('resize', checkTouch)
+	}, [])
 
 	const href = url || '#'
 	const isExternal = href !== '#'
@@ -23,7 +37,7 @@ const WorkCard = ({ img, name, description, url, tags = [] }) => {
 
 	// Lerp-based smooth tilt — runs in requestAnimationFrame
 	const startLerp = useCallback(() => {
-		if (raf.current) return
+		if (raf.current || isTouch) return // Disable 3D tilt lerp on mobile
 		const loop = () => {
 			const c = current.current
 			const t = target.current
@@ -62,10 +76,10 @@ const WorkCard = ({ img, name, description, url, tags = [] }) => {
 			}
 		}
 		raf.current = requestAnimationFrame(loop)
-	}, [isDark])
+	}, [isDark, isTouch])
 
 	const handleMouseMove = (e) => {
-		if (!innerRef.current) return
+		if (isTouch || !innerRef.current) return
 		const rect = innerRef.current.getBoundingClientRect()
 		const x = e.clientX - rect.left
 		const y = e.clientY - rect.top
@@ -80,6 +94,7 @@ const WorkCard = ({ img, name, description, url, tags = [] }) => {
 	}
 
 	const handleMouseEnter = () => {
+		if (isTouch) return
 		if (innerRef.current) {
 			gsap.to(innerRef.current, {
 				scale: 1.03,
@@ -93,6 +108,7 @@ const WorkCard = ({ img, name, description, url, tags = [] }) => {
 	}
 
 	const handleMouseLeave = () => {
+		if (isTouch) return
 		// Smoothly reset the targets
 		target.current = { rotX: 0, rotY: 0, glareX: 50, glareY: 50 }
 		startLerp()
@@ -109,6 +125,34 @@ const WorkCard = ({ img, name, description, url, tags = [] }) => {
 		}
 	}
 
+	const handleClick = (e) => {
+		// If on a mouse device, just act as a normal link
+		if (!isTouch) return
+
+		// On mobile, block the default link behavior
+		e.preventDefault()
+
+		if (isTapped) {
+			// Second tap: Follow the link
+			if (isExternal) {
+				window.open(href, '_blank', 'noopener,noreferrer')
+			} else {
+				window.location.href = href
+			}
+			setIsTapped(false)
+			if (tapTimeoutRef.current) clearTimeout(tapTimeoutRef.current)
+		} else {
+			// First tap: Show action state
+			setIsTapped(true)
+			
+			// Reset back to untapped state after 3 seconds
+			if (tapTimeoutRef.current) clearTimeout(tapTimeoutRef.current)
+			tapTimeoutRef.current = setTimeout(() => {
+				setIsTapped(false)
+			}, 3000)
+		}
+	}
+
 	return (
 		<div
 			onMouseMove={handleMouseMove}
@@ -120,9 +164,10 @@ const WorkCard = ({ img, name, description, url, tags = [] }) => {
 			{/* Inner wrapper — tilt target */}
 			<a
 				href={href}
-				{...(isExternal && { target: '_blank', rel: 'noopener noreferrer' })}
+				onClick={handleClick}
+				{...(isExternal && !isTouch && { target: '_blank', rel: 'noopener noreferrer' })}
 				ref={innerRef}
-				className='work-card-inner group block relative no-underline rounded-2xl overflow-hidden p-4'
+				className={`work-card-inner group block relative no-underline rounded-2xl overflow-hidden p-4 ${isTapped ? 'is-tapped' : ''}`}
 				style={{
 					transformStyle: 'preserve-3d',
 					willChange: 'transform',
@@ -151,30 +196,28 @@ const WorkCard = ({ img, name, description, url, tags = [] }) => {
 					<img
 						alt={name}
 						src={img}
-						className='w-full h-full object-cover'
-						style={{ transition: 'transform 0.6s cubic-bezier(0.33,1,0.68,1)' }}
+						className='w-full h-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.33,1,0.68,1)] group-hover:scale-105 group-[.is-tapped]:scale-105'
 					/>
-					{/* Dark overlay on hover via CSS class on parent */}
+					{/* Dark overlay on hover/tap via CSS class on parent */}
 					<div
-						className='absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100'
-						style={{ transition: 'opacity 0.4s ease' }}
+						className='absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 group-[.is-tapped]:opacity-100 transition-opacity duration-400 ease-out'
 					/>
 					{/* Visit label */}
 					<div
-						className='absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100'
-						style={{ transition: 'opacity 0.4s ease', zIndex: 3 }}
+						className='absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 group-[.is-tapped]:opacity-100 transition-opacity duration-400 ease-out'
+						style={{ zIndex: 3 }}
 					>
 						<span
-							className='px-4 py-1.5 rounded-full text-white text-xs font-semibold tracking-wide'
+							className='px-4 py-1.5 rounded-full text-white text-xs font-semibold tracking-wide shadow-xl'
 							style={{ background: 'var(--selected-color, #339AF0)', backdropFilter: 'blur(8px)' }}
 						>
-							View Project ↗
+							{isTouch ? (isTapped ? 'Tap again to open ↗' : 'View Project') : 'View Project ↗'}
 						</span>
 					</div>
 				</div>
 
 				{/* Text */}
-				<div className='space-y-2' style={{ zIndex: 2, position: 'relative' }}>
+				<div className='space-y-2' style={{ zIndex: 2, position: 'relative', pointerEvents: 'none' }}>
 					<h3
 						className='text-lg font-bold tracking-tight'
 						style={{

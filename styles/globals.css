@@ -1,5 +1,7 @@
 /* Inter (UI) + Space Grotesk (Hero name) */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Space+Grotesk:wght@600;700&display=swap');
+/* Instrument Serif + Geist + Geist Mono (New Hero Section) */
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500&family=Geist+Mono:wght@400&display=swap');
 
 /* Critical: Apply dark theme styles immediately to prevent flash */
 @media (prefers-color-scheme: dark) {
