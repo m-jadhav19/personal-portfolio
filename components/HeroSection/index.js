@@ -113,7 +113,7 @@ const HeroSection = () => {
 							href={social.link}
 							target={social.title === 'Email' ? '_self' : '_blank'}
 							rel="noopener noreferrer"
-							className="font-geist-mono text-[11px] tracking-wider flex items-center gap-2 px-4 py-2.5 border border-black/15 dark:border-white/15 rounded-sm text-black/50 dark:text-white/50 hover:text-black dark:hover:text-white hover:border-black/35 dark:hover:border-white/35 hover:bg-black/5 dark:hover:bg-white/5 transition-all duration-150"
+							className="font-geist-mono text-[11px] tracking-wider flex items-center gap-2 px-4 py-2.5 border border-black/15 dark:border-white/15 rounded-sm text-black/50 dark:text-white/50 hover:text-black dark:hover:text-white hover:border-black/35 dark:hover:border-white/35 hover:bg-black/5 dark:hover:bg-white/5 transition-all duration-300 hover:scale-105 active:scale-95 liquid-glass-btn"
 						>
 							{social.title === 'Github' && (
 								<svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">

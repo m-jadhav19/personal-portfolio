@@ -1,9 +1,7 @@
-/* eslint-disable @next/next/no-img-element */
-import React, { useRef, useCallback, useEffect, useState } from 'react'
-import { gsap } from 'gsap'
+import { motion } from 'framer-motion'
 import { useTheme } from 'next-themes'
 
-const WorkCard = ({ img, name, description, url, tags = [] }) => {
+const WorkCard = ({ img, name, description, url, tags = [], onSwipeLeft, onSwipeRight }) => {
 	// Keep the tilt on a separate inner ref so the carousel's 3D
 	// positioning of the outer wrapper never conflicts.
 	const innerRef = useRef(null)
@@ -154,12 +152,26 @@ const WorkCard = ({ img, name, description, url, tags = [] }) => {
 	}
 
 	return (
-		<div
+		<motion.div
 			onMouseMove={handleMouseMove}
 			onMouseEnter={handleMouseEnter}
 			onMouseLeave={handleMouseLeave}
+			onPanEnd={(e, info) => {
+				if (!isTouch) return
+				// Thresholds: distance > 50px OR velocity > 500px/s
+				const threshold = 50
+				const velocityThreshold = 500
+				
+				if (Math.abs(info.offset.x) > threshold || Math.abs(info.velocity.x) > velocityThreshold) {
+					if (info.offset.x < -threshold || info.velocity.x < -velocityThreshold) {
+						onSwipeLeft?.()
+					} else if (info.offset.x > threshold || info.velocity.x > velocityThreshold) {
+						onSwipeRight?.()
+					}
+				}
+			}}
 			className='work-card-outer block'
-			style={{ perspective: '900px' }}
+			style={{ perspective: '900px', touchAction: 'pan-y' }}
 		>
 			{/* Inner wrapper — tilt target */}
 			<a
@@ -251,7 +263,7 @@ const WorkCard = ({ img, name, description, url, tags = [] }) => {
 					</div>
 				</div>
 			</a>
-		</div>
+		</motion.div>
 	)
 }
 

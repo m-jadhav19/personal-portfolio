@@ -302,6 +302,8 @@ export default function Home() {
 										description={project.description}
 										url={project.url}
 										tags={project.tags}
+										onSwipeLeft={goNext}
+										onSwipeRight={goPrev}
 									/>
 								</div>
 							))}

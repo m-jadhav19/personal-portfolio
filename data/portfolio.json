@@ -5,7 +5,7 @@
 	"headerTaglineThree": "Frontend Developer",
 	"headerTaglineFour": "Developer based in Mumbai, India.",
 	"showBlog": false,
-	"showCursor": true,
+	"showCursor": false,
 	"darkMode": true,
 	"socials": [
 		{
