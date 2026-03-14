@@ -69,7 +69,6 @@ const HeroSection = () => {
 				
 				{/* Eyebrow */}
 				<p className="font-geist-mono text-[11px] tracking-[0.18em] uppercase text-black/40 dark:text-white/40 mb-9 flex items-center gap-3 before:block before:w-7 before:h-px before:bg-current before:opacity-50 pointer-events-auto w-fit">
-					portfolio — 2025
 				</p>
 
 				{/* Title block */}
