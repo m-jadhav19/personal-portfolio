@@ -3,7 +3,11 @@ import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { useGSAP } from '@gsap/react'
 import data from '../../data/portfolio.json'
+import dynamic from 'next/dynamic'
 
+const Morph = dynamic(() => import('../Morph'), {
+	ssr: false,
+})
 gsap.registerPlugin(ScrollTrigger)
 
 const HeroSection = () => {
@@ -54,12 +58,17 @@ const HeroSection = () => {
 	return (
 		<section
 			ref={heroRef}
-			className="relative min-h-[85vh] flex flex-col justify-center px-6 tablet:px-12 pt-16 pb-12"
+			className="relative min-h-[85vh] flex flex-col justify-center px-6 tablet:px-12 pt-16 pb-12 overflow-hidden"
 		>
-			<div className="max-w-4xl z-10 w-full tablet:w-5/6 mx-auto tablet:mx-0">
+			{/* Centerpiece Container */}
+			<div className="absolute inset-y-0 right-0 w-full tablet:w-1/2 laptop:w-[45vw] h-full pointer-events-auto z-0 flex items-center justify-center opacity-30 tablet:opacity-100">
+				<Morph />
+			</div>
+
+			<div className="max-w-4xl z-10 w-full tablet:w-5/6 mx-auto tablet:mx-0 relative pointer-events-none">
 				
 				{/* Eyebrow */}
-				<p className="font-geist-mono text-[11px] tracking-[0.18em] uppercase text-black/40 dark:text-white/40 mb-9 flex items-center gap-3 before:block before:w-7 before:h-px before:bg-current before:opacity-50">
+				<p className="font-geist-mono text-[11px] tracking-[0.18em] uppercase text-black/40 dark:text-white/40 mb-9 flex items-center gap-3 before:block before:w-7 before:h-px before:bg-current before:opacity-50 pointer-events-auto w-fit">
 					portfolio — 2025
 				</p>
 
@@ -97,7 +106,7 @@ const HeroSection = () => {
 				</div>
 
 				{/* Socials */}
-				<div ref={socialsRef} className="flex gap-2 flex-wrap">
+				<div ref={socialsRef} className="flex gap-2 flex-wrap pointer-events-auto">
 					{data.socials.map((social) => (
 						<a
 							key={social.id}
@@ -130,7 +139,7 @@ const HeroSection = () => {
 			{/* Scroll indicator */}
 			<div
 				ref={scrollIndicatorRef}
-				className="absolute bottom-8 left-6 tablet:left-12 flex items-center gap-3 opacity-40"
+				className="absolute bottom-8 left-6 tablet:left-12 flex items-center gap-3 opacity-40 z-10"
 			>
 				<div className="w-8 h-px bg-black dark:bg-white" />
 				<span className="font-geist-mono text-[10px] tracking-[0.2em] uppercase text-black/60 dark:text-white/60">scroll</span>
