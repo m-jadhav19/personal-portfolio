@@ -80,9 +80,10 @@ const hexToRgb = (hex) => {
 const isValidHex = (hex) => /^#[0-9A-Fa-f]{6}$/.test(hex)
 
 // ─── Saturation / Brightness canvas picker ───────────────────────────────────
+// Uses pointer capture so dragging works anywhere on screen without
+// needing a separate isDragging flag (no async state delay on first click).
 const SBCanvas = ({hue, sat, bri, onChange}) => {
 	const canvasRef = useRef(null)
-	const [isDragging, setIsDragging] = useState(false)
 
 	const drawCanvas = useCallback(() => {
 		const canvas = canvasRef.current
@@ -122,39 +123,41 @@ const SBCanvas = ({hue, sat, bri, onChange}) => {
 
 	useEffect(() => { drawCanvas() }, [drawCanvas])
 
-	const pick = useCallback((e) => {
+	// Extract s/v from pointer position relative to canvas
+	const getSV = useCallback((e) => {
 		const canvas = canvasRef.current
-		if (!canvas) return
+		if (!canvas) return null
 		const rect = canvas.getBoundingClientRect()
-		const clientX = e.touches ? e.touches[0].clientX : e.clientX
-		const clientY = e.touches ? e.touches[0].clientY : e.clientY
+		// Use offsetX/offsetY when available (more accurate), fall back to client coords
+		const clientX = e.clientX
+		const clientY = e.clientY
 		const s = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width))
 		const v = Math.max(0, Math.min(1, 1 - (clientY - rect.top) / rect.height))
-		onChange(s, v)
-	}, [onChange])
+		return {s, v}
+	}, [])
 
-	useEffect(() => {
-		const handleMove = (e) => {
-			if (isDragging) pick(e)
-		}
-		const handleUp = () => {
-			setIsDragging(false)
-		}
+	const handlePointerDown = useCallback((e) => {
+		e.preventDefault()
+		// Capture pointer so all subsequent move/up events fire on this element
+		// even if the cursor leaves it — no isDragging state needed
+		canvasRef.current.setPointerCapture(e.pointerId)
+		const sv = getSV(e)
+		if (sv) onChange(sv.s, sv.v)
+	}, [getSV, onChange])
 
-		if (isDragging) {
-			window.addEventListener('mousemove', handleMove)
-			window.addEventListener('mouseup', handleUp)
-			window.addEventListener('touchmove', handleMove)
-			window.addEventListener('touchend', handleUp)
-		}
+	const handlePointerMove = useCallback((e) => {
+		// Only fires while pointer is captured (i.e., button held down)
+		if (!canvasRef.current.hasPointerCapture(e.pointerId)) return
+		e.preventDefault()
+		const sv = getSV(e)
+		if (sv) onChange(sv.s, sv.v)
+	}, [getSV, onChange])
 
-		return () => {
-			window.removeEventListener('mousemove', handleMove)
-			window.removeEventListener('mouseup', handleUp)
-			window.removeEventListener('touchmove', handleMove)
-			window.removeEventListener('touchend', handleUp)
+	const handlePointerUp = useCallback((e) => {
+		if (canvasRef.current.hasPointerCapture(e.pointerId)) {
+			canvasRef.current.releasePointerCapture(e.pointerId)
 		}
-	}, [isDragging, pick])
+	}, [])
 
 	return (
 		<canvas
@@ -163,61 +166,59 @@ const SBCanvas = ({hue, sat, bri, onChange}) => {
 			height={140}
 			className="touch-none"
 			style={{width: '100%', height: 140, borderRadius: 8, cursor: 'crosshair', display: 'block'}}
-			onMouseDown={(e) => { setIsDragging(true); pick(e) }}
-			onTouchStart={(e) => { setIsDragging(true); pick(e) }}
+			onPointerDown={handlePointerDown}
+			onPointerMove={handlePointerMove}
+			onPointerUp={handlePointerUp}
 		/>
 	)
 }
 
 // ─── Hue slider ─────────────────────────────────────────────────────────────
+// Same pointer-capture approach — live updates with zero state delay.
 const HueSlider = ({hue, onChange}) => {
 	const trackRef = useRef(null)
-	const [isDragging, setIsDragging] = useState(false)
 
-	const pick = useCallback((e) => {
+	const getHue = useCallback((e) => {
 		const track = trackRef.current
-		if (!track) return
+		if (!track) return null
 		const rect = track.getBoundingClientRect()
-		const clientX = e.touches ? e.touches[0].clientX : e.clientX
-		const h = Math.max(0, Math.min(360, ((clientX - rect.left) / rect.width) * 360))
-		onChange(h)
-	}, [onChange])
+		return Math.max(0, Math.min(360, ((e.clientX - rect.left) / rect.width) * 360))
+	}, [])
 
-	useEffect(() => {
-		const handleMove = (e) => {
-			if (isDragging) pick(e)
-		}
-		const handleUp = () => {
-			setIsDragging(false)
-		}
+	const handlePointerDown = useCallback((e) => {
+		e.preventDefault()
+		trackRef.current.setPointerCapture(e.pointerId)
+		const h = getHue(e)
+		if (h !== null) onChange(h)
+	}, [getHue, onChange])
 
-		if (isDragging) {
-			window.addEventListener('mousemove', handleMove)
-			window.addEventListener('mouseup', handleUp)
-			window.addEventListener('touchmove', handleMove)
-			window.addEventListener('touchend', handleUp)
-		}
+	const handlePointerMove = useCallback((e) => {
+		if (!trackRef.current.hasPointerCapture(e.pointerId)) return
+		e.preventDefault()
+		const h = getHue(e)
+		if (h !== null) onChange(h)
+	}, [getHue, onChange])
 
-		return () => {
-			window.removeEventListener('mousemove', handleMove)
-			window.removeEventListener('mouseup', handleUp)
-			window.removeEventListener('touchmove', handleMove)
-			window.removeEventListener('touchend', handleUp)
+	const handlePointerUp = useCallback((e) => {
+		if (trackRef.current.hasPointerCapture(e.pointerId)) {
+			trackRef.current.releasePointerCapture(e.pointerId)
 		}
-	}, [isDragging, pick])
+	}, [])
 
 	return (
-		<div style={{position: 'relative', height: 14, userSelect: 'none'}}
+		<div
 			ref={trackRef}
 			className="touch-none"
-			onMouseDown={(e) => { setIsDragging(true); pick(e) }}
-			onTouchStart={(e) => { setIsDragging(true); pick(e) }}
+			style={{position: 'relative', height: 14, userSelect: 'none', cursor: 'pointer'}}
+			onPointerDown={handlePointerDown}
+			onPointerMove={handlePointerMove}
+			onPointerUp={handlePointerUp}
 		>
 			<div style={{
 				position: 'absolute', inset: 0,
 				borderRadius: 99,
 				background: 'linear-gradient(to right, hsl(0,100%,50%), hsl(30,100%,50%), hsl(60,100%,50%), hsl(90,100%,50%), hsl(120,100%,50%), hsl(150,100%,50%), hsl(180,100%,50%), hsl(210,100%,50%), hsl(240,100%,50%), hsl(270,100%,50%), hsl(300,100%,50%), hsl(330,100%,50%), hsl(360,100%,50%))',
-				cursor: 'pointer',
+				pointerEvents: 'none',
 			}} />
 			<div style={{
 				position: 'absolute',
@@ -231,7 +232,6 @@ const HueSlider = ({hue, onChange}) => {
 				border: '2.5px solid white',
 				boxShadow: '0 1px 4px rgba(0,0,0,0.4)',
 				pointerEvents: 'none',
-				transition: 'left 0.05s',
 			}} />
 		</div>
 	)
@@ -259,7 +259,6 @@ const FAB = () => {
 	const [selectedColor, setSelectedColor] = useState('#339AF0')
 	const [hexInput, setHexInput] = useState('#339AF0')
 
-	// HSV state for the custom picker
 	const initHsv = hexToHsv('#339AF0')
 	const [hue, setHue] = useState(initHsv.h)
 	const [sat, setSat] = useState(initHsv.s)
@@ -268,22 +267,29 @@ const FAB = () => {
 	const {currentTheme, mounted} = useReliableTheme()
 	const isDark = currentTheme === 'dark'
 
-	// Sync CSS vars whenever selectedColor changes
 	useEffect(() => {
 		if (!mounted) return
 		document.documentElement.style.setProperty('--selected-color', selectedColor)
 		document.documentElement.style.setProperty('--selected-color-rgb', hexToRgb(selectedColor))
 	}, [selectedColor, mounted])
 
-	// When HSV changes → update selectedColor + hexInput
 	const applyHsv = useCallback((h, s, v) => {
 		const hex = hsvToHex(h, s, v)
 		setSelectedColor(hex)
 		setHexInput(hex)
 	}, [])
 
-	const handleHueChange = (h) => { setHue(h); applyHsv(h, sat, bri) }
-	const handleSBChange = (s, v) => { setSat(s); setBri(v); applyHsv(hue, s, v) }
+	// These now fire continuously during drag — no click-lag
+	const handleHueChange = useCallback((h) => {
+		setHue(h)
+		applyHsv(h, sat, bri)
+	}, [sat, bri, applyHsv])
+
+	const handleSBChange = useCallback((s, v) => {
+		setSat(s)
+		setBri(v)
+		applyHsv(hue, s, v)
+	}, [hue, applyHsv])
 
 	const handleHexInput = (val) => {
 		setHexInput(val)
@@ -301,7 +307,6 @@ const FAB = () => {
 		setHue(h); setSat(s); setBri(v)
 	}
 
-	// ── Panel style helpers ──
 	const panelBg = isDark ? 'rgba(10, 10, 10, 0.92)' : 'rgba(253, 251, 247, 0.94)'
 	const borderCol = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'
 	const textCol = isDark ? '#fafafa' : '#1a1a1a'
@@ -311,7 +316,6 @@ const FAB = () => {
 	const tabActiveBg = isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)'
 	const tabActiveCol = isDark ? '#fff' : '#111'
 
-	// ── Preset view ──
 	const PresetView = () => (
 		<motion.div
 			key='preset'
@@ -368,7 +372,6 @@ const FAB = () => {
 		</motion.div>
 	)
 
-	// ── Custom view ──
 	const CustomView = () => (
 		<motion.div
 			key='custom'
@@ -378,7 +381,6 @@ const FAB = () => {
 			transition={{duration: 0.2, type: 'spring', bounce: 0.3}}
 			style={{display: 'flex', flexDirection: 'column', gap: 10}}
 		>
-			{/* Saturation / Brightness canvas */}
 			<SBCanvas
 				hue={hue}
 				sat={sat}
@@ -386,12 +388,10 @@ const FAB = () => {
 				onChange={handleSBChange}
 			/>
 
-			{/* Hue strip */}
 			<div style={{padding: '4px 0'}}>
 				<HueSlider hue={hue} onChange={handleHueChange} />
 			</div>
 
-			{/* Preview swatch + HEX type-in */}
 			<div style={{display: 'flex', alignItems: 'center', gap: 10}}>
 				<div style={{
 					width: 34,
@@ -434,7 +434,6 @@ const FAB = () => {
 		<Popover className='fixed bottom-6 right-6 z-50'>
 			{({open}) => (
 				<>
-					{/* FAB trigger button */}
 					<Popover.Button
 						style={{
 							width: 52,
@@ -486,7 +485,6 @@ const FAB = () => {
 										gap: 14,
 									}}
 								>
-									{/* Header */}
 									<div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
 										<span style={{fontSize: 12, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase', color: subCol}}>Accent Color</span>
 										<div style={{
@@ -499,7 +497,6 @@ const FAB = () => {
 										}} />
 									</div>
 
-									{/* Tab switcher */}
 									<div style={{
 										display: 'flex',
 										background: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)',
@@ -532,12 +529,10 @@ const FAB = () => {
 										))}
 									</div>
 
-									{/* Tab content */}
 									<AnimatePresence mode='wait'>
 										{selectedTab === 'Preset' ? <PresetView /> : <CustomView />}
 									</AnimatePresence>
 
-									{/* Footer: live hex value, color chip */}
 									<div style={{
 										display: 'flex',
 										alignItems: 'center',
