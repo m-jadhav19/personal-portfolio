@@ -5,32 +5,41 @@ import React, {useEffect, useState} from 'react'
 import Button from '../Button'
 
 import data from '../../data/portfolio.json'
-import Image from 'next/image'
 
 const Header = ({handleWorkScroll, handleAboutScroll, isBlog}) => {
 	const router = useRouter()
 	const {theme, setTheme} = useTheme()
 	const [mounted, setMounted] = useState(false)
+	const [scrolled, setScrolled] = useState(false)
 
 	const {name, showBlog, showResume} = data
 
 	useEffect(() => {
 		setMounted(true)
+		const handleScroll = () => setScrolled(window.scrollY > 20)
+		window.addEventListener('scroll', handleScroll, {passive: true})
+		return () => window.removeEventListener('scroll', handleScroll)
 	}, [])
+
+	const isDark = mounted
+		? theme === 'system'
+			? window.matchMedia('(prefers-color-scheme: dark)').matches
+			: theme === 'dark'
+		: false
+
+	const pillClass = `glass-header-pill ${isDark ? 'glass-dark' : 'glass-light'} ${scrolled ? 'glass-scrolled' : ''}`
 
 	const renderThemeChanger = () => {
 		if (!mounted) return null
-		const currentTheme = theme === 'system' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme
-
 		return (
-			<Button onClick={() => setTheme(currentTheme === 'dark' ? 'light' : 'dark')}>
+			<Button onClick={() => setTheme(isDark ? 'light' : 'dark')}>
 				<div
 					className='h-6 w-6 transition-transform duration-300 transform'
 					style={{
-						transform: currentTheme === 'dark' ? 'rotate(0deg)' : 'rotate(360deg)',
+						transform: isDark ? 'rotate(0deg)' : 'rotate(360deg)',
 						color: 'var(--selected-color, #339AF0)'
 					}}>
-					{currentTheme === 'dark' ? (
+					{isDark ? (
 						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-full h-full">
 							<path fillRule="evenodd" d="M9.528 1.718a.75.75 0 0 1 .162.819A8.97 8.97 0 0 0 9 6a9 9 0 0 0 9 9 8.97 8.97 0 0 0 3.463-.69.75.75 0 0 1 .981.98 10.503 10.503 0 0 1-9.694 6.46c-5.799 0-10.5-4.7-10.5-10.5 0-4.368 2.667-8.112 6.46-9.694a.75.75 0 0 1 .818.162Z" clipRule="evenodd" />
 						</svg>
@@ -46,20 +55,19 @@ const Header = ({handleWorkScroll, handleAboutScroll, isBlog}) => {
 
 	return (
 		<>
-			<Popover className='block tablet:hidden px-2 mt-2 sticky top-4 z-10'>
+			{/* ── Mobile ── */}
+			<Popover className='block tablet:hidden px-3 mt-3 sticky top-3 z-50'>
 				{({open}) => (
 					<>
-						<div className={`header-mobile header-extra-wide ${theme === 'dark' ? 'dark' : ''} flex items-center justify-between p-2 laptop:p-0 mx-auto`}>
+						<div className={`${pillClass} flex items-center justify-between px-6 py-2`}>
 							<h1
 								onClick={() => router.push('/')}
 								className='logo-code liquid-glass-logo font-fira-code text-xl font-bold p-2 laptop:p-0 link cursor-pointer'
-								style={{ color: 'var(--selected-color, #339AF0)' }}>
+								style={{color: 'var(--selected-color, #339AF0)'}}>
 								&lt;/MJ&gt;
 							</h1>
-
 							<div className='flex items-center'>
 								{data.darkMode && renderThemeChanger()}
-
 								<Popover.Button>
 									<div
 										className='h-6 w-6 my-auto transition-transform duration-300 transform'
@@ -80,79 +88,63 @@ const Header = ({handleWorkScroll, handleAboutScroll, isBlog}) => {
 								</Popover.Button>
 							</div>
 						</div>
-						<Popover.Panel className={`absolute float-right right-0 z-10 w-fit px-4 py-2 mt-2 mr-3 header-mobile ${theme === 'dark' ? 'dark' : ''} shadow-md rounded-md`}>
-							{!isBlog ? (
-								<div className='grid grid-cols-1'>
-									<Button onClick={handleWorkScroll}>Work</Button>
-									<Button onClick={handleAboutScroll}>About</Button>
-									{showBlog && <Button onClick={() => router.push('/blog')}>Blog</Button>}
-									{showResume && <Button onClick={() => window.open('mailto:jadhavmandar44@gmail.com')}>Resume</Button>}
 
-									<Button onClick={() => window.open('mailto:jadhavmandar44@gmail.com')}>Contact</Button>
-								</div>
-							) : (
-								<div className='grid grid-cols-1'>
-									<Button
-										onClick={() => router.push('/')}
-										classes='first:ml-1'>
-										Home
-									</Button>
-									{showBlog && <Button onClick={() => router.push('/blog')}>Blog</Button>}
-									{showResume && (
-										<Button
-											onClick={() => router.push('/resume')}
-											classes='first:ml-1'>
-											Resume
-										</Button>
-									)}
-
-									<Button onClick={() => window.open('mailto:jadhavmandar44@gmail.com')}>Contact</Button>
-								</div>
-							)}
+						<Popover.Panel className={`absolute right-3 mt-2 w-48 glass-dropdown ${isDark ? 'glass-dark' : 'glass-light'} rounded-2xl overflow-hidden shadow-xl`}>
+							<div className='flex flex-col py-2'>
+								{!isBlog ? (
+									<>
+										<Button onClick={handleWorkScroll}>Work</Button>
+										<Button onClick={handleAboutScroll}>About</Button>
+										{showBlog && <Button onClick={() => router.push('/blog')}>Blog</Button>}
+										{showResume && <Button onClick={() => router.push('/resume')}>Resume</Button>}
+										<Button onClick={() => window.open('mailto:jadhavmandar44@gmail.com')}>Contact</Button>
+									</>
+								) : (
+									<>
+										<Button onClick={() => router.push('/')}>Home</Button>
+										{showBlog && <Button onClick={() => router.push('/blog')}>Blog</Button>}
+										{showResume && <Button onClick={() => router.push('/resume')}>Resume</Button>}
+										<Button onClick={() => window.open('mailto:jadhavmandar44@gmail.com')}>Contact</Button>
+									</>
+								)}
+							</div>
 						</Popover.Panel>
 					</>
 				)}
 			</Popover>
-			<div className={`header-desktop header-extra-wide ${theme === 'dark' ? 'dark' : ''} mt-10 hidden flex-row items-center justify-between sticky top-0 z-10 tablet:flex mx-auto px-2`}>
+
+			{/* ── Desktop ── */}
+			<div className={`${pillClass} hidden tablet:flex items-center justify-between mt-6 mx-auto sticky top-4 z-50 px-6 py-1`}>
 				<h1
 					onClick={() => router.push('/')}
-					className='logo-code liquid-glass-logo font-fira-code text-2xl font-bold cursor-pointer ml-4 mob:p-2 laptop:p-0'
-					style={{ color: 'var(--selected-color, #339AF0)' }}>
+					className='logo-code liquid-glass-logo font-fira-code text-2xl font-bold cursor-pointer ml-2'
+					style={{color: 'var(--selected-color, #339AF0)'}}>
 					&lt;/MJ&gt;
 				</h1>
-				{!isBlog ? (
-					<div className='flex'>
-						<Button onClick={handleWorkScroll}>Work</Button>
-						<Button onClick={handleAboutScroll}>About</Button>
-						{showBlog && <Button onClick={() => router.push('/blog')}>Blog</Button>}
-						{showResume && (
-							<Button
-								onClick={() => router.push('/resume')}
-								classes='first:ml-1'>
-								Resume
-							</Button>
-						)}
 
-						<Button onClick={() => window.open('mailto:jadhavmandar44@gmail.com')}>Contact</Button>
-						{data.darkMode && renderThemeChanger()}
-					</div>
-				) : (
-					<div className='flex'>
-						<Button onClick={() => router.push('/')}>Home</Button>
-						{showBlog && <Button onClick={() => router.push('/blog')}>Blog</Button>}
-						{showResume && (
-							<Button
-								onClick={() => router.push('/resume')}
-								classes='first:ml-1'>
-								Resume
-							</Button>
-						)}
-
-						<Button onClick={() => window.open('mailto:jadhavmandar44@gmail.com')}>Contact</Button>
-
-						{data.darkMode && renderThemeChanger()}
-					</div>
-				)}
+				<div className='flex items-center gap-1.5'>
+					{!isBlog ? (
+						<>
+							<Button onClick={handleWorkScroll}>Work</Button>
+							<Button onClick={handleAboutScroll}>About</Button>
+							{showBlog && <Button onClick={() => router.push('/blog')}>Blog</Button>}
+							{showResume && <Button onClick={() => router.push('/resume')}>Resume</Button>}
+							<Button onClick={() => window.open('mailto:jadhavmandar44@gmail.com')}>Contact</Button>
+						</>
+					) : (
+						<>
+							<Button onClick={() => router.push('/')}>Home</Button>
+							{showBlog && <Button onClick={() => router.push('/blog')}>Blog</Button>}
+							{showResume && <Button onClick={() => router.push('/resume')}>Resume</Button>}
+							<Button onClick={() => window.open('mailto:jadhavmandar44@gmail.com')}>Contact</Button>
+						</>
+					)}
+					{data.darkMode && (
+						<div className="border-l border-white/10 ml-2 pl-2">
+							{renderThemeChanger()}
+						</div>
+					)}
+				</div>
 			</div>
 		</>
 	)

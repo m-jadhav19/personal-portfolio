@@ -272,7 +272,7 @@ export default function Home() {
 						{/* Prev button — tall click zone on far left edge */}
 						<button
 							onClick={goPrev}
-							className='absolute left-0 tablet:left-2 z-30 h-full w-12 tablet:w-16 flex items-center justify-center transition-all duration-300 group/btn hover:bg-white/5 rounded-r-2xl'
+							className='absolute left-0 z-30 h-full w-20 tablet:w-32 flex items-center justify-center transition-all duration-300 group/btn hover:bg-white/5 rounded-r-3xl'
 							aria-label='Previous project'
 						>
 							<div
@@ -312,7 +312,7 @@ export default function Home() {
 						{/* Next button — tall click zone on far right edge */}
 						<button
 							onClick={goNext}
-							className='absolute right-0 tablet:right-2 z-30 h-full w-12 tablet:w-16 flex items-center justify-center transition-all duration-300 group/btn hover:bg-white/5 rounded-l-2xl'
+							className='absolute right-0 z-30 h-full w-20 tablet:w-32 flex items-center justify-center transition-all duration-300 group/btn hover:bg-white/5 rounded-l-3xl'
 							aria-label='Next project'
 						>
 							<div

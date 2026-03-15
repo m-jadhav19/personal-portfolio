@@ -204,301 +204,184 @@ html[data-theme="dark"] .liquid-glass:hover {
 	border-color: rgba(255, 255, 255, 0.3);
 }
 
-/* Liquid Glass Effect for Header - Highly Visible */
-.liquid-glass-header {
-	position: relative;
-	overflow: hidden;
-	background: rgba(255, 255, 255, 0.25);
-	-webkit-backdrop-filter: blur(20px) saturate(180%);
-	backdrop-filter: blur(20px) saturate(180%);
-	border: 1.5px solid rgba(255, 255, 255, 0.4);
-	padding: 0.5rem;
-	box-shadow: 
-		0 10px 40px rgba(0, 0, 0, 0.25),
-		0 4px 12px rgba(0, 0, 0, 0.15),
-		0 0 0 1px rgba(255, 255, 255, 0.1),
-		inset 0 1px 0 rgba(255, 255, 255, 0.5),
-		inset 0 -1px 0 rgba(255, 255, 255, 0.1);
-	transition: all 0.3s ease-out;
+/* =======================================================================
+   GLASSMORPHISM HEADER SYSTEM
+   Replace the old .header-mobile / .header-desktop / .liquid-glass-header
+   blocks in globals.css with this entire block.
+
+   KEY FIX: opacity must be low enough (~0.35–0.45) for backdrop-filter
+   blur to be visually apparent. A 75%+ opaque background just looks solid.
+   ======================================================================= */
+
+/* ── 1. Pill shell ─────────────────────────────────────────────────────── */
+.glass-header-pill {
+  width: 98%;
+  border-radius: 9999px;
+  position: relative;
+  isolation: isolate;
+  /* !! Do NOT use overflow:hidden — it can clip backdrop-filter in some browsers */
+  transition:
+    background      0.35s ease,
+    border-color    0.35s ease,
+    box-shadow      0.35s ease;
 }
 
-.liquid-glass-header.dark {
-	background: rgba(0, 0, 0, 0.35);
-	border: 1.5px solid rgba(255, 255, 255, 0.2);
-	box-shadow: 
-		0 10px 40px rgba(0, 0, 0, 0.5),
-		0 4px 12px rgba(0, 0, 0, 0.3),
-		0 0 0 1px rgba(255, 255, 255, 0.05),
-		inset 0 1px 0 rgba(255, 255, 255, 0.2),
-		inset 0 -1px 0 rgba(255, 255, 255, 0.05);
+/* Inner shimmer — the diagonal highlight that makes flat glass read as glass */
+.glass-header-pill::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    120deg,
+    rgba(255,255,255,0.12) 0%,
+    rgba(255,255,255,0.02) 45%,
+    rgba(255,255,255,0.07) 100%
+  );
+  pointer-events: none;
+  z-index: 0;
 }
 
-.liquid-glass-header:hover {
-	background: rgba(255, 255, 255, 0.3);
-	border-color: rgba(255, 255, 255, 0.5);
-	box-shadow: 
-		0 16px 60px rgba(0, 0, 0, 0.3),
-		0 6px 20px rgba(0, 0, 0, 0.2),
-		0 0 0 1px rgba(255, 255, 255, 0.15),
-		inset 0 1px 0 rgba(255, 255, 255, 0.6),
-		inset 0 -1px 0 rgba(255, 255, 255, 0.15);
+/* Top specular edge — simulates glass catching light */
+.glass-header-pill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 5%;
+  width: 90%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255,255,255,0.35) 30%,
+    rgba(255,255,255,0.50) 50%,
+    rgba(255,255,255,0.35) 70%,
+    transparent
+  );
+  border-radius: 9999px;
+  pointer-events: none;
+  z-index: 0;
 }
 
-.liquid-glass-header.dark:hover {
-	background: rgba(0, 0, 0, 0.45);
-	border-color: rgba(255, 255, 255, 0.25);
-	box-shadow: 
-		0 16px 60px rgba(0, 0, 0, 0.6),
-		0 6px 20px rgba(0, 0, 0, 0.4),
-		0 0 0 1px rgba(255, 255, 255, 0.08),
-		inset 0 1px 0 rgba(255, 255, 255, 0.25),
-		inset 0 -1px 0 rgba(255, 255, 255, 0.08);
+/* All direct children sit above pseudo layers */
+.glass-header-pill > * { position: relative; z-index: 1; }
+
+
+/* ── 2. Light theme ────────────────────────────────────────────────────── */
+.glass-header-pill.glass-light {
+  background: rgba(255, 255, 255, 0.30);    /* low opacity = glass shows    */
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  box-shadow:
+    inset 0  1px  0 rgba(255,255,255,0.60),
+    inset 0 -1px  0 rgba(0,0,0,0.05),
+    0  8px 32px -4px rgba(0,0,0,0.12),
+    0  2px  8px -2px rgba(0,0,0,0.08);
 }
 
-.liquid-glass-header::before {
-	content: '';
-	position: absolute;
-	top: 0;
-	left: -100%;
-	width: 100%;
-	height: 100%;
-	background: linear-gradient(
-		90deg,
-		transparent,
-		rgba(255, 255, 255, 0.1),
-		transparent
-	);
-	transition: left 0.5s ease-out;
-	pointer-events: none;
-	z-index: 1;
+
+/* ── 3. Dark theme — transparent enough to show background blur ─────────── */
+.glass-header-pill.glass-dark {
+  background: rgba(15, 20, 35, 0.40);       /* ← 40% opacity, not 75%       */
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  box-shadow:
+    /* top specular highlight */
+    inset 0  1px  0 rgba(255,255,255,0.12),
+    /* bottom edge depth */
+    inset 0 -1px  0 rgba(0,0,0,0.30),
+    /* ambient drop shadow */
+    0  8px 32px -4px rgba(0,0,0,0.50),
+    0  2px 10px -2px rgba(0,0,0,0.35);
 }
 
-.liquid-glass-header:hover::before {
-	left: 100%;
+
+/* ── 4. Scrolled — slightly more opaque once page content is behind it ──── */
+.glass-header-pill.glass-scrolled.glass-light {
+  background: rgba(255, 255, 255, 0.45);
+  backdrop-filter: blur(28px) saturate(200%);
+  -webkit-backdrop-filter: blur(28px) saturate(200%);
+  box-shadow:
+    inset 0  1px  0 rgba(255,255,255,0.70),
+    0 10px 40px -4px rgba(0,0,0,0.15),
+    0  4px 14px -4px rgba(0,0,0,0.10);
 }
 
-.liquid-glass-header.dark::before {
-	background: linear-gradient(
-		90deg,
-		transparent,
-		rgba(255, 255, 255, 0.05),
-		transparent
-	);
+.glass-header-pill.glass-scrolled.glass-dark {
+  background: rgba(15, 20, 35, 0.58);       /* bumps up when scrolled, but  */
+  backdrop-filter: blur(28px) saturate(170%); /* still shows blur behind      */
+  -webkit-backdrop-filter: blur(28px) saturate(170%);
+  box-shadow:
+    inset 0  1px  0 rgba(255,255,255,0.14),
+    inset 0 -1px  0 rgba(0,0,0,0.40),
+    0 12px 44px -4px rgba(0,0,0,0.70),
+    0  4px 16px -4px rgba(0,0,0,0.50);
 }
 
-/* Header-specific liquid glass styles - Highly Visible */
-.header-mobile {
-	background: rgba(255, 255, 255, 0.25);
-	-webkit-backdrop-filter: blur(20px) saturate(180%);
-	backdrop-filter: blur(20px) saturate(180%);
-	border: 1.5px solid rgba(255, 255, 255, 0.4);
-	border-radius: 0.75rem;
-	box-shadow: 
-		0 10px 40px rgba(0, 0, 0, 0.25),
-		0 4px 12px rgba(0, 0, 0, 0.15),
-		0 0 0 1px rgba(255, 255, 255, 0.1),
-		inset 0 1px 0 rgba(255, 255, 255, 0.5),
-		inset 0 -1px 0 rgba(255, 255, 255, 0.1);
-	overflow: hidden;
-	position: relative;
-	transition: all 0.3s ease-out;
+
+/* ── 5. Contact button — outline only at rest, subtle fill on hover ──────── */
+.glass-contact-btn {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 0.35rem 1rem;
+  border-radius: 9999px;
+  border: 1.5px solid var(--selected-color, #339AF0);
+  background: transparent;
+  color: var(--selected-color, #339AF0);
+  cursor: pointer;
+  transition:
+    background  0.2s ease,
+    box-shadow  0.2s ease,
+    transform   0.15s ease;
 }
 
-.header-mobile:hover {
-	background: rgba(255, 255, 255, 0.3);
-	border-color: rgba(255, 255, 255, 0.5);
-	box-shadow: 
-		0 16px 60px rgba(0, 0, 0, 0.3),
-		0 6px 20px rgba(0, 0, 0, 0.2),
-		0 0 0 1px rgba(255, 255, 255, 0.15),
-		inset 0 1px 0 rgba(255, 255, 255, 0.6),
-		inset 0 -1px 0 rgba(255, 255, 255, 0.15);
+.glass-contact-btn:hover {
+  background: rgba(var(--selected-color-rgb, 51,154,240), 0.12);
+  box-shadow: 0 0 16px rgba(var(--selected-color-rgb, 51,154,240), 0.20);
+  transform: translateY(-1px);
 }
 
-.header-mobile.dark {
-	background: rgba(0, 0, 0, 0.35);
-	border: 1.5px solid rgba(255, 255, 255, 0.2);
-	box-shadow: 
-		0 10px 40px rgba(0, 0, 0, 0.5),
-		0 4px 12px rgba(0, 0, 0, 0.3),
-		0 0 0 1px rgba(255, 255, 255, 0.05),
-		inset 0 1px 0 rgba(255, 255, 255, 0.2),
-		inset 0 -1px 0 rgba(255, 255, 255, 0.05);
+.glass-contact-btn:active {
+  transform: translateY(0);
 }
 
-.header-mobile.dark:hover {
-	background: rgba(0, 0, 0, 0.45);
-	border-color: rgba(255, 255, 255, 0.25);
-	box-shadow: 
-		0 16px 60px rgba(0, 0, 0, 0.6),
-		0 6px 20px rgba(0, 0, 0, 0.4),
-		0 0 0 1px rgba(255, 255, 255, 0.08),
-		inset 0 1px 0 rgba(255, 255, 255, 0.25),
-		inset 0 -1px 0 rgba(255, 255, 255, 0.08);
+
+/* ── 6. Mobile dropdown ─────────────────────────────────────────────────── */
+.glass-dropdown {
+  border: 1px solid transparent;
+  animation: glassDropIn 0.18s cubic-bezier(0.34,1.56,0.64,1) both;
 }
 
-/* Shine effect like buttons */
-.header-mobile::before {
-	content: '';
-	position: absolute;
-	top: 0;
-	left: -100%;
-	width: 100%;
-	height: 100%;
-	background: linear-gradient(
-		90deg,
-		transparent,
-		rgba(255, 255, 255, 0.1),
-		transparent
-	);
-	transition: left 0.5s ease-out;
-	pointer-events: none;
-	z-index: 1;
+.glass-dropdown.glass-light {
+  background: rgba(255,255,255,0.55);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border-color: rgba(255,255,255,0.65);
+  box-shadow: 0 16px 48px rgba(0,0,0,0.12);
 }
 
-.header-mobile:hover::before {
-	left: 100%;
+.glass-dropdown.glass-dark {
+  background: rgba(15,20,35,0.65);
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  border-color: rgba(255,255,255,0.10);
+  box-shadow: 0 16px 48px rgba(0,0,0,0.60);
 }
 
-.header-mobile.dark::before {
-	background: linear-gradient(
-		90deg,
-		transparent,
-		rgba(255, 255, 255, 0.05),
-		transparent
-	);
+@keyframes glassDropIn {
+  from { opacity: 0; transform: translateY(-8px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0)    scale(1);    }
 }
 
-.header-mobile::after {
-	display: none;
+/* ── Put everything above the pill's ::before pseudo ── */
+.glass-header-pill > * {
+  position: relative;
+  z-index: 1;
 }
 
-.header-desktop {
-	background: rgba(255, 255, 255, 0.25);
-	-webkit-backdrop-filter: blur(20px) saturate(180%);
-	backdrop-filter: blur(20px) saturate(180%);
-	border: 1.5px solid rgba(255, 255, 255, 0.4);
-	border-radius: 0.75rem;
-	box-shadow: 
-		0 10px 40px rgba(0, 0, 0, 0.25),
-		0 4px 12px rgba(0, 0, 0, 0.15),
-		0 0 0 1px rgba(255, 255, 255, 0.1),
-		inset 0 1px 0 rgba(255, 255, 255, 0.5),
-		inset 0 -1px 0 rgba(255, 255, 255, 0.1);
-	overflow: hidden;
-	position: relative;
-	transition: all 0.3s ease-out;
-}
-
-.header-desktop:hover {
-	background: rgba(255, 255, 255, 0.3);
-	border-color: rgba(255, 255, 255, 0.5);
-	box-shadow: 
-		0 16px 60px rgba(0, 0, 0, 0.3),
-		0 6px 20px rgba(0, 0, 0, 0.2),
-		0 0 0 1px rgba(255, 255, 255, 0.15),
-		inset 0 1px 0 rgba(255, 255, 255, 0.6),
-		inset 0 -1px 0 rgba(255, 255, 255, 0.15);
-}
-
-.header-desktop.dark {
-	background: rgba(0, 0, 0, 0.35);
-	border: 1.5px solid rgba(255, 255, 255, 0.2);
-	box-shadow: 
-		0 10px 40px rgba(0, 0, 0, 0.5),
-		0 4px 12px rgba(0, 0, 0, 0.3),
-		0 0 0 1px rgba(255, 255, 255, 0.05),
-		inset 0 1px 0 rgba(255, 255, 255, 0.2),
-		inset 0 -1px 0 rgba(255, 255, 255, 0.05);
-}
-
-.header-desktop.dark:hover {
-	background: rgba(0, 0, 0, 0.45);
-	border-color: rgba(255, 255, 255, 0.25);
-	box-shadow: 
-		0 16px 60px rgba(0, 0, 0, 0.6),
-		0 6px 20px rgba(0, 0, 0, 0.4),
-		0 0 0 1px rgba(255, 255, 255, 0.08),
-		inset 0 1px 0 rgba(255, 255, 255, 0.25),
-		inset 0 -1px 0 rgba(255, 255, 255, 0.08);
-}
-
-/* Shine effect like buttons */
-.header-desktop::before {
-	content: '';
-	position: absolute;
-	top: 0;
-	left: -100%;
-	width: 100%;
-	height: 100%;
-	background: linear-gradient(
-		90deg,
-		transparent,
-		rgba(255, 255, 255, 0.1),
-		transparent
-	);
-	transition: left 0.5s ease-out;
-	pointer-events: none;
-	z-index: 1;
-}
-
-.header-desktop:hover::before {
-	left: 100%;
-}
-
-.header-desktop.dark::before {
-	background: linear-gradient(
-		90deg,
-		transparent,
-		rgba(255, 255, 255, 0.05),
-		transparent
-	);
-}
-
-.header-desktop::after {
-	display: none;
-}
-
-/* Custom Wide Header Styles */
-.header-mobile.w-11\/12 {
-	width: 91.666667%;
-	max-width: none;
-}
-
-.header-desktop.w-11\/12 {
-	width: 91.666667%;
-	max-width: none;
-}
-
-/* Extra Wide Header Option */
-.header-extra-wide {
-	width: 98% !important;
-	max-width: none !important;
-}
-
-/* Shine animation effect */
-.header-mobile .shine-effect,
-.header-desktop .shine-effect {
-	position: absolute;
-	top: 0;
-	left: -100%;
-	width: 100%;
-	height: 100%;
-	background: linear-gradient(
-		90deg,
-		transparent,
-		rgba(255, 255, 255, 0.15),
-		transparent
-	);
-	transition: left 0.6s ease-out;
-	pointer-events: none;
-	z-index: 2;
-}
-
-.header-mobile:hover .shine-effect,
-.header-desktop:hover .shine-effect {
-	left: 100%;
-}
 
 /* Ripple Effect for WorkCard */
 .ripple-container {
@@ -649,22 +532,17 @@ html[data-theme="light"] {
 }
 
 /* Aggressive dark mode enforcement - Apply immediately before React loads */
-html[data-theme="dark"] .liquid-glass-header,
-html.dark .liquid-glass-header,
-html[data-theme="dark"] .header-mobile,
-html.dark .header-mobile,
-html[data-theme="dark"] .header-desktop,
-html.dark .header-desktop {
-	background: rgba(0, 0, 0, 0.35) !important;
-	border: 1.5px solid rgba(255, 255, 255, 0.2) !important;
-	box-shadow: 
-		0 10px 40px rgba(0, 0, 0, 0.5),
-		0 4px 12px rgba(0, 0, 0, 0.3),
-		0 0 0 1px rgba(255, 255, 255, 0.05),
-		inset 0 1px 0 rgba(255, 255, 255, 0.2),
-		inset 0 -1px 0 rgba(255, 255, 255, 0.05) !important;
-	backdrop-filter: blur(20px) saturate(180%) !important;
-	-webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+html[data-theme="dark"] .glass-header-pill.glass-dark,
+html.dark .glass-header-pill.glass-dark {
+  background: rgba(12, 12, 20, 0.75) !important;
+  border: 1px solid rgba(255, 255, 255, 0.10) !important;
+  box-shadow:
+    inset 0  1px  0 rgba(255,255,255,0.10),
+    inset 0 -1px  0 rgba(0,0,0,0.40),
+    0 10px 40px -4px rgba(0,0,0,0.65),
+    0  4px 14px -4px rgba(0,0,0,0.50) !important;
+  backdrop-filter: blur(28px) saturate(160%) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(160%) !important;
 }
 
 /* Light mode enforcement - Same as header */
