@@ -2,7 +2,7 @@ import React, {useEffect, useState} from 'react'
 import {useTheme} from 'next-themes'
 import data from '../../data/portfolio.json'
 
-const Button = ({children, type, onClick, classes}) => {
+const Button = ({children, type, onClick, classes, useSelectedColor}) => {
 	const {theme} = useTheme()
 	const [selectedColor, setSelectedColor] = useState('#339AF0')
 	const [isHovered, setIsHovered] = useState(false)
@@ -45,7 +45,7 @@ const Button = ({children, type, onClick, classes}) => {
 				} ${classes}`}
 				style={{
 					backgroundColor: selectedColor,
-					color: theme === 'dark' ? 'white' : 'black'
+					color: useSelectedColor ? selectedColor : (theme === 'dark' ? 'white' : 'black')
 				}}>
 				{children}
 			</button>
@@ -61,7 +61,7 @@ const Button = ({children, type, onClick, classes}) => {
 				theme === 'dark' ? 'dark' : ''
 			} ${data.showCursor && 'cursor-none'} ${classes} link`}
 			style={{
-				color: theme === 'dark' ? 'white' : 'black',
+				color: useSelectedColor ? selectedColor : (theme === 'dark' ? 'white' : 'black'),
 				backgroundColor: isHovered ? `${selectedColor}20` : 'transparent',
 			}}>
 			{children}

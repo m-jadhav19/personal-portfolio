@@ -93,18 +93,18 @@ const Header = ({handleWorkScroll, handleAboutScroll, isBlog}) => {
 							<div className='flex flex-col py-2'>
 								{!isBlog ? (
 									<>
-										<Button onClick={handleWorkScroll}>Work</Button>
-										<Button onClick={handleAboutScroll}>About</Button>
+										<Button onClick={handleWorkScroll} useSelectedColor={true}>Work</Button>
+										<Button onClick={handleAboutScroll} useSelectedColor={true}>About</Button>
 										{showBlog && <Button onClick={() => router.push('/blog')}>Blog</Button>}
 										{showResume && <Button onClick={() => router.push('/resume')}>Resume</Button>}
-										<Button onClick={() => window.open('mailto:jadhavmandar44@gmail.com')}>Contact</Button>
+										<Button onClick={() => window.open('mailto:jadhavmandar44@gmail.com')} useSelectedColor={true}>Contact</Button>
 									</>
 								) : (
 									<>
-										<Button onClick={() => router.push('/')}>Home</Button>
+										<Button onClick={() => router.push('/')} useSelectedColor={true}>Home</Button>
 										{showBlog && <Button onClick={() => router.push('/blog')}>Blog</Button>}
 										{showResume && <Button onClick={() => router.push('/resume')}>Resume</Button>}
-										<Button onClick={() => window.open('mailto:jadhavmandar44@gmail.com')}>Contact</Button>
+										<Button onClick={() => window.open('mailto:jadhavmandar44@gmail.com')} useSelectedColor={true}>Contact</Button>
 									</>
 								)}
 							</div>
@@ -122,21 +122,21 @@ const Header = ({handleWorkScroll, handleAboutScroll, isBlog}) => {
 					&lt;/MJ&gt;
 				</h1>
 
-				<div className='flex items-center gap-1.5'>
+				<div className='flex items-center gap-1.5 font-[550]'>
 					{!isBlog ? (
 						<>
-							<Button onClick={handleWorkScroll}>Work</Button>
-							<Button onClick={handleAboutScroll}>About</Button>
+							<Button onClick={handleWorkScroll} useSelectedColor={true}>Work</Button>
+							<Button onClick={handleAboutScroll} useSelectedColor={true}>About</Button>
 							{showBlog && <Button onClick={() => router.push('/blog')}>Blog</Button>}
 							{showResume && <Button onClick={() => router.push('/resume')}>Resume</Button>}
-							<Button onClick={() => window.open('mailto:jadhavmandar44@gmail.com')}>Contact</Button>
+							<Button onClick={() => window.open('mailto:jadhavmandar44@gmail.com')} useSelectedColor={true}>Contact</Button>
 						</>
 					) : (
 						<>
-							<Button onClick={() => router.push('/')}>Home</Button>
+							<Button onClick={() => router.push('/')} useSelectedColor={true}>Home</Button>
 							{showBlog && <Button onClick={() => router.push('/blog')}>Blog</Button>}
 							{showResume && <Button onClick={() => router.push('/resume')}>Resume</Button>}
-							<Button onClick={() => window.open('mailto:jadhavmandar44@gmail.com')}>Contact</Button>
+							<Button onClick={() => window.open('mailto:jadhavmandar44@gmail.com')} useSelectedColor={true}>Contact</Button>
 						</>
 					)}
 					{data.darkMode && (
