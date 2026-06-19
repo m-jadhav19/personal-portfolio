@@ -431,7 +431,7 @@ const FAB = () => {
 	if (!mounted) return null
 
 	return (
-		<Popover className='fixed bottom-6 right-6 z-50'>
+		<Popover className='fixed bottom-20 tablet:bottom-6 right-5 tablet:right-6 z-50' style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
 			{({open}) => (
 				<>
 					<Popover.Button
@@ -472,7 +472,8 @@ const FAB = () => {
 										position: 'absolute',
 										bottom: 64,
 										right: 0,
-										width: 272,
+										width: 'min(272px, calc(100vw - 2rem))',
+										maxWidth: 'calc(100vw - 2rem)',
 										borderRadius: 16,
 										background: panelBg,
 										border: `1px solid ${borderCol}`,

@@ -75,6 +75,19 @@
 
 
 
+.markdown-class pre,
+.markdown-class code {
+  @apply overflow-x-auto;
+}
+
+.markdown-class pre {
+  @apply p-4 rounded-lg;
+}
+
+.markdown-class code {
+  @apply text-sm;
+}
+
 /* Image */
 
 .markdown-class img {

@@ -4,20 +4,15 @@ import { gsap } from 'gsap'
 import { motion } from 'framer-motion'
 import { useTheme } from 'next-themes'
 
-const WorkCard = ({ img, name, description, url, tags = [], onSwipeLeft, onSwipeRight }) => {
-	// Keep the tilt on a separate inner ref so the carousel's 3D
-	// positioning of the outer wrapper never conflicts.
+const WorkCard = ({ img, name, description, url, tags = [], isActive = false, onSwipeLeft, onSwipeRight }) => {
 	const innerRef = useRef(null)
 	const glareRef = useRef(null)
 	const { theme } = useTheme()
 	const [mounted, setMounted] = useState(false)
 	const [isTouch, setIsTouch] = useState(false)
-	const [isTapped, setIsTapped] = useState(false)
-	const tapTimeoutRef = useRef(null)
 
 	useEffect(() => setMounted(true), [])
 
-	// Detect touch devices
 	useEffect(() => {
 		const checkTouch = () => {
 			setIsTouch(('ontouchstart' in window) || (navigator.maxTouchPoints > 0))
@@ -29,20 +24,34 @@ const WorkCard = ({ img, name, description, url, tags = [], onSwipeLeft, onSwipe
 
 	const href = url || '#'
 	const isExternal = href !== '#'
-	// Only evaluate after mount — avoids undefined theme on first render
 	const isDark = !mounted || theme === 'dark' || (!theme && typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches)
 
 	const raf = useRef(null)
 	const current = useRef({ rotX: 0, rotY: 0, glareX: 50, glareY: 50 })
 	const target  = useRef({ rotX: 0, rotY: 0, glareX: 50, glareY: 50 })
 
-	// Lerp-based smooth tilt — runs in requestAnimationFrame
+	const cardStyle = {
+		transformStyle: 'preserve-3d',
+		willChange: 'transform',
+		background: isDark
+			? 'rgba(15, 15, 20, 0.7)'
+			: 'rgba(255, 255, 255, 0.75)',
+		backdropFilter: 'blur(16px)',
+		WebkitBackdropFilter: 'blur(16px)',
+		border: isDark
+			? '1px solid rgba(255, 255, 255, 0.08)'
+			: '1px solid rgba(0, 0, 0, 0.06)',
+		boxShadow: isDark
+			? '0 20px 60px rgba(0,0,0,0.5), 0 4px 16px rgba(0,0,0,0.3)'
+			: '0 20px 60px rgba(0,0,0,0.12), 0 4px 16px rgba(0,0,0,0.06)',
+	}
+
 	const startLerp = useCallback(() => {
-		if (raf.current || isTouch) return // Disable 3D tilt lerp on mobile
+		if (raf.current || isTouch) return
 		const loop = () => {
 			const c = current.current
 			const t = target.current
-			const factor = 0.12 // lower = more inertia
+			const factor = 0.12
 
 			c.rotX   += (t.rotX   - c.rotX)   * factor
 			c.rotY   += (t.rotY   - c.rotY)   * factor
@@ -65,7 +74,6 @@ const WorkCard = ({ img, name, description, url, tags = [], onSwipeLeft, onSwipe
 				})
 			}
 
-			// Stop the loop once settled
 			const settled =
 				Math.abs(t.rotX - c.rotX) < 0.01 &&
 				Math.abs(t.rotY - c.rotY) < 0.01
@@ -86,7 +94,6 @@ const WorkCard = ({ img, name, description, url, tags = [], onSwipeLeft, onSwipe
 		const y = e.clientY - rect.top
 		const cx = rect.width  / 2
 		const cy = rect.height / 2
-		// Gentle tilt: ±8 degrees max
 		target.current.rotX   = -((y - cy) / cy) * 8
 		target.current.rotY   =  ((x - cx) / cx) * 8
 		target.current.glareX = (x / rect.width)  * 100
@@ -110,7 +117,6 @@ const WorkCard = ({ img, name, description, url, tags = [], onSwipeLeft, onSwipe
 
 	const handleMouseLeave = () => {
 		if (isTouch) return
-		// Smoothly reset the targets
 		target.current = { rotX: 0, rotY: 0, glareX: 50, glareY: 50 }
 		startLerp()
 
@@ -126,33 +132,67 @@ const WorkCard = ({ img, name, description, url, tags = [], onSwipeLeft, onSwipe
 		}
 	}
 
-	const handleClick = (e) => {
-		// If on a mouse device, just act as a normal link
-		if (!isTouch) return
+	const cardContent = (
+		<>
+			<div
+				ref={glareRef}
+				className='absolute inset-0 rounded-2xl pointer-events-none opacity-0'
+				style={{ zIndex: 1, transition: 'opacity 0.3s' }}
+			/>
 
-		// On mobile, block the default link behavior
-		e.preventDefault()
+			<div className='relative rounded-xl overflow-hidden aspect-[16/10] mb-4 pointer-events-none' style={{ zIndex: 2 }}>
+				<img
+					alt={name}
+					src={img}
+					className='w-full h-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.33,1,0.68,1)] group-hover:scale-105'
+				/>
+				{!isTouch && (
+					<>
+						<div className='absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-400 ease-out' />
+						<div className='absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-400 ease-out' style={{ zIndex: 3 }}>
+							<span
+								className='px-4 py-1.5 rounded-full text-white text-xs font-semibold tracking-wide shadow-xl'
+								style={{ background: 'var(--selected-color, #339AF0)', backdropFilter: 'blur(8px)' }}
+							>
+								View Project ↗
+							</span>
+						</div>
+					</>
+				)}
+			</div>
 
-		if (isTapped) {
-			// Second tap: Follow the link
-			if (isExternal) {
-				window.open(href, '_blank', 'noopener,noreferrer')
-			} else {
-				window.location.href = href
-			}
-			setIsTapped(false)
-			if (tapTimeoutRef.current) clearTimeout(tapTimeoutRef.current)
-		} else {
-			// First tap: Show action state
-			setIsTapped(true)
-			
-			// Reset back to untapped state after 3 seconds
-			if (tapTimeoutRef.current) clearTimeout(tapTimeoutRef.current)
-			tapTimeoutRef.current = setTimeout(() => {
-				setIsTapped(false)
-			}, 3000)
-		}
-	}
+			<div className='space-y-2' style={{ zIndex: 2, position: 'relative', pointerEvents: 'none' }}>
+				<h3
+					className='text-lg font-bold tracking-tight'
+					style={{ color: isDark ? '#f0f0f0' : '#111', transition: 'color 0.3s' }}
+				>
+					{name || 'Project Name'}
+				</h3>
+				<p
+					className='text-xs line-clamp-2 leading-relaxed'
+					style={{ color: isDark ? 'rgba(200,200,210,0.7)' : 'rgba(50,50,60,0.65)' }}
+				>
+					{description || 'Description'}
+				</p>
+
+				<div className='flex flex-wrap gap-1.5 pt-1.5'>
+					{tags.map((tag, i) => (
+						<span
+							key={i}
+							className='px-2 py-0.5 text-[11px] font-semibold tracking-wider uppercase rounded-md'
+							style={{
+								background: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.05)',
+								border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'}`,
+								color: isDark ? 'rgba(200,200,210,0.7)' : 'rgba(50,50,60,0.65)',
+							}}
+						>
+							{tag}
+						</span>
+					))}
+				</div>
+			</div>
+		</>
+	)
 
 	return (
 		<motion.div
@@ -161,10 +201,9 @@ const WorkCard = ({ img, name, description, url, tags = [], onSwipeLeft, onSwipe
 			onMouseLeave={handleMouseLeave}
 			onPanEnd={(e, info) => {
 				if (!isTouch) return
-				// Thresholds: distance > 50px OR velocity > 500px/s
 				const threshold = 50
 				const velocityThreshold = 500
-				
+
 				if (Math.abs(info.offset.x) > threshold || Math.abs(info.velocity.x) > velocityThreshold) {
 					if (info.offset.x < -threshold || info.velocity.x < -velocityThreshold) {
 						onSwipeLeft?.()
@@ -176,96 +215,40 @@ const WorkCard = ({ img, name, description, url, tags = [], onSwipeLeft, onSwipe
 			className='work-card-outer block'
 			style={{ perspective: '900px', touchAction: 'pan-y' }}
 		>
-			{/* Inner wrapper — tilt target */}
-			<a
-				href={href}
-				onClick={handleClick}
-				{...(isExternal && !isTouch && { target: '_blank', rel: 'noopener noreferrer' })}
-				ref={innerRef}
-				className={`work-card-inner group block relative no-underline rounded-2xl overflow-hidden p-4 ${isTapped ? 'is-tapped' : ''}`}
-				style={{
-					transformStyle: 'preserve-3d',
-					willChange: 'transform',
-					background: isDark
-						? 'rgba(15, 15, 20, 0.7)'
-						: 'rgba(255, 255, 255, 0.75)',
-					backdropFilter: 'blur(16px)',
-					WebkitBackdropFilter: 'blur(16px)',
-					border: isDark
-						? '1px solid rgba(255, 255, 255, 0.08)'
-						: '1px solid rgba(0, 0, 0, 0.06)',
-					boxShadow: isDark
-						? '0 20px 60px rgba(0,0,0,0.5), 0 4px 16px rgba(0,0,0,0.3)'
-						: '0 20px 60px rgba(0,0,0,0.12), 0 4px 16px rgba(0,0,0,0.06)',
-				}}
-			>
-				{/* Glare overlay */}
+			{isTouch ? (
 				<div
-					ref={glareRef}
-					className='absolute inset-0 rounded-2xl pointer-events-none opacity-0'
-					style={{ zIndex: 1, transition: 'opacity 0.3s' }}
-				/>
-
-				{/* Image */}
-				<div className='relative rounded-xl overflow-hidden aspect-[16/10] mb-4 pointer-events-none' style={{ zIndex: 2 }}>
-					<img
-						alt={name}
-						src={img}
-						className='w-full h-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.33,1,0.68,1)] group-hover:scale-105 group-[.is-tapped]:scale-105'
-					/>
-					{/* Dark overlay on hover/tap via CSS class on parent */}
-					<div
-						className='absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 group-[.is-tapped]:opacity-100 transition-opacity duration-400 ease-out'
-					/>
-					{/* Visit label */}
-					<div
-						className='absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 group-[.is-tapped]:opacity-100 transition-opacity duration-400 ease-out'
-						style={{ zIndex: 3 }}
-					>
-						<span
-							className='px-4 py-1.5 rounded-full text-white text-xs font-semibold tracking-wide shadow-xl'
-							style={{ background: 'var(--selected-color, #339AF0)', backdropFilter: 'blur(8px)' }}
-						>
-							{isTouch ? (isTapped ? 'Tap again to open ↗' : 'View Project') : 'View Project ↗'}
-						</span>
-					</div>
+					ref={innerRef}
+					className='work-card-inner group block relative no-underline rounded-2xl overflow-hidden p-4'
+					style={cardStyle}
+				>
+					{cardContent}
 				</div>
+			) : (
+				<a
+					href={href}
+					{...(isExternal && { target: '_blank', rel: 'noopener noreferrer' })}
+					ref={innerRef}
+					className='work-card-inner group block relative no-underline rounded-2xl overflow-hidden p-4'
+					style={cardStyle}
+				>
+					{cardContent}
+				</a>
+			)}
 
-				{/* Text */}
-				<div className='space-y-2' style={{ zIndex: 2, position: 'relative', pointerEvents: 'none' }}>
-					<h3
-						className='text-lg font-bold tracking-tight'
-						style={{
-							color: isDark ? '#f0f0f0' : '#111',
-							transition: 'color 0.3s',
-						}}
-					>
-						{name || 'Project Name'}
-					</h3>
-					<p
-						className='text-xs line-clamp-2 leading-relaxed'
-						style={{ color: isDark ? 'rgba(200,200,210,0.7)' : 'rgba(50,50,60,0.65)' }}
-					>
-						{description || 'Description'}
-					</p>
-
-					<div className='flex flex-wrap gap-1.5 pt-1.5'>
-						{tags.map((tag, i) => (
-							<span
-								key={i}
-								className='px-2 py-0.5 text-[9px] font-semibold tracking-wider uppercase rounded-md'
-								style={{
-									background: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.05)',
-									border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'}`,
-									color: isDark ? 'rgba(200,200,210,0.7)' : 'rgba(50,50,60,0.65)',
-								}}
-							>
-								{tag}
-							</span>
-						))}
-					</div>
-				</div>
-			</a>
+			{isTouch && isActive && isExternal && (
+				<a
+					href={href}
+					target='_blank'
+					rel='noopener noreferrer'
+					className='mt-3 flex items-center justify-center gap-2 w-full min-h-11 px-4 py-3 rounded-lg text-sm font-semibold tracking-wide transition-all duration-300 active:scale-95'
+					style={{
+						background: 'var(--selected-color, #339AF0)',
+						color: '#ffffff',
+					}}
+				>
+					View Project ↗
+				</a>
+			)}
 		</motion.div>
 	)
 }

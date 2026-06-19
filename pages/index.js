@@ -31,6 +31,20 @@ export default function Home() {
 	const [activeDisplay, setActiveDisplay] = useState(0) // display-only (buttons)
 	const autoPlayTimerRef = useRef(null)
 	const isHoveringCarousel = useRef(false)
+	const carouselSpacingRef = useRef(340)
+
+	const getCarouselSpacing = useCallback(() => {
+		if (typeof window === 'undefined') return 340
+		const card = document.querySelector('.work-carousel-card')
+		if (card?.offsetWidth) {
+			return Math.min(340, card.offsetWidth + 24)
+		}
+		return Math.min(340, Math.max(260, window.innerWidth * 0.85))
+	}, [])
+
+	const isMobileViewport = useCallback(() => {
+		return typeof window !== 'undefined' && window.innerWidth < 768
+	}, [])
 
 	// Lenis ref
 	const lenisRef = useRef(null)
@@ -85,6 +99,9 @@ export default function Home() {
 		const cards = document.querySelectorAll('.work-carousel-card')
 		if (!cards.length) return
 
+		const spacing = carouselSpacingRef.current
+		const mobile = isMobileViewport()
+
 		cards.forEach((card, i) => {
 			let diff = i - idx
 			while (diff > total / 2) diff -= total
@@ -94,10 +111,10 @@ export default function Home() {
 			const isActive = absDiff < 0.1
 
 			gsap.to(card, {
-				x: diff * 340,
+				x: diff * spacing,
 				z: isActive ? 0 : -280 - absDiff * 80,
-				rotationY: diff * 40,
-				opacity: Math.max(0, 1 - absDiff * 0.45),
+				rotationY: mobile ? diff * 15 : diff * 40,
+				opacity: mobile ? (isActive ? 1 : 0) : Math.max(0, 1 - absDiff * 0.45),
 				scale: isActive ? 1 : Math.max(0.5, 0.82 - absDiff * 0.05),
 				duration: 0.75,
 				ease: 'power3.out',
@@ -109,7 +126,7 @@ export default function Home() {
 
 		activeIndexRef.current = idx
 		setActiveDisplay(idx)
-	}, [])
+	}, [isMobileViewport])
 
 	const goPrev = useCallback(() => {
 		goToSlide(activeIndexRef.current - 1)
@@ -118,6 +135,16 @@ export default function Home() {
 	const goNext = useCallback(() => {
 		goToSlide(activeIndexRef.current + 1)
 	}, [goToSlide])
+
+	// Recompute carousel spacing on resize
+	useEffect(() => {
+		const onResize = () => {
+			carouselSpacingRef.current = getCarouselSpacing()
+			goToSlide(activeIndexRef.current)
+		}
+		window.addEventListener('resize', onResize)
+		return () => window.removeEventListener('resize', onResize)
+	}, [getCarouselSpacing, goToSlide])
 
 	// Auto-play
 	const stopAutoPlay = useCallback(() => {
@@ -212,17 +239,20 @@ export default function Home() {
 		document.addEventListener('mousemove', onMouseMove)
 
 		// Initial carousel positioning (no animation)
+		carouselSpacingRef.current = getCarouselSpacing()
 		const initCards = document.querySelectorAll('.work-carousel-card')
 		const total = initCards.length
+		const spacing = carouselSpacingRef.current
+		const mobile = isMobileViewport()
 		initCards.forEach((card, i) => {
 			const diff = i - 0
 			const absDiff = Math.abs(diff)
 			const isActive = absDiff < 0.1
 			gsap.set(card, {
-				x: diff * 340,
+				x: diff * spacing,
 				z: isActive ? 0 : -280 - absDiff * 80,
-				rotationY: diff * 40,
-				opacity: Math.max(0, 1 - absDiff * 0.45),
+				rotationY: mobile ? diff * 15 : diff * 40,
+				opacity: mobile ? (isActive ? 1 : 0) : Math.max(0, 1 - absDiff * 0.45),
 				scale: isActive ? 1 : Math.max(0.5, 0.82 - absDiff * 0.05),
 				pointerEvents: isActive ? 'auto' : 'none',
 				zIndex: Math.round(100 - absDiff * 10),
@@ -257,14 +287,14 @@ export default function Home() {
 
 				{/* ── Work Section ───────────────────────────────────────── */}
 				<div className='work-section-wrapper overflow-hidden' ref={workSectionRef}>
-					<div className='container mx-auto px-4 tablet:px-12 pt-10 pb-4'>
+					<div className='container mx-auto px-5 mob:px-6 tablet:px-12 pt-10 pb-4'>
 						{/* Title */}
 						<h2 className='section-heading font-space-grotesk mb-2 text-center tablet:text-left'>Work.</h2>
 					</div>
 
 					{/* 3-D Carousel stage — full width, buttons at very edges */}
 					<div
-						className='relative w-full h-[460px] max-w-[100vw] flex items-center justify-center'
+						className='relative w-full h-[380px] tablet:h-[460px] max-w-full flex items-center justify-center'
 						style={{ perspective: '1100px' }}
 						onMouseEnter={() => { isHoveringCarousel.current = true }}
 						onMouseLeave={() => { isHoveringCarousel.current = false }}
@@ -287,7 +317,7 @@ export default function Home() {
 
 						{/* Cards */}
 						<div
-							className='relative w-full max-w-lg h-full flex items-center justify-center pointer-events-none'
+							className='relative w-full max-w-[calc(100vw-2.5rem)] tablet:max-w-lg h-full flex items-center justify-center pointer-events-none'
 							style={{ transformStyle: 'preserve-3d' }}
 						>
 							{data.projects.map((project, index) => (
@@ -302,6 +332,7 @@ export default function Home() {
 										description={project.description}
 										url={project.url}
 										tags={project.tags}
+										isActive={index === activeDisplay}
 										onSwipeLeft={goNext}
 										onSwipeRight={goPrev}
 									/>
@@ -327,21 +358,26 @@ export default function Home() {
 					</div>
 
 					{/* Dot indicators — centered below */}
-					<div className='container mx-auto px-4 pb-12 pt-4'>
-						<div className='flex justify-center gap-2'>
+					<div className='container mx-auto px-5 mob:px-6 tablet:px-12 pb-12 pt-4'>
+						<div className='flex justify-center gap-1'>
 							{Array.from({ length: total }).map((_, i) => (
 								<button
 									key={i}
 									onClick={() => goToSlide(i)}
-									className='rounded-full transition-all duration-300'
-									style={{
-										width:  i === activeDisplay ? '24px' : '8px',
-										height: '8px',
-										background: i === activeDisplay
-											? 'var(--selected-color, #339AF0)'
-											: 'rgba(128,128,128,0.4)',
-									}}
-								/>
+									aria-label={`Go to project ${i + 1}`}
+									className='min-h-11 min-w-11 flex items-center justify-center rounded-full transition-all duration-300'
+								>
+									<span
+										className='rounded-full transition-all duration-300 block'
+										style={{
+											width:  i === activeDisplay ? '24px' : '8px',
+											height: '8px',
+											background: i === activeDisplay
+												? 'var(--selected-color, #339AF0)'
+												: 'rgba(128,128,128,0.4)',
+										}}
+									/>
+								</button>
 							))}
 						</div>
 					</div>
@@ -349,8 +385,8 @@ export default function Home() {
 
 				{/* ── About Section ──────────────────────────────────────── */}
 				<div className='about-section' ref={aboutSectionRef}>
-					<div className='container mx-auto px-4 py-10'>
-						<h2 className='section-heading font-space-grotesk'>About.</h2>
+					<div className='container mx-auto px-5 mob:px-6 tablet:px-12 py-10'>
+						<h2 className='section-heading font-space-grotesk text-center tablet:text-left'>About.</h2>
 						<div className='max-w-4xl mx-auto'>
 							<p className='section-body mb-6 font-dm-sans'>{data.aboutParaLine1}</p>
 							<p className='section-body font-dm-sans'>{data.aboutParaLine2}</p>
@@ -360,7 +396,7 @@ export default function Home() {
 
 				{/* ── Contact Section ────────────────────────────────────── */}
 				<div className='contact-section'>
-					<div className='container mx-auto px-4 py-10 text-center'>
+					<div className='container mx-auto px-5 mob:px-6 tablet:px-12 py-10 text-center'>
 						<h2 className='section-heading font-space-grotesk'>Contact.</h2>
 						<div className='max-w-2xl mx-auto'>
 							<p className='section-body mb-6 font-dm-sans'>Let&apos;s work together on your next project.</p>

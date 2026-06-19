@@ -69,7 +69,7 @@ const Blog = ({ posts }) => {
           <title>Blog</title>
         </Head>
         <div
-          className={`container mx-auto mb-10 ${
+          className={`container mx-auto mb-10 px-5 mob:px-6 tablet:px-12 ${
             data.showCursor && "cursor-none"
           }`}
         >
@@ -77,7 +77,7 @@ const Blog = ({ posts }) => {
           <div className="mt-10">
             <h1
               ref={text}
-              className="mx-auto mob:p-2 text-bold text-6xl laptop:text-8xl w-full"
+              className="mx-auto mob:p-2 text-bold text-4xl mob:text-5xl laptop:text-8xl w-full"
             >
               Blog.
             </h1>

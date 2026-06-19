@@ -1,7 +1,7 @@
-/* Inter (UI) + Space Grotesk (Hero name) */
+/* Inter (fallback) + Space Grotesk (section headings) */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Space+Grotesk:wght@600;700&display=swap');
-/* Instrument Serif + Geist + Geist Mono (New Hero Section) */
-@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500&family=Geist+Mono:wght@400&display=swap');
+/* Instrument Serif + Geist + Geist Mono (Hero) + Fira Code (logo) */
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500&family=Geist+Mono:wght@400&family=Fira+Code:wght@700&display=swap');
 
 /* ─── Critical: prevent theme flash ─────────────────────────────────────── */
 @media (prefers-color-scheme: dark) {
@@ -32,24 +32,27 @@ html[data-theme="light"] body {
 	color: #1a1a1a !important;
 }
 
+html, body {
+	overflow-x: clip;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 @import './markdown.css';
 
 /* ─── Fonts ──────────────────────────────────────────────────────────────── */
-* {
-	font-family: 'Inter', sans-serif !important;
+body {
+	font-family: 'Geist', 'Inter', sans-serif;
 }
 
 .font-hero-name,
 .font-space-grotesk { font-family: 'Space Grotesk', sans-serif !important; }
-.font-dm-sans       { font-family: 'DM Sans', sans-serif !important; }
-.font-orbitron      { font-family: 'Orbitron', monospace !important; }
-.font-poppins       { font-family: 'Poppins', sans-serif !important; }
-.font-syne          { font-family: 'Syne', sans-serif !important; }
-.font-outfit        { font-family: 'Outfit', sans-serif !important; }
+.font-dm-sans       { font-family: 'Geist', sans-serif !important; }
 .font-fira-code     { font-family: 'Fira Code', monospace !important; }
+.font-instrument    { font-family: 'Instrument Serif', serif !important; }
+.font-geist         { font-family: 'Geist', sans-serif !important; }
+.font-geist-mono    { font-family: 'Geist Mono', monospace !important; }
 
 /* ─── Base body ──────────────────────────────────────────────────────────── */
 body { @apply dark:bg-black dark:text-white; }
@@ -741,11 +744,19 @@ html[data-theme="light"] .social-link:hover { box-shadow: 0 8px 25px rgba(0,0,0,
 .gsap-fade-in:not(.gsap-revealed) { visibility: hidden; }
 
 /* Section headings */
-.section-heading { @apply text-4xl font-bold mb-12 text-center; }
+.section-heading {
+	font-size: clamp(1.75rem, 5vw, 2.25rem);
+	font-weight: 700;
+	margin-bottom: clamp(1.5rem, 4vw, 3rem);
+	text-align: center;
+}
 html[data-theme="dark"] .section-heading, .dark .section-heading { color: #ffffff; }
 html[data-theme="light"] .section-heading { color: #000000; }
 
-.section-body { @apply text-lg leading-relaxed; }
+.section-body {
+	font-size: clamp(1rem, 2.5vw, 1.125rem);
+	line-height: 1.625;
+}
 html[data-theme="dark"] .section-body, .dark .section-body { color: #d1d5db; }
 html[data-theme="light"] .section-body { color: #374151; }
 
@@ -766,33 +777,6 @@ html[data-theme="light"] .section-body { color: #374151; }
 .typewriter-cursor { display: inline-block; animation: typewriter-blink 0.8s step-end infinite; opacity: 1; }
 @keyframes typewriter-blink { 50% { opacity: 0; } }
 
-.hero-im { color: #fafafa; font-family: 'Space Grotesk', sans-serif !important; font-weight: 600; }
-html[data-theme="light"] .hero-im { color: #0a0a0a; }
-
-.hero-name {
-	background: linear-gradient(120deg, #e0aaff, #c77dff, #9d4edd, #e0aaff);
-	background-size: 300% 300%;
-	background-position: 0% 50%;
-	-webkit-background-clip: text;
-	background-clip: text;
-	-webkit-text-fill-color: transparent;
-	color: transparent;
-	font-family: 'Space Grotesk', sans-serif !important;
-	font-weight: 700;
-	letter-spacing: -0.02em;
-	filter: drop-shadow(0 0 14px rgba(157,78,221,0.25));
-}
-
-.hero-name-text {
-	background: linear-gradient(90deg, #FF6B6B 0%, #4ECDC4 14.28%, #45B7D1 28.56%, #96CEB4 42.84%, #FFEAA7 57.12%, #DDA0DD 71.4%, #98D8C8 85.68%, #FF6B6B 100%);
-	background-size: 200% 100%;
-	-webkit-background-clip: text;
-	background-clip: text;
-	-webkit-text-fill-color: transparent;
-	animation: gradientShift 6s ease infinite;
-	filter: brightness(1.2);
-}
-
 /* =============================================================================
    WORK SECTION
    ============================================================================= */
@@ -800,23 +784,6 @@ html[data-theme="light"] .hero-im { color: #0a0a0a; }
 .work-card { transform-origin: center; flex-shrink: 0; }
 
 .work-section-wrapper { position: relative; width: 100%; overflow: hidden; z-index: 1; }
-.work-section-inner   { width: 100%; }
-
-.work-cards-horizontal-scroll {
-	width: 100%; overflow-x: hidden; overflow-y: hidden;
-	position: relative; padding: 2rem 0 4rem 0;
-	scrollbar-width: none; -ms-overflow-style: none;
-}
-.work-cards-horizontal-scroll::-webkit-scrollbar { display: none; }
-
-.work-cards-container { display: flex; gap: 1.5rem; padding: 0 4rem; will-change: transform; }
-.work-cards-container .work-card { min-width: 350px; max-width: 450px; width: 100%; flex-shrink: 0; }
-
-@media (min-width: 768px)  { .work-cards-container .work-card { min-width: 400px; max-width: 500px; } }
-@media (min-width: 1024px) {
-	.work-cards-container { padding: 0 6rem; }
-	.work-cards-container .work-card { min-width: 450px; max-width: 550px; }
-}
 
 /* =============================================================================
    BACKGROUNDS

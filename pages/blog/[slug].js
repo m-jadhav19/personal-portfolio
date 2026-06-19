@@ -31,20 +31,20 @@ const BlogPost = ({ post }) => {
       {data.showCursor && <Cursor />}
 
       <div
-        className={`container mx-auto mt-10 ${
+        className={`container mx-auto mt-10 px-5 mob:px-6 tablet:px-12 ${
           data.showCursor && "cursor-none"
         }`}
       >
         <Header isBlog={true} />
         <div className="mt-10 flex flex-col">
           <Image
-            className="w-full h-96 rounded-lg shadow-lg object-cover"
+            className="w-full h-56 mob:h-72 laptop:h-96 rounded-lg shadow-lg object-cover"
             src={post.image}
             alt={post.title}
           />
           <h1
             ref={textOne}
-            className="mt-10 text-4xl mob:text-2xl laptop:text-6xl text-bold"
+            className="mt-10 text-2xl mob:text-3xl laptop:text-6xl font-bold"
           >
             {post.title}
           </h1>

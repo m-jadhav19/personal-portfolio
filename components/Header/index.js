@@ -32,7 +32,7 @@ const Header = ({handleWorkScroll, handleAboutScroll, isBlog}) => {
 	const renderThemeChanger = () => {
 		if (!mounted) return null
 		return (
-			<Button onClick={() => setTheme(isDark ? 'light' : 'dark')}>
+			<Button onClick={() => setTheme(isDark ? 'light' : 'dark')} classes="min-h-11 min-w-11 flex items-center justify-center">
 				<div
 					className='h-6 w-6 transition-transform duration-300 transform'
 					style={{
@@ -68,9 +68,9 @@ const Header = ({handleWorkScroll, handleAboutScroll, isBlog}) => {
 							</h1>
 							<div className='flex items-center'>
 								{data.darkMode && renderThemeChanger()}
-								<Popover.Button>
+								<Popover.Button className='min-h-11 min-w-11 flex items-center justify-center'>
 									<div
-										className='h-6 w-6 my-auto transition-transform duration-300 transform'
+										className='h-6 w-6 transition-transform duration-300 transform'
 										style={{
 											transform: !open ? 'rotate(0deg)' : 'rotate(360deg)',
 											color: 'var(--selected-color, #339AF0)'
@@ -140,7 +140,7 @@ const Header = ({handleWorkScroll, handleAboutScroll, isBlog}) => {
 						</>
 					)}
 					{data.darkMode && (
-						<div className="border-l border-white/10 ml-2 pl-2">
+						<div className="border-l border-white/10 ml-2 pl-2 min-h-11 flex items-center">
 							{renderThemeChanger()}
 						</div>
 					)}

@@ -703,7 +703,7 @@ const Morph = forwardRef(function Morph(_, ref) {
   useEffect(() => {
     const update = () => {
       const vw = window.innerWidth
-      setCanvasSize(vw < 480 ? Math.min(vw - 32, 280) : vw < 1024 ? 340 : 420)
+      setCanvasSize(vw < 375 ? Math.min(vw - 32, 260) : vw < 768 ? Math.min(vw - 32, 280) : vw < 1024 ? 340 : 420)
     }
     update()
     window.addEventListener('resize', update)
