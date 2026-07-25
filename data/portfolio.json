@@ -2,9 +2,12 @@
 	"name": "Mandar",
 	"headerTaglineOne": "Hello, I'm",
 	"headerTaglineTwo": "Mandar Jadhav",
-	"headerTaglineThree": "Frontend Developer",
-	"headerTaglineFour": "Developer based in Mumbai, India.",
-	"showBlog": false,
+	"headerTaglineThree": "Motion-rich frontend developer",
+	"headerTaglineFour": "Based in Mumbai, India.",
+	"heroTechStack": ["React", "Next.js", "Three.js", "GSAP"],
+	"contactTagline": "Open to frontend roles and creative dev collaborations. Let's build something unusual.",
+	"showBlog": true,
+	"showResume": true,
 	"showCursor": false,
 	"darkMode": true,
 	"socials": [
@@ -71,7 +74,7 @@
 		},
 		{
 			"id": "7",
-			"title": "3D Portfolio Websit (WIP)",
+			"title": "3D Portfolio Website (WIP)",
 			"description": "A 3D portfolio website that allows users to view 3D models in a 3D environment",
 			"imageSrc": "/images/3dportfolio.png",
 			"url": "https://3d-portfolio-zeta-ten.vercel.app/",
@@ -100,12 +103,11 @@
 			"description": "We combine creative design and technical skills to build striking 3D visualisations that bring your project to life."
 		}
 	],
-	"aboutParaLine1": "I am an enthusiastic and devoted Frontend Developer with experience in building responsive, user-friendly online apps as a professional and as a hobby. With a strong background in HTML, CSS, and JavaScript, I specialize in creating dynamic and engaging user interfaces using modern frameworks like as React.js, Vue.js and Next.js. ",
-	"aboutParaLine2": "In my recent projects, I've been working on constructing interactive 3D model viewers with Three.js, as well as complex property search functions that allow users to easily filter properties. My expertise includes increasing site performance and guaranteeing cross-browser compatibility, which improves the overall user experience.",
-	"aboutParaLine3": "Aside from coding, I enjoy gaming and game creation, and I am always searching for new methods to merge complex graphics and interactivity into web applications. I also love football, and when I have free time, I like to play and watch the game. I'm always willing to pick up new skills and take on challenging projects that test the boundaries of web development. My objective is to grow as a developer and support innovative projects that make a big difference.",
+	"aboutParaLine1": "I'm a frontend developer who builds responsive, motion-rich interfaces with React, Next.js, and Three.js. I care about performance, accessibility, and interactions that feel intentional.",
+	"aboutParaLine2": "When I'm not coding, you'll find me gaming, experimenting with 3D graphics, or watching football. Based in Mumbai, always open to challenging projects at the intersection of design and engineering.",
 	"stats": {
 		"yearsExperience": "2+",
-		"projectsCompleted": 5,
+		"projectsCompleted": 7,
 		"technologiesMastered": 12,
 		"happyClients": 3
 	},
@@ -121,19 +123,19 @@
 			"color": "pastelLavender"
 		},
 		{
-			"name": "Node.js",
+			"name": "Three.js",
 			"icon": "CpuChipIcon",
 			"color": "pastelMint"
+		},
+		{
+			"name": "GSAP",
+			"icon": "CommandLineIcon",
+			"color": "pastelLavender"
 		},
 		{
 			"name": "Figma",
 			"icon": "PaintBrushIcon",
 			"color": "pastelPink"
-		},
-		{
-			"name": "Coffee",
-			"icon": "InfinityIcon",
-			"color": "pastelCyan"
 		}
 	],
 	"resume": {
@@ -163,5 +165,23 @@
 		"languages": ["Javascript", "HTML5", "CSS", "Java", "C#", "C++"],
 		"frameworks": ["React", "Nuxt", "Vue.js", "Tailwind CSS"],
 		"others": ["Figma", "AdobeXD", "AWS"]
+	},
+	"scrollExperience": {
+		"intro": {
+			"desktop": {
+				"path": "/frames/intro/desktop/frame_%04d.webp",
+				"count": 30
+			},
+			"mobile": {
+				"path": "/frames/intro/mobile/frame_%04d.webp",
+				"count": 20
+			}
+		},
+		"chapters": [
+			{ "id": "intro", "pin": true, "scrub": 1.2 },
+			{ "id": "work", "pin": true, "scrub": 0.8, "type": "horizontal-rail" },
+			{ "id": "about", "pin": false, "type": "overlay" },
+			{ "id": "contact", "pin": false, "type": "cta" }
+		]
 	}
 }

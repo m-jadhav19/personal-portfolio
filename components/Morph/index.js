@@ -1,7 +1,29 @@
 import { useEffect, useRef, useState, useImperativeHandle, forwardRef } from 'react'
 
-// ─── Canvas resolution ────────────────────────────────────────────────────
-const W = 160, H = 160
+// ─── Canvas resolution (native pixels — no CSS upscale) ───────────────────
+let RW = 160
+let RH = 160
+let _col = null
+let _dep = null
+let _colA = null
+let _depA = null
+let _colB = null
+let _depB = null
+let _err = null
+
+function ensureBuffers(w, h) {
+	if (w === RW && h === RH && _col) return
+	RW = w
+	RH = h
+	const n = w * h
+	_col = new Float32Array(n)
+	_dep = new Float32Array(n)
+	_colA = new Float32Array(n)
+	_depA = new Float32Array(n)
+	_colB = new Float32Array(n)
+	_depB = new Float32Array(n)
+	_err = new Float32Array(n)
+}
 
 // ─── Bayer matrix ─────────────────────────────────────────────────────────
 const BAYER8 = [
@@ -11,14 +33,7 @@ const BAYER8 = [
   15,47,7,39,13,45,5,37, 63,31,55,23,61,29,53,21
 ]
 
-// ─── Pre-allocated buffers — zero GC per frame ────────────────────────────
-const _col  = new Float32Array(W * H)
-const _dep  = new Float32Array(W * H)
-const _colA = new Float32Array(W * H)
-const _depA = new Float32Array(W * H)
-const _colB = new Float32Array(W * H)
-const _depB = new Float32Array(W * H)
-const _err  = new Float32Array(W * H)
+ensureBuffers(160, 160)
 
 function getBuf(col, dep) {
   dep.fill(-999); col.fill(0)
@@ -41,7 +56,7 @@ function P(x, y, z) {
   const y1=y*cX-z*sX, z1=y*sX+z*cX
   const x2=x*cY+z1*sY, z2=-x*sY+z1*cY
   const dist=(320)/(320+z2+120)
-  return [W/2+x2*dist*2*zoom, H/2+y1*dist*2*zoom, z2]
+  return [RW/2+x2*dist*2*zoom, RH/2+y1*dist*2*zoom, z2]
 }
 
 // ─── Lighting ─────────────────────────────────────────────────────────────
@@ -65,8 +80,8 @@ function shade(nx,ny,nz,lx,ly,lz) {
 // ─── Plot ─────────────────────────────────────────────────────────────────
 function plot(buf, px, py, pz, light) {
   const x=Math.round(px), y=Math.round(py)
-  if (x>=0&&x<W&&y>=0&&y<H) {
-    const i=y*W+x
+  if (x>=0&&x<RW&&y>=0&&y<RH) {
+    const i=y*RW+x
     if (pz>buf.dep[i]) { buf.dep[i]=pz; buf.col[i]=Math.max(0,Math.min(1,light)) }
   }
 }
@@ -669,7 +684,12 @@ const SHAPES = [
 function dithBayer(val,x,y) { return val>BAYER8[(y%8)*8+(x%8)]/64?1:0 }
 
 // ─── Component ────────────────────────────────────────────────────────────
-const Morph = forwardRef(function Morph(_, ref) {
+const Morph = forwardRef(function Morph({
+  autoPlay = true,
+  morphSpeed = 0.045,
+  sizePreset = 'default',
+  idleMorph = false,
+}, ref) {
   const canvasRef = useRef(null)
   const [canvasSize, setCanvasSize] = useState(300)
 
@@ -703,14 +723,24 @@ const Morph = forwardRef(function Morph(_, ref) {
   useEffect(() => {
     const update = () => {
       const vw = window.innerWidth
+      if (sizePreset === 'background') {
+        const size = vw < 768
+          ? Math.min(380, Math.floor(vw * 0.94))
+          : vw < 1024
+            ? Math.min(580, Math.floor(vw * 0.64))
+            : Math.min(760, Math.floor(vw * 0.58))
+        setCanvasSize(size)
+        return
+      }
       setCanvasSize(vw < 375 ? Math.min(vw - 32, 260) : vw < 768 ? Math.min(vw - 32, 280) : vw < 1024 ? 340 : 420)
     }
     update()
     window.addEventListener('resize', update)
     return () => window.removeEventListener('resize', update)
-  }, [])
+  }, [sizePreset])
 
   useEffect(() => {
+    ensureBuffers(canvasSize, canvasSize)
     const st = s.current
     st.isDark = window.matchMedia('(prefers-color-scheme: dark)').matches
     const canvas = canvasRef.current
@@ -758,30 +788,30 @@ const Morph = forwardRef(function Morph(_, ref) {
     canvas.style.cursor='grab'
 
     function renderBuf(buf, useBayer) {
-      const img = ctx.createImageData(W,H)
+      const img = ctx.createImageData(RW,RH)
       const cs = getComputedStyle(document.documentElement).getPropertyValue('--selected-color-rgb')||'51,154,240'
       const [fgR,fgG,fgB]=cs.split(',').map(v=>parseInt(v.trim()))
       const dk=st.isDark, dR=dk?Math.round(fgR*0.15):Math.round(fgR*0.2), dG=dk?Math.round(fgG*0.15):Math.round(fgG*0.2), dB=dk?Math.round(fgB*0.15):Math.round(fgB*0.2)
 
       if (useBayer) {
-        for (let i=0;i<W*H;i++) {
+        for (let i=0;i<RW*RH;i++) {
           if (buf.dep[i]>-999) {
-            const on=dithBayer(buf.col[i],i%W,Math.floor(i/W))
+            const on=dithBayer(buf.col[i],i%RW,Math.floor(i/RW))
             img.data[i*4]=on?fgR:dR; img.data[i*4+1]=on?fgG:dG; img.data[i*4+2]=on?fgB:dB; img.data[i*4+3]=255
           } else { img.data[i*4+3]=0 }
         }
       } else {
-        for (let i=0;i<W*H;i++) _err[i]=buf.dep[i]>-999?buf.col[i]:-1
-        for (let y=0;y<H;y++) for (let x=0;x<W;x++) {
-          const i=y*W+x
+        for (let i=0;i<RW*RH;i++) _err[i]=buf.dep[i]>-999?buf.col[i]:-1
+        for (let y=0;y<RH;y++) for (let x=0;x<RW;x++) {
+          const i=y*RW+x
           if (_err[i]<0){img.data[i*4+3]=0;continue}
           const v=Math.max(0,Math.min(1,_err[i])), q=v>=0.5?1:0, err=v-q
           img.data[i*4]=q?fgR:dR; img.data[i*4+1]=q?fgG:dG; img.data[i*4+2]=q?fgB:dB; img.data[i*4+3]=255
-          if (x+1<W&&_err[i+1]>=0) _err[i+1]+=err*7/16
-          if (y+1<H) {
-            if (x>0&&_err[i+W-1]>=0) _err[i+W-1]+=err*3/16
-            if (_err[i+W]>=0) _err[i+W]+=err*5/16
-            if (x+1<W&&_err[i+W+1]>=0) _err[i+W+1]+=err/16
+          if (x+1<RW&&_err[i+1]>=0) _err[i+1]+=err*7/16
+          if (y+1<RH) {
+            if (x>0&&_err[i+RW-1]>=0) _err[i+RW-1]+=err*3/16
+            if (_err[i+RW]>=0) _err[i+RW]+=err*5/16
+            if (x+1<RW&&_err[i+RW+1]>=0) _err[i+RW+1]+=err/16
           }
         }
       }
@@ -812,12 +842,12 @@ const Morph = forwardRef(function Morph(_, ref) {
       const isMorphing = st.morphing && st.morphT < 1
 
       if (isMorphing) {
-        st.morphT += 0.045
+        st.morphT += morphSpeed
         const ease = st.morphT<0.5 ? 2*st.morphT**2 : 1-(2-2*st.morphT)**2/2
         const bufA=getBuf(_colA,_depA), bufB=getBuf(_colB,_depB)
         SHAPES[st.currentShape].draw(bufA, st.frame, L)
         SHAPES[st.targetShape].draw(bufB, st.frame, L)
-        for (let i=0;i<W*H;i++) {
+        for (let i=0;i<RW*RH;i++) {
           const hA=bufA.dep[i]>-999, hB=bufB.dep[i]>-999
           if (hA||hB) {
             const pA=hA?(1-ease):0, pB=hB?ease:0, tot=pA+pB
@@ -837,14 +867,17 @@ const Morph = forwardRef(function Morph(_, ref) {
     }
     rafId = requestAnimationFrame(loop)
 
-    const nextAuto = () => {
-      const st2 = s.current
-      const idx = st2.autoIdx
-      if (idx !== st2.currentShape) { st2.targetShape=idx; st2.morphT=0; st2.morphing=true }
-      st2.autoIdx = (idx+1) % SHAPES.length
-      st2.autoTimer = setTimeout(nextAuto, 3200)
+    if (autoPlay || idleMorph) {
+      const interval = idleMorph && !autoPlay ? 2400 : 3200
+      const nextAuto = () => {
+        const st2 = s.current
+        const idx = st2.autoIdx
+        if (idx !== st2.currentShape) { st2.targetShape=idx; st2.morphT=0; st2.morphing=true }
+        st2.autoIdx = (idx+1) % SHAPES.length
+        st2.autoTimer = setTimeout(nextAuto, interval)
+      }
+      st.autoTimer = setTimeout(nextAuto, interval)
     }
-    st.autoTimer = setTimeout(nextAuto, 3200)
 
     return () => {
       cancelAnimationFrame(rafId)
@@ -860,11 +893,11 @@ const Morph = forwardRef(function Morph(_, ref) {
       window.removeEventListener('touchend',onUp)
       document.removeEventListener('visibilitychange',onVis)
     }
-  }, [])
+  }, [autoPlay, idleMorph, morphSpeed, canvasSize])
 
   return (
     <div className="flex items-center justify-center">
-      <canvas ref={canvasRef} width={W} height={H}
+      <canvas ref={canvasRef} width={canvasSize} height={canvasSize}
         style={{ imageRendering:'pixelated', width:canvasSize, height:canvasSize, display:'block', touchAction:'none' }}
       />
     </div>

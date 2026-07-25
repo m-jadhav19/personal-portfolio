@@ -1,115 +1,87 @@
-import React, { useRef, useState } from "react";
-import { getPostBySlug, getAllPosts } from "../../utils/api";
-import Header from "../../components/Header";
-import ContentSection from "../../components/ContentSection";
-import Footer from "../../components/Footer";
-import Head from "next/head";
-import { useIsomorphicLayoutEffect } from "../../utils";
-import { stagger } from "../../animations";
-import Button from "../../components/Button";
-import BlogEditor from "../../components/BlogEditor";
-import { useRouter } from "next/router";
-import Cursor from "../../components/Cursor";
-import data from "../../data/portfolio.json";
+import { useState } from 'react'
+import Image from 'next/image'
+import { useRouter } from 'next/router'
+import CinematicLayout from '../../components/cinematic/CinematicLayout'
+import ContentSection from '../../components/ContentSection'
+import BlogEditor from '../../components/BlogEditor'
+import data from '../../data/portfolio.json'
+import { getPostBySlug, getAllPosts } from '../../utils/api'
 
 const BlogPost = ({ post }) => {
-  const [showEditor, setShowEditor] = useState(false);
-  const textOne = useRef();
-  const textTwo = useRef();
-  const router = useRouter();
+	const [showEditor, setShowEditor] = useState(false)
+	const router = useRouter()
 
-  useIsomorphicLayoutEffect(() => {
-    stagger([textOne.current, textTwo.current], { y: 30 }, { y: 0 });
-  }, []);
+	return (
+		<CinematicLayout title={post.title} description={post.preview}>
+			<article>
+				<div className="relative w-full h-56 mob:h-72 laptop:h-96 rounded-2xl overflow-hidden mb-10 cinematic-glass-panel">
+					<Image
+						src={post.image}
+						alt={post.title}
+						layout="fill"
+						objectFit="cover"
+					/>
+				</div>
+				<p className="font-geist-mono text-xs uppercase tracking-[0.3em] text-white/40 mb-4">Blog Post</p>
+				<h1 className="font-space-grotesk text-3xl tablet:text-5xl laptop:text-6xl font-bold mb-4">
+					{post.title}
+				</h1>
+				<h2 className="text-xl text-white/50 mb-10 max-w-3xl">{post.tagline}</h2>
+				<div className="cinematic-subpage-content prose-invert">
+					<ContentSection content={post.content} />
+				</div>
+			</article>
 
-  return (
-    <>
-      <Head>
-        <title>{"Blog - " + post.title}</title>
-        <meta name="description" content={post.preview} />
-      </Head>
-      {data.showCursor && <Cursor />}
+			{process.env.NODE_ENV === 'development' && (
+				<button
+					type="button"
+					onClick={() => setShowEditor(true)}
+					className="fixed bottom-6 right-6 cinematic-accent-btn px-6 py-3 rounded-full text-sm uppercase tracking-widest"
+				>
+					Edit this blog
+				</button>
+			)}
 
-      <div
-        className={`container mx-auto mt-10 px-5 mob:px-6 tablet:px-12 ${
-          data.showCursor && "cursor-none"
-        }`}
-      >
-        <Header isBlog={true} />
-        <div className="mt-10 flex flex-col">
-          <Image
-            className="w-full h-56 mob:h-72 laptop:h-96 rounded-lg shadow-lg object-cover"
-            src={post.image}
-            alt={post.title}
-          />
-          <h1
-            ref={textOne}
-            className="mt-10 text-2xl mob:text-3xl laptop:text-6xl font-bold"
-          >
-            {post.title}
-          </h1>
-          <h2
-            ref={textTwo}
-            className="mt-2 text-xl max-w-4xl text-darkgray opacity-50"
-          >
-            {post.tagline}
-          </h2>
-        </div>
-        <ContentSection content={post.content}></ContentSection>
-        <Footer />
-      </div>
-      {process.env.NODE_ENV === "development" && (
-        <div className="fixed bottom-6 right-6">
-          <Button onClick={() => setShowEditor(true)} type={"primary"}>
-            Edit this blog
-          </Button>
-        </div>
-      )}
+			{showEditor && (
+				<BlogEditor
+					post={post}
+					close={() => setShowEditor(false)}
+					refresh={() => router.reload(window.location.pathname)}
+				/>
+			)}
+		</CinematicLayout>
+	)
+}
 
-      {showEditor && (
-        <BlogEditor
-          post={post}
-          close={() => setShowEditor(false)}
-          refresh={() => router.reload(window.location.pathname)}
-        />
-      )}
-    </>
-  );
-};
-import Image from "next/image";
 export async function getStaticProps({ params }) {
-  const post = getPostBySlug(params.slug, [
-    "date",
-    "slug",
-    "preview",
-    "title",
-    "tagline",
-    "preview",
-    "image",
-    "content",
-  ]);
+	const post = getPostBySlug(params.slug, [
+		'date',
+		'slug',
+		'preview',
+		'title',
+		'tagline',
+		'image',
+		'content',
+	])
 
-  return {
-    props: {
-      post: {
-        ...post,
-      },
-    },
-  };
+	return {
+		props: {
+			post: {
+				...post,
+			},
+		},
+	}
 }
 
 export async function getStaticPaths() {
-  const posts = getAllPosts(["slug"]);
+	const posts = getAllPosts(['slug'])
 
-  return {
-    paths: posts.map((post) => {
-      return {
-        params: {
-          slug: post.slug,
-        },
-      };
-    }),
-    fallback: false,
-  };
+	return {
+		paths: posts.map((post) => ({
+			params: { slug: post.slug },
+		})),
+		fallback: false,
+	}
 }
-export default BlogPost;
+
+export default BlogPost
