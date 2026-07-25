@@ -42,7 +42,7 @@ export default function ContactChapter() {
 	)
 
 	return (
-		<section id="contact" ref={sectionRef} className="contact-chapter py-32 tablet:py-40 px-5 tablet:px-12">
+		<section id="contact" ref={sectionRef} className="contact-chapter py-32 tablet:py-40 px-5 tablet:px-12" data-chapter="contact">
 			<div ref={contentRef} className="cinematic-content-panel cinematic-content-panel-centered max-w-3xl mx-auto text-center py-10 tablet:py-14 px-6 tablet:px-12">
 				<p className="font-label text-xs uppercase tracking-[0.32em] text-[var(--cinematic-accent)] mb-4">Get In Touch</p>
 				<h2 className="font-display text-4xl tablet:text-6xl font-extrabold mb-6">Let&apos;s Build.</h2>

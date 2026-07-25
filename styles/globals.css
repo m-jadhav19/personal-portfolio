@@ -1,7 +1,5 @@
 /* Bricolage Grotesque (display) + Outfit (body) + JetBrains Mono (labels) */
 @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=Outfit:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
-/* Legacy fallbacks for subpages */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Space+Grotesk:wght@600;700&display=swap');
 
 /* ─── Critical: prevent theme flash ─────────────────────────────────────── */
 @media (prefers-color-scheme: dark) {
@@ -1050,9 +1048,34 @@ html[data-theme="light"] h4, html[data-theme="light"] h5, html[data-theme="light
 }
 
 .cinematic-nav {
-	background: linear-gradient(to bottom, rgba(7, 8, 11, 0.92), transparent);
-	backdrop-filter: blur(16px);
-	border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+	pointer-events: none;
+}
+
+.cinematic-nav-shell {
+	pointer-events: auto;
+	border-radius: 9999px;
+	background: rgba(12, 13, 18, 0.55);
+	border: 1px solid rgba(255, 255, 255, 0.08);
+	box-shadow:
+		inset 0 1px 0 rgba(255, 255, 255, 0.06),
+		0 8px 32px rgba(0, 0, 0, 0.28);
+	backdrop-filter: blur(18px);
+	-webkit-backdrop-filter: blur(18px);
+	transition:
+		background 0.35s ease,
+		border-color 0.35s ease,
+		box-shadow 0.35s ease,
+		backdrop-filter 0.35s ease;
+}
+
+.cinematic-nav-shell-scrolled {
+	background: rgba(10, 11, 15, 0.88);
+	border-color: rgba(255, 255, 255, 0.12);
+	box-shadow:
+		inset 0 1px 0 rgba(255, 255, 255, 0.08),
+		0 16px 48px rgba(0, 0, 0, 0.45);
+	backdrop-filter: blur(24px);
+	-webkit-backdrop-filter: blur(24px);
 }
 
 .cinematic-nav-logo {
@@ -1060,6 +1083,7 @@ html[data-theme="light"] h4, html[data-theme="light"] h5, html[data-theme="light
 	font-weight: 700;
 	letter-spacing: -0.02em;
 	transition: color 0.2s;
+	text-decoration: none;
 }
 
 .cinematic-nav-logo:hover {
@@ -1067,12 +1091,85 @@ html[data-theme="light"] h4, html[data-theme="light"] h5, html[data-theme="light
 }
 
 .cinematic-nav-link {
-	color: rgba(255, 255, 255, 0.6);
-	transition: color 0.2s;
+	display: inline-flex;
+	align-items: center;
+	padding: 0.5rem 1rem;
+	border-radius: 9999px;
+	font-family: 'JetBrains Mono', monospace;
+	font-size: 0.6875rem;
+	font-weight: 500;
+	text-transform: uppercase;
+	letter-spacing: 0.18em;
+	color: rgba(255, 255, 255, 0.58);
+	text-decoration: none;
+	transition: color 0.2s ease, background 0.2s ease;
 }
 
 .cinematic-nav-link:hover {
+	color: #fff;
+	background: rgba(255, 255, 255, 0.06);
+}
+
+.cinematic-nav-link-active {
+	color: #fff;
+	background: rgba(var(--cinematic-accent-rgb), 0.18);
+	box-shadow: inset 0 0 0 1px rgba(var(--cinematic-accent-rgb), 0.35);
+}
+
+.cinematic-mobile-nav-link {
+	display: flex;
+	align-items: baseline;
+	gap: 1.25rem;
+	padding: 0.75rem 0;
+	color: rgba(255, 255, 255, 0.72);
+	text-decoration: none;
+	transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.cinematic-mobile-nav-link:hover,
+.cinematic-mobile-nav-link-active {
 	color: var(--cinematic-accent);
+}
+
+.cinematic-mobile-nav-link:hover {
+	transform: translateX(4px);
+}
+
+.cinematic-mobile-nav-index {
+	font-family: 'JetBrains Mono', monospace;
+	font-size: 0.75rem;
+	font-weight: 500;
+	letter-spacing: 0.2em;
+	color: rgba(255, 255, 255, 0.28);
+	transition: color 0.2s ease;
+}
+
+.cinematic-mobile-nav-link-active .cinematic-mobile-nav-index,
+.cinematic-mobile-nav-link:hover .cinematic-mobile-nav-index {
+	color: rgba(var(--cinematic-accent-rgb), 0.7);
+}
+
+.chapter-progress-dot {
+	width: 8px;
+	height: 8px;
+	background: rgba(255, 255, 255, 0.22);
+	border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.chapter-progress-dot-active {
+	width: 10px;
+	height: 10px;
+	background: var(--cinematic-accent);
+	border-color: rgba(var(--cinematic-accent-rgb), 0.5);
+	box-shadow: 0 0 16px rgba(var(--cinematic-accent-rgb), 0.45);
+}
+
+.chapter-progress-link-active .chapter-progress-dot {
+	background: var(--cinematic-accent);
+}
+
+.work-carousel-dot-featured:not(.work-carousel-dot-active) {
+	background: rgba(var(--cinematic-accent-rgb), 0.35);
 }
 
 .cinematic-glass-panel {

@@ -52,16 +52,12 @@ export default function HeroChapter({ onNavigate }) {
 				)}
 
 				<div className="flex flex-wrap gap-3 mb-6">
-					<Link
-						href="/#work"
-						onClick={handleViewWork}
-						className="cinematic-btn cinematic-accent-btn"
-					>
-						View Work
+					<Link href="/#work" passHref>
+						<a onClick={handleViewWork} className="cinematic-btn cinematic-accent-btn">View Work</a>
 					</Link>
 					{data.showResume && (
-						<Link href="/resume" className="cinematic-btn cinematic-glass-btn">
-							Resume
+						<Link href="/resume" passHref>
+							<a className="cinematic-btn cinematic-glass-btn">Resume</a>
 						</Link>
 					)}
 				</div>

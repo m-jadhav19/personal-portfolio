@@ -4,7 +4,7 @@ import { gsap } from 'gsap'
 import { motion } from 'framer-motion'
 import { useTheme } from 'next-themes'
 
-const WorkCard = ({ img, name, description, url, tags = [], isActive = false, onSwipeLeft, onSwipeRight }) => {
+const WorkCard = ({ img, name, description, impact, featured = false, url, tags = [], isActive = false, onSwipeLeft, onSwipeRight }) => {
 	const innerRef = useRef(null)
 	const glareRef = useRef(null)
 	const { theme } = useTheme()
@@ -162,15 +162,30 @@ const WorkCard = ({ img, name, description, url, tags = [], isActive = false, on
 			</div>
 
 			<div className='space-y-2' style={{ zIndex: 2, position: 'relative', pointerEvents: 'none' }}>
-				<h3
-					className='text-lg font-bold tracking-tight'
-					style={{ color: isDark ? '#f0f0f0' : '#111', transition: 'color 0.3s' }}
-				>
-					{name || 'Project Name'}
-				</h3>
+				<div className='flex items-center gap-2 flex-wrap'>
+					<h3
+						className='text-lg font-bold tracking-tight'
+						style={{ color: isDark ? '#f0f0f0' : '#111', transition: 'color 0.3s' }}
+					>
+						{name || 'Project Name'}
+					</h3>
+					{featured && (
+						<span className='project-card-tag px-2 py-0.5 text-[10px] font-label uppercase tracking-wider rounded-full'>
+							Featured
+						</span>
+					)}
+				</div>
+				{impact && (
+					<p
+						className='text-xs leading-relaxed text-[var(--cinematic-accent,#339AF0)] font-medium'
+						style={{ color: isDark ? 'rgba(51, 154, 240, 0.95)' : '#2563eb' }}
+					>
+						{impact}
+					</p>
+				)}
 				<p
 					className='text-xs line-clamp-2 leading-relaxed'
-					style={{ color: isDark ? 'rgba(200,200,210,0.7)' : 'rgba(50,50,60,0.65)' }}
+					style={{ color: isDark ? 'rgba(220,220,230,0.78)' : 'rgba(50,50,60,0.65)' }}
 				>
 					{description || 'Description'}
 				</p>

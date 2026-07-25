@@ -17,8 +17,8 @@ export default function CinematicLayout({ children, title, description }) {
 				{children}
 			</main>
 			<footer className="cinematic-subpage-footer border-t border-white/10 py-8 px-5 tablet:px-12 text-center text-white/30 text-sm">
-				<Link href="/" className="hover:text-[var(--cinematic-accent)] transition-colors">
-					Back to home
+				<Link href="/" passHref>
+					<a className="hover:text-[var(--cinematic-accent)] transition-colors">Back to home</a>
 				</Link>
 				<p className="mt-2">&copy; {new Date().getFullYear()} {data.name}</p>
 			</footer>

@@ -2,6 +2,7 @@ import { useRef } from 'react'
 import Head from 'next/head'
 import data from '../data/portfolio.json'
 import { useLenisRef } from '../hooks/useLenisRef'
+import { useChapterSpy } from '../hooks/useChapterSpy'
 import CinematicNav from '../components/cinematic/CinematicNav'
 import DitheredPageBackground from '../components/cinematic/DitheredPageBackground'
 import HeroChapter from '../components/cinematic/HeroChapter'
@@ -13,6 +14,7 @@ import ChapterProgress from '../components/cinematic/ChapterProgress'
 export default function Home() {
 	const pageRef = useRef(null)
 	const { scrollTo } = useLenisRef()
+	const { activeChapter, scrolled } = useChapterSpy()
 
 	const handleNavigate = (href) => {
 		scrollTo(href)
@@ -27,11 +29,11 @@ export default function Home() {
 
 			<DitheredPageBackground pageRef={pageRef} />
 
-			<CinematicNav onNavigate={handleNavigate} />
-			<ChapterProgress />
+			<CinematicNav onNavigate={handleNavigate} activeChapter={activeChapter} scrolled={scrolled} />
+			<ChapterProgress onNavigate={handleNavigate} activeChapter={activeChapter} />
 
 			<div ref={pageRef} className="relative z-10">
-				<section className="intro-chapter relative min-h-screen">
+				<section className="intro-chapter relative min-h-screen" data-chapter="intro">
 					<HeroChapter onNavigate={handleNavigate} />
 				</section>
 

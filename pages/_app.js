@@ -1,4 +1,5 @@
 import "../styles/globals.css";
+import Head from "next/head";
 import { ThemeProvider } from "next-themes";
 import { useEffect } from "react";
 import Lenis from "@studio-freight/lenis";
@@ -77,6 +78,9 @@ const App = ({ Component, pageProps }) => {
       enableSystem={true}
       disableTransitionOnChange={false}
     >
+      <Head>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+      </Head>
       <ThemeScript />
       <SmoothScroll />
       <Component {...pageProps} />

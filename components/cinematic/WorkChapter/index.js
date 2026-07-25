@@ -1,17 +1,30 @@
-import { useRef, useEffect, useState, useCallback } from 'react'
+import { useRef, useEffect, useState, useCallback, useMemo } from 'react'
 import { gsap } from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { useGSAP } from '@gsap/react'
 import data from '../../../data/portfolio.json'
 import WorkCard from '../../WorkCard'
 
+if (typeof window !== 'undefined') {
+	gsap.registerPlugin(ScrollTrigger)
+}
+
 export default function WorkChapter() {
 	const sectionRef = useRef(null)
+	const headerRef = useRef(null)
+	const carouselRef = useRef(null)
 	const activeIndexRef = useRef(0)
 	const [activeDisplay, setActiveDisplay] = useState(0)
 	const carouselSpacingRef = useRef(340)
 
-	const total = data.projects.length
+	const projects = useMemo(
+		() => [...data.projects].sort((a, b) => Number(b.featured) - Number(a.featured)),
+		[]
+	)
+
+	const total = projects.length
 	const counterLabel = `${String(activeDisplay + 1).padStart(2, '0')} / ${String(total).padStart(2, '0')}`
+	const activeProject = projects[activeDisplay]
 
 	const getCarouselSpacing = useCallback(() => {
 		if (typeof window === 'undefined') return 340
@@ -77,10 +90,59 @@ export default function WorkChapter() {
 		return () => window.removeEventListener('resize', onResize)
 	}, [getCarouselSpacing, goToSlide])
 
+	useEffect(() => {
+		const onKeyDown = (e) => {
+			if (!sectionRef.current) return
+			if (e.target.closest('input, textarea, select, [contenteditable="true"]')) return
+
+			const rect = sectionRef.current.getBoundingClientRect()
+			const inView = rect.top < window.innerHeight * 0.85 && rect.bottom > window.innerHeight * 0.15
+			if (!inView) return
+
+			if (e.key === 'ArrowLeft') {
+				e.preventDefault()
+				goPrev()
+			}
+			if (e.key === 'ArrowRight') {
+				e.preventDefault()
+				goNext()
+			}
+		}
+
+		window.addEventListener('keydown', onKeyDown)
+		return () => window.removeEventListener('keydown', onKeyDown)
+	}, [goPrev, goNext])
+
 	useGSAP(
 		() => {
 			carouselSpacingRef.current = getCarouselSpacing()
 			requestAnimationFrame(() => goToSlide(0))
+
+			const section = sectionRef.current
+			const header = headerRef.current
+			const carousel = carouselRef.current
+			if (!section) return undefined
+
+			const tl = gsap.timeline({
+				scrollTrigger: {
+					trigger: section,
+					start: 'top 78%',
+					toggleActions: 'play none none reverse',
+				},
+			})
+
+			if (header) {
+				tl.fromTo(header, { opacity: 0, y: 48 }, { opacity: 1, y: 0, duration: 0.7, ease: 'power3.out' })
+			}
+			if (carousel) {
+				tl.fromTo(
+					carousel,
+					{ opacity: 0, y: 64, scale: 0.96 },
+					{ opacity: 1, y: 0, scale: 1, duration: 0.85, ease: 'power3.out' },
+					'-=0.45'
+				)
+			}
+
 			return undefined
 		},
 		{ scope: sectionRef, dependencies: [goToSlide, getCarouselSpacing] }
@@ -91,22 +153,35 @@ export default function WorkChapter() {
 			id="work"
 			ref={sectionRef}
 			className="work-chapter work-section-wrapper relative overflow-hidden py-16 tablet:py-24"
+			data-chapter="work"
 		>
-			<div className="px-5 tablet:px-12 pt-4 pb-8 flex items-end justify-between gap-4">
+			<div ref={headerRef} className="px-5 tablet:px-12 pt-4 pb-8 flex items-end justify-between gap-4">
 				<div className="cinematic-section-header">
-				<p className="font-label text-xs uppercase tracking-[0.32em] text-[var(--cinematic-accent)] mb-2">
-					Selected Work
-				</p>
-				<h2 className="font-display text-4xl tablet:text-6xl font-extrabold">Projects.</h2>
+					<p className="font-label text-xs uppercase tracking-[0.32em] text-[var(--cinematic-accent)] mb-2">
+						Selected Work
+					</p>
+					<h2 className="font-display text-4xl tablet:text-6xl font-extrabold">Projects.</h2>
 				</div>
-				<p className="font-label text-sm text-white/55 tracking-[0.2em] shrink-0" aria-live="polite">
+				<p className="font-label text-sm text-white/65 tracking-[0.2em] shrink-0" aria-live="polite">
 					{counterLabel}
 				</p>
 			</div>
 
+			{activeProject?.featured && (
+				<div className="px-5 tablet:px-12 pb-4">
+					<span className="project-card-tag inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[11px] font-label uppercase tracking-wider">
+						<span className="w-1.5 h-1.5 rounded-full bg-[var(--cinematic-accent)]" aria-hidden="true" />
+						Featured project
+					</span>
+				</div>
+			)}
+
 			<div
-				className="relative w-full h-[380px] tablet:h-[460px] max-w-full flex items-center justify-center"
+				ref={carouselRef}
+				className="relative w-full h-[400px] tablet:h-[480px] max-w-full flex items-center justify-center"
 				style={{ perspective: '1100px' }}
+				role="region"
+				aria-label="Project carousel. Use arrow keys to navigate."
 			>
 				<button
 					type="button"
@@ -125,7 +200,7 @@ export default function WorkChapter() {
 					className="relative w-full max-w-[calc(100vw-2.5rem)] tablet:max-w-lg h-full flex items-center justify-center pointer-events-none"
 					style={{ transformStyle: 'preserve-3d' }}
 				>
-					{data.projects.map((project, index) => (
+					{projects.map((project, index) => (
 						<div
 							key={project.id}
 							className="work-carousel-card absolute w-full will-change-transform"
@@ -135,6 +210,8 @@ export default function WorkChapter() {
 								img={project.imageSrc}
 								name={project.title}
 								description={project.description}
+								impact={project.impact}
+								featured={project.featured}
 								url={project.url}
 								tags={project.tags}
 								isActive={index === activeDisplay}
@@ -159,21 +236,27 @@ export default function WorkChapter() {
 				</button>
 			</div>
 
-			<div className="px-5 tablet:px-12 pb-12 pt-4">
+			<div className="px-5 tablet:px-12 pb-4 pt-2 text-center">
+				<p className="font-label text-[11px] uppercase tracking-[0.2em] text-white/45">
+					Arrow keys to navigate
+				</p>
+			</div>
+
+			<div className="px-5 tablet:px-12 pb-12 pt-2">
 				<div className="flex justify-center gap-1">
-					{Array.from({ length: total }).map((_, i) => (
+					{projects.map((project, i) => (
 						<button
-							key={i}
+							key={project.id}
 							type="button"
 							onClick={() => goToSlide(i)}
-							aria-label={`Go to project ${i + 1}`}
+							aria-label={`Go to ${project.title}`}
 							aria-current={i === activeDisplay ? 'true' : undefined}
 							className="min-h-11 min-w-11 flex items-center justify-center rounded-full transition-all duration-300"
 						>
 							<span
 								className={`work-carousel-dot rounded-full transition-all duration-300 block ${
 									i === activeDisplay ? 'work-carousel-dot-active' : ''
-								}`}
+								} ${project.featured ? 'work-carousel-dot-featured' : ''}`}
 							/>
 						</button>
 					))}
