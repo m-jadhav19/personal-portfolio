@@ -25,7 +25,9 @@ export function HeroMarquee({ lines, lineRefs, portrait }: HeroMarqueeProps) {
         <div
           key={line}
           ref={lineRefs?.[index]}
-          className={styles.marqueeRow}
+          className={`${styles.marqueeRow} ${
+            index === 1 ? styles.marqueeRowBehind : styles.marqueeRowFront
+          }`}
           data-intro="marquee-line"
         >
           <MarqueeTrack text={line} />

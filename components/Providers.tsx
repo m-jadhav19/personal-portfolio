@@ -3,7 +3,6 @@
 import { Cursor } from "@/components/Cursor/Cursor";
 import { Loader } from "@/components/Loader/Loader";
 import { Navigation } from "@/components/Navigation";
-import { useContactTheme } from "@/hooks/useContactTheme";
 import { useLenis } from "@/hooks/useLenis";
 
 type ProvidersProps = {
@@ -12,7 +11,6 @@ type ProvidersProps = {
 
 export function Providers({ children }: ProvidersProps) {
   useLenis();
-  useContactTheme();
 
   return (
     <>

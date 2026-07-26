@@ -16,7 +16,6 @@ export function Logo({ innerRef, onClick }: LogoProps) {
       onClick={(event) => {
         event.preventDefault();
         onClick?.();
-        window.scrollTo({ top: 0, behavior: "smooth" });
       }}
       aria-label="Mandar Jadhav — back to top"
     >

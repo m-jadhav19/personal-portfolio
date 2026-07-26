@@ -20,7 +20,8 @@ export type Project = {
 export type Service = {
   id: string;
   title: string;
-  description: string;
+  imageSrc: string;
+  items: string[];
 };
 
 export type Experience = {
@@ -57,9 +58,8 @@ export type Portfolio = {
   socials: Social[];
   projects: Project[];
   services: Service[];
-  aboutParaLine1: string;
-  aboutParaLine2: string;
-  aboutParaLine3: string;
+  servicesIntro: string;
+  aboutCopy: string;
   stats: {
     yearsExperience: string;
     projectsCompleted: number;

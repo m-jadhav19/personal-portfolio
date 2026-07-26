@@ -2,6 +2,8 @@
 
 import { useEffect } from "react";
 
+import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Lenis from "lenis";
 
 import "lenis/dist/lenis.css";
@@ -49,9 +51,15 @@ export function useLenis() {
     });
 
     win.__lenis__ = lenis;
+    if (document.documentElement.classList.contains("loader-active")) {
+      lenis.stop();
+    }
     if (!win.__lenisScrollListeners__) {
       win.__lenisScrollListeners__ = new Set();
     }
+
+    gsap.registerPlugin(ScrollTrigger);
+    lenis.on("scroll", ScrollTrigger.update);
 
     document.documentElement.classList.add("lenis");
 
@@ -68,6 +76,7 @@ export function useLenis() {
 
     return () => {
       cancelAnimationFrame(frame);
+      lenis.off("scroll", ScrollTrigger.update);
       lenis.destroy();
       document.documentElement.classList.remove("lenis");
       delete win.__lenis__;

@@ -29,7 +29,9 @@ export function Hero() {
     const unsubscribeParallax = bindMarqueeParallax(rows);
 
     const runIntro = () => {
-      if (hasPlayedIntro.current) return;
+      if (hasPlayedIntro.current && process.env.NODE_ENV !== "development") {
+        return;
+      }
       hasPlayedIntro.current = true;
 
       playHeroIntro({

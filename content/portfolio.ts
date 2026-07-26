@@ -8,7 +8,7 @@ export const portfolio: Portfolio = {
   headerTaglineFour: "Developer based in Mumbai, India.",
   showBlog: false,
   showCursor: true,
-  darkMode: false,
+  darkMode: true,
   socials: [
     {
       id: "1",
@@ -136,34 +136,52 @@ export const portfolio: Portfolio = {
     {
       id: "1",
       title: "Art Direction",
-      description:
-        "We help with the creation and development of online advertising ideas, with particular focus on their visual appearance.",
+      imageSrc: "/images/retro.png",
+      items: [
+        "Visual strategy",
+        "Creative concept",
+        "Art supervision",
+        "Brand storytelling",
+      ],
     },
     {
       id: "2",
       title: "Branding",
-      description:
-        "We design key brand elements such as the logo, color scheme, typography, and other design components that makes your brand stand out from competitors.",
+      imageSrc: "/images/brutualist.png",
+      items: [
+        "Brand identity",
+        "Logo design",
+        "Visual language",
+        "Style guide",
+      ],
     },
     {
       id: "3",
-      title: "Web Design",
-      description:
-        "We build and optimize your online presence. Website is the digital entry point into your business and a powerful revenue channel.",
+      title: "Digital Design",
+      imageSrc: "/images/ply-app.png",
+      items: [
+        "UI/UX design",
+        "Prototyping",
+        "Design systems",
+        "Interaction design",
+      ],
     },
     {
       id: "4",
-      title: "3D Design",
-      description:
-        "We combine creative design and technical skills to build striking 3D visualisations that bring your project to life.",
+      title: "Development",
+      imageSrc: "/images/epoch.png",
+      items: [
+        "Frontend development",
+        "React / Next.js",
+        "Motion & interactions",
+        "Responsive design",
+      ],
     },
   ],
-  aboutParaLine1:
-    "I am an enthusiastic and devoted Frontend Developer with experience in building responsive, user-friendly online apps as a professional and as a hobby. With a strong background in HTML, CSS, and JavaScript, I specialize in creating dynamic and engaging user interfaces using modern frameworks like React.js, Vue.js and Next.js.",
-  aboutParaLine2:
-    "In my recent projects, I've been working on constructing interactive 3D model viewers with Three.js, as well as complex property search functions that allow users to easily filter properties. My expertise includes increasing site performance and guaranteeing cross-browser compatibility, which improves the overall user experience.",
-  aboutParaLine3:
-    "Aside from coding, I enjoy gaming and game creation, and I am always searching for new methods to merge complex graphics and interactivity into web applications. I also love football, and when I have free time, I like to play and watch the game.",
+  servicesIntro:
+    "I'm not a founder, a CEO, or a strategist hiding behind a title. I'm just a creator. Someone who designs, builds, and thinks in equal measure, using that mix to take ideas from first sketch to live product with the care they deserve.",
+  aboutCopy:
+    "I design and build digital experiences with a focus on craft, motion, and interaction — creating interfaces where every detail feels intentional. Based in Mumbai, I work across React, Next.js, and GSAP to turn ideas into polished, responsive products.",
   stats: {
     yearsExperience: "2+",
     projectsCompleted: 7,

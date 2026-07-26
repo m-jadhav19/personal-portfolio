@@ -35,7 +35,7 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: `${portfolio.name} | ${portfolio.headerTaglineThree}`,
-  description: portfolio.aboutParaLine1,
+  description: portfolio.aboutCopy,
 };
 
 export default function RootLayout({
@@ -46,7 +46,8 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${bebasNeue.variable} ${instrumentSerif.variable} ${inter.variable} ${jetbrainsMono.variable}`}
+      className={`theme-dark ${bebasNeue.variable} ${instrumentSerif.variable} ${inter.variable} ${jetbrainsMono.variable}`}
+      data-theme="dark"
     >
       <body>
         <Providers>{children}</Providers>

@@ -2,61 +2,154 @@
 
 import { useEffect, useRef, useState } from "react";
 
-import { gsap } from "gsap";
-
 import { signalIntroComplete } from "@/animations/loader";
-import { EASE_CSS } from "@/lib/motion";
+import { resetIntroDocumentState } from "@/lib/introDocument";
 
+import { DevLoaderBypass } from "./DevLoaderBypass";
+import {
+  getLoaderTiming,
+  nextLoaderCount,
+  readLoaderSeen,
+  writeLoaderSeen,
+} from "./loaderState";
+import { loaderMessages, pickLoaderMessage } from "./loaderMessages";
 import styles from "./Loader.module.css";
 
+type LoaderWindow = Window & {
+  __lenis__?: {
+    start: () => void;
+    stop: () => void;
+  };
+};
+
 export function Loader() {
+  if (process.env.NODE_ENV === "development") {
+    return <DevLoaderBypass />;
+  }
+
+  return <ProductionLoader />;
+}
+
+function ProductionLoader() {
   const [count, setCount] = useState(0);
+  const [message, setMessage] = useState(loaderMessages[0].text);
+  const [isExiting, setIsExiting] = useState(false);
   const loaderRef = useRef<HTMLDivElement>(null);
   const hasCompleted = useRef(false);
+  const assetsReadyRef = useRef(false);
+  const timingRef = useRef(getLoaderTiming(false, false));
 
   useEffect(() => {
+    const prefersReducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    const hasSeenLoader = readLoaderSeen();
+    const timing = getLoaderTiming(hasSeenLoader, prefersReducedMotion);
+    timingRef.current = timing;
+
+    resetIntroDocumentState();
     document.documentElement.classList.add("intro-loading");
+    document.documentElement.classList.add("loader-active");
+    (window as LoaderWindow).__lenis__?.stop();
+    setMessage(pickLoaderMessage(loaderMessages));
+
+    if (prefersReducedMotion) {
+      assetsReadyRef.current = true;
+      setCount(100);
+      return () => {
+        if (!hasCompleted.current) {
+          document.documentElement.classList.remove("loader-active", "intro-loading");
+          (window as LoaderWindow).__lenis__?.start();
+        }
+      };
+    }
+
+    if (hasSeenLoader) {
+      setCount(88);
+    }
+
+    let cancelled = false;
+    const markReady = () => {
+      if (!cancelled) {
+        assetsReadyRef.current = true;
+      }
+    };
+
+    const pageReady =
+      document.readyState === "complete"
+        ? Promise.resolve()
+        : new Promise<void>((resolve) => {
+            window.addEventListener("load", () => resolve(), { once: true });
+          });
+    const fontsReady = document.fonts?.ready ?? Promise.resolve();
+
+    void Promise.all([pageReady, fontsReady]).then(markReady);
 
     const interval = window.setInterval(() => {
       setCount((current) => {
-        const next = Math.min(100, current + Math.ceil(Math.random() * 12));
-        return next;
+        const increment = hasSeenLoader
+          ? 12
+          : Math.max(1, Math.ceil(Math.random() * 7));
+        return nextLoaderCount(
+          current,
+          assetsReadyRef.current,
+          increment,
+        );
       });
-    }, 90);
+    }, timing.intervalMs);
 
-    return () => window.clearInterval(interval);
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+
+      if (!hasCompleted.current) {
+        document.documentElement.classList.remove("loader-active", "intro-loading");
+        (window as LoaderWindow).__lenis__?.start();
+      }
+    };
   }, []);
 
-  useEffect(() => {
-    if (count < 100 || hasCompleted.current) return;
-
+  const finish = () => {
+    if (hasCompleted.current) return;
     hasCompleted.current = true;
-    const loader = loaderRef.current;
+    writeLoaderSeen();
+    document.documentElement.classList.remove("loader-active");
+    (window as LoaderWindow).__lenis__?.start();
+    signalIntroComplete();
+  };
 
-    const finish = () => {
-      signalIntroComplete();
-    };
-
-    if (!loader) {
-      finish();
-      return;
-    }
+  useEffect(() => {
+    if (count < 100 || isExiting) return;
 
     const timeout = window.setTimeout(() => {
-      gsap.to(loader, {
-        yPercent: -100,
-        duration: 0.8,
-        ease: EASE_CSS,
-        onComplete: finish,
-      });
-    }, 300);
+      setIsExiting(true);
+    }, timingRef.current.exitDelayMs);
 
     return () => window.clearTimeout(timeout);
-  }, [count]);
+  }, [count, isExiting]);
+
+  useEffect(() => {
+    if (!isExiting || timingRef.current.exitDuration > 0) return;
+    finish();
+  }, [isExiting]);
 
   return (
-    <div ref={loaderRef} className={styles.loader} aria-hidden={count >= 100}>
-      <span className={styles.count}>{count}</span>
+    <div
+      ref={loaderRef}
+      className={`${styles.loader} ${isExiting ? styles.loaderExiting : ""}`}
+      role="status"
+      aria-live="polite"
+      aria-label={`Loading ${count}%`}
+      onTransitionEnd={(event) => {
+        if (event.propertyName === "transform" && isExiting) {
+          finish();
+        }
+      }}
+    >
+      <div className={styles.copy}>
+        <p className={styles.message}>{message}</p>
+        <p className={styles.count}>{count}%</p>
+      </div>
     </div>
   );
 }

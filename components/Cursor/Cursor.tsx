@@ -9,6 +9,7 @@ const HOVER_SIZE = 48;
 
 const INTERACTIVE_SELECTOR =
   'a, button, [data-cursor="nav"], [data-cursor="interactive"]';
+const HIDE_CURSOR_SELECTOR = '[data-cursor="hide"]';
 
 export function Cursor() {
   const dotRef = useRef<HTMLDivElement>(null);
@@ -59,7 +60,19 @@ export function Cursor() {
     const onMouseOver = (event: MouseEvent) => {
       const target = event.target;
       if (!(target instanceof Element)) return;
-      if (target.closest(INTERACTIVE_SELECTOR)) {
+
+      if (target.closest(HIDE_CURSOR_SELECTOR)) {
+        gsap.to(dot, { opacity: 0, duration: 0.15 });
+        scaleTo(BASE_SIZE);
+        return;
+      }
+
+      gsap.to(dot, { opacity: 1, duration: 0.15 });
+
+      if (
+        target.closest(INTERACTIVE_SELECTOR) &&
+        !target.closest(HIDE_CURSOR_SELECTOR)
+      ) {
         scaleTo(HOVER_SIZE);
       }
     };
@@ -68,6 +81,18 @@ export function Cursor() {
       const target = event.target;
       const related = event.relatedTarget;
       if (!(target instanceof Element)) return;
+
+      if (target.closest(HIDE_CURSOR_SELECTOR)) {
+        if (
+          related instanceof Element &&
+          related.closest(HIDE_CURSOR_SELECTOR)
+        ) {
+          return;
+        }
+        gsap.to(dot, { opacity: 1, duration: 0.15 });
+        return;
+      }
+
       if (!target.closest(INTERACTIVE_SELECTOR)) return;
       if (related instanceof Element && related.closest(INTERACTIVE_SELECTOR)) {
         return;
@@ -82,6 +107,7 @@ export function Cursor() {
       yPercent: -50,
       width: BASE_SIZE,
       height: BASE_SIZE,
+      opacity: 1,
     });
 
     frame = requestAnimationFrame(animateCursor);

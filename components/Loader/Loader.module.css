@@ -3,17 +3,57 @@
   inset: 0;
   z-index: 1000;
   display: flex;
-  align-items: flex-end;
-  justify-content: flex-start;
-  padding: var(--space-24);
-  background-color: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-body);
-  font-size: 0.85rem;
-  letter-spacing: 0.05em;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: clamp(1.5rem, 4vw, 3rem) var(--grid-padding-inline);
+  background: #000;
+  color: #fff;
   pointer-events: all;
+  transform: translateY(0);
+  transition: transform 1s cubic-bezier(0.76, 0, 0.24, 1);
 }
 
-.count::after {
-  content: "%";
+.loaderExiting {
+  transform: translateY(-100vh);
+}
+
+.copy {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(0.75rem, 2vw, 1.5rem);
+  max-width: min(52rem, 92vw);
+}
+
+.message {
+  font-family: var(--font-body);
+  font-size: clamp(3rem, 5vw, 4.375rem);
+  font-weight: 600;
+  line-height: 0.95;
+  letter-spacing: -0.04em;
+  text-transform: uppercase;
+}
+
+.count {
+  font-family: var(--font-body);
+  font-size: clamp(6rem, 18vw, 12rem);
+  font-weight: 700;
+  line-height: 0.82;
+  letter-spacing: -0.06em;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 700px) {
+  .message {
+    font-size: clamp(2rem, 8vw, 2.75rem);
+  }
+
+  .count {
+    font-size: clamp(4.5rem, 24vw, 7rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loader {
+    transition: none;
+  }
 }

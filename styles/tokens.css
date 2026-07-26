@@ -1,22 +1,16 @@
 /* ─── Color Tokens ───────────────────────────────────────────────────────── */
 
 :root {
-  --background: #f5f4f0;
-  --foreground: #0e0e0e;
+  --background: #0e0e0e;
+  --foreground: #f5f4f0;
 
-  --muted: #6b6b6b;
-  --border: rgba(14, 14, 14, 0.12);
+  --muted: #8a8a8a;
+  --border: rgba(245, 244, 240, 0.12);
 
   --accent: #0ea5e9;
   --success: #22c55e;
 
-  --surface: #ffffff;
-
-  /* Dark theme (Contact section) — toggled via .theme-dark on <html> */
-  --background-dark: #0e0e0e;
-  --foreground-dark: #f5f4f0;
-  --muted-dark: #8a8a8a;
-  --border-dark: rgba(245, 244, 240, 0.12);
+  --surface: #1a1a1a;
 
   /* ─── Spacing Scale ──────────────────────────────────────────────────── */
 
@@ -39,7 +33,7 @@
 
   --radius: 0;
   --border-width: 1px;
-  --border-color: rgba(0, 0, 0, 0.1);
+  --border-color: rgba(245, 244, 240, 0.12);
 
   /* ─── Motion ─────────────────────────────────────────────────────────── */
 
@@ -50,15 +44,14 @@
   --duration-hero: 1.6s;
 
   --nav-height: 80px;
+
+  /* Light footer contrast on dark site */
+  --footer-background: #f5f4f0;
+  --footer-foreground: #0e0e0e;
+  --footer-muted: #6b6b6b;
+  --footer-border: rgba(14, 14, 14, 0.12);
 }
 
-/* ─── Dark theme (Contact section centered) ──────────────────────────────── */
-
-html.theme-dark {
-  --background: var(--background-dark);
-  --foreground: var(--foreground-dark);
-  --muted: var(--muted-dark);
-  --border: var(--border-dark);
-  --border-color: var(--border-dark);
+html {
   color-scheme: dark;
 }

@@ -31,11 +31,19 @@ export function Navigation() {
   const magneticOne = useMagneticHover<HTMLDivElement>();
   const magneticTwo = useMagneticHover<HTMLDivElement>();
   const magneticThree = useMagneticHover<HTMLDivElement>();
-  const magneticHandlers = [magneticOne, magneticTwo, magneticThree];
+  const magneticFour = useMagneticHover<HTMLDivElement>();
+  const magneticHandlers = [
+    magneticOne,
+    magneticTwo,
+    magneticThree,
+    magneticFour,
+  ];
 
   useEffect(() => {
     const runIntro = () => {
-      if (hasPlayedIntro.current) return;
+      if (hasPlayedIntro.current && process.env.NODE_ENV !== "development") {
+        return;
+      }
       hasPlayedIntro.current = true;
 
       playNavigationIntro({
@@ -49,7 +57,7 @@ export function Navigation() {
       return;
     }
 
-    window.addEventListener(INTRO_COMPLETE_EVENT, runIntro, { once: true });
+    window.addEventListener(INTRO_COMPLETE_EVENT, runIntro);
 
     return () => {
       window.removeEventListener(INTRO_COMPLETE_EVENT, runIntro);
@@ -68,7 +76,10 @@ export function Navigation() {
     <>
       <header className={headerClassName}>
         <div className={styles.inner}>
-          <Logo innerRef={logoRef} />
+          <Logo
+            innerRef={logoRef}
+            onClick={() => scrollToSection("top")}
+          />
 
           <nav className={styles.desktopNav} aria-label="Primary">
             {navigation.map((item, index) => {

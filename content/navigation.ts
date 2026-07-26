@@ -7,7 +7,8 @@ export type NavigationItem = {
 export const navigation: NavigationItem[] = [
   { id: "about", label: "About", number: "01" },
   { id: "projects", label: "Projects", number: "02" },
-  { id: "contact", label: "Contact", number: "03" },
+  { id: "services", label: "Services", number: "03" },
+  { id: "contact", label: "Contact", number: "04" },
 ];
 
 export type MobileExtraLink = {

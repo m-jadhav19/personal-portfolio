@@ -2,35 +2,58 @@
 
 import { useEffect, useState } from "react";
 
+import { subscribeLenisScroll } from "@/hooks/useLenis";
+import { SCROLL_HEADER_OFFSET } from "@/lib/smoothScroll";
+
+function getScrollY() {
+  const lenis = (window as Window & { __lenis__?: { scroll: number } }).__lenis__;
+  return lenis?.scroll ?? window.scrollY;
+}
+
 export function useActiveSection(sectionIds: string[]) {
-  const [activeId, setActiveId] = useState(sectionIds[0] ?? "");
+  const [activeId, setActiveId] = useState<string | null>(null);
 
   useEffect(() => {
-    const sections = sectionIds
-      .map((id) => document.getElementById(id))
-      .filter((section): section is HTMLElement => Boolean(section));
+    const getSections = () =>
+      sectionIds
+        .map((id) => document.getElementById(id))
+        .filter((section): section is HTMLElement => Boolean(section));
 
-    if (!sections.length) return;
+    const updateActive = () => {
+      const sections = getSections();
+      if (!sections.length) return;
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visible = entries
-          .filter((entry) => entry.isIntersecting)
-          .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+      const scrollY = getScrollY();
+      const marker =
+        scrollY + Math.abs(SCROLL_HEADER_OFFSET) + window.innerHeight * 0.35;
+      const firstSectionTop =
+        sections[0].getBoundingClientRect().top + scrollY;
 
-        if (visible[0]?.target.id) {
-          setActiveId(visible[0].target.id);
+      if (marker < firstSectionTop) {
+        setActiveId(null);
+        return;
+      }
+
+      let currentId = sections[0].id;
+      for (const section of sections) {
+        const sectionTop = section.getBoundingClientRect().top + scrollY;
+        if (sectionTop <= marker) {
+          currentId = section.id;
         }
-      },
-      {
-        rootMargin: "-35% 0px -50% 0px",
-        threshold: [0, 0.25, 0.5, 0.75, 1],
-      },
-    );
+      }
 
-    sections.forEach((section) => observer.observe(section));
+      setActiveId(currentId);
+    };
 
-    return () => observer.disconnect();
+    const unsubscribe = subscribeLenisScroll(updateActive);
+    updateActive();
+
+    window.addEventListener("resize", updateActive);
+
+    return () => {
+      unsubscribe();
+      window.removeEventListener("resize", updateActive);
+    };
   }, [sectionIds]);
 
   return activeId;
