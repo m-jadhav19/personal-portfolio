@@ -43,7 +43,7 @@
 .logoLine1,
 .logoLine2 {
   display: block;
-  font-family: var(--font-body);
+  font-family: var(--font-display-sans);
   font-size: clamp(0.95rem, 1.15vw, 1.1rem);
   font-weight: 700;
   line-height: 1.05;
@@ -80,8 +80,9 @@
   align-items: baseline;
   gap: 0.35em;
   padding-block: var(--space-4);
+  font-family: var(--font-display-sans);
   font-size: 0.85rem;
-  font-weight: 500;
+  font-weight: 600;
   letter-spacing: 0.05em;
   text-transform: uppercase;
   color: inherit;
@@ -108,7 +109,7 @@
 }
 
 .navNumber {
-  font-family: var(--font-body);
+  font-family: inherit;
   font-size: inherit;
   font-weight: 500;
   letter-spacing: inherit;
@@ -116,7 +117,7 @@
 }
 
 .navLabel {
-  font-family: var(--font-body);
+  font-family: inherit;
 }
 
 .activeDot {
@@ -153,9 +154,9 @@
 }
 
 .menuButton {
-  font-family: var(--font-body);
+  font-family: var(--font-display-sans);
   font-size: 0.85rem;
-  font-weight: 500;
+  font-weight: 600;
   letter-spacing: 0.05em;
   text-transform: lowercase;
   color: inherit;

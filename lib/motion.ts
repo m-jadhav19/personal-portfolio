@@ -9,6 +9,19 @@ export const DURATION = {
   hero: 1.6,
 } as const;
 
+/** Shorter timings for the initial page intro sequence. */
+export const INTRO_DURATION = {
+  navLogo: 0.75,
+  navLinks: 0.32,
+  navLinksDelay: 0.2,
+  navStagger: 0.05,
+  heroMarquee: 0.8,
+  heroMarqueeStagger: 0.06,
+  heroPortrait: 1,
+  heroPortraitDelay: 0.05,
+  loaderReveal: 0.6,
+} as const;
+
 export const DURATION_MS = {
   fast: DURATION.fast * 1000,
   medium: DURATION.medium * 1000,

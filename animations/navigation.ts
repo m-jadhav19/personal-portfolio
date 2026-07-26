@@ -1,6 +1,6 @@
 import { gsap } from "gsap";
 
-import { DURATION, EASE_CSS } from "@/lib/motion";
+import { DURATION, EASE_CSS, INTRO_DURATION } from "@/lib/motion";
 
 export const INTRO_COMPLETE_EVENT = "intro:complete";
 export const NAV_COMPLETE_EVENT = "nav:complete";
@@ -22,7 +22,7 @@ export function playNavigationIntro({ logo, links }: NavigationIntroTargets) {
 
   if (logo) {
     gsap.set(logo, { yPercent: 120 });
-    tl.to(logo, { yPercent: 0, duration: DURATION.large }, 0);
+    tl.to(logo, { yPercent: 0, duration: INTRO_DURATION.navLogo }, 0);
   }
 
   if (links.length) {
@@ -32,10 +32,10 @@ export function playNavigationIntro({ logo, links }: NavigationIntroTargets) {
       {
         opacity: 1,
         y: 0,
-        duration: DURATION.fast,
-        stagger: 0.08,
+        duration: INTRO_DURATION.navLinks,
+        stagger: INTRO_DURATION.navStagger,
       },
-      0.35,
+      INTRO_DURATION.navLinksDelay,
     );
   }
 

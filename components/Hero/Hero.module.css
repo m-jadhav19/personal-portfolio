@@ -58,11 +58,11 @@
   display: inline-flex;
   width: max-content;
   white-space: nowrap;
-  font-family: var(--font-marquee-family);
-  font-weight: 400;
+  font-family: var(--font-display-sans);
+  font-weight: 700;
   font-size: clamp(3.25rem, 11.5vw, 8.5rem);
   line-height: 0.9;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
   color: var(--foreground);
   text-transform: uppercase;
   animation: marquee-left 24s linear infinite;
@@ -272,8 +272,9 @@
   left: 50%;
   z-index: 2;
   transform: translateX(-50%);
+  font-family: var(--font-display-sans);
   font-size: 0.7rem;
-  font-weight: 500;
+  font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--muted);

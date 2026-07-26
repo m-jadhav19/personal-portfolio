@@ -16,6 +16,7 @@
 .loaderExiting {
   opacity: 0;
   pointer-events: none;
+  transition: opacity 0.35s cubic-bezier(0.76, 0, 0.24, 1);
 }
 
 .copy {
@@ -26,16 +27,16 @@
 }
 
 .message {
-  font-family: var(--font-body);
+  font-family: var(--font-display-sans);
   font-size: clamp(3rem, 5vw, 4.375rem);
-  font-weight: 600;
+  font-weight: 700;
   line-height: 0.95;
   letter-spacing: -0.04em;
   text-transform: uppercase;
 }
 
 .count {
-  font-family: var(--font-body);
+  font-family: var(--font-display-sans);
   font-size: clamp(6rem, 18vw, 12rem);
   font-weight: 700;
   line-height: 0.82;

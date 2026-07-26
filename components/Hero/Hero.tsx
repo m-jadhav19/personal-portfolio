@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 
 import { playHeroIntro } from "@/animations/hero";
 import { bindMarqueeParallax } from "@/animations/marquee";
-import { NAV_COMPLETE_EVENT } from "@/animations/navigation";
+import { INTRO_COMPLETE_EVENT } from "@/animations/navigation";
 import { portfolio } from "@/content/portfolio";
 
 import { HeroMarquee } from "./HeroMarquee";
@@ -40,15 +40,15 @@ export function Hero() {
       });
     };
 
-    if (document.documentElement.classList.contains("intro-nav-only")) {
+    if (document.documentElement.dataset.intro === "complete") {
       runIntro();
     } else {
-      window.addEventListener(NAV_COMPLETE_EVENT, runIntro, { once: true });
+      window.addEventListener(INTRO_COMPLETE_EVENT, runIntro, { once: true });
     }
 
     return () => {
       unsubscribeParallax();
-      window.removeEventListener(NAV_COMPLETE_EVENT, runIntro);
+      window.removeEventListener(INTRO_COMPLETE_EVENT, runIntro);
     };
   }, []);
 

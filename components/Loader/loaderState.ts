@@ -1,5 +1,10 @@
 export const LOADER_SEEN_KEY = "portfolio-loader-seen";
 
+export const MIN_LOADER_VISIBLE_MS = 1000;
+export const MIN_LOADER_REPEAT_VISIBLE_MS = 550;
+export const MIN_LOADER_ASSETS_READY_MS = 700;
+export const MIN_LOADER_REPEAT_ASSETS_READY_MS = 400;
+
 export type LoaderTiming = {
   intervalMs: number;
   exitDelayMs: number;
@@ -29,10 +34,10 @@ export function getLoaderTiming(  hasSeenLoader: boolean,
   }
 
   if (hasSeenLoader) {
-    return { intervalMs: 24, exitDelayMs: 80, exitDuration: 0.45 };
+    return { intervalMs: 35, exitDelayMs: 250, exitDuration: 0.35 };
   }
 
-  return { intervalMs: 70, exitDelayMs: 1500, exitDuration: 1 };
+  return { intervalMs: 60, exitDelayMs: 500, exitDuration: 0.7 };
 }
 
 export function nextLoaderCount(

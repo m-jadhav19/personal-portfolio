@@ -1,15 +1,15 @@
 import type { Metadata } from "next";
-import { Bebas_Neue, Instrument_Serif, Inter, JetBrains_Mono } from "next/font/google";
+import { Instrument_Serif, Inter, JetBrains_Mono, Space_Grotesk } from "next/font/google";
 
 import "@/styles/globals.css";
 
 import { portfolio } from "@/content/portfolio";
 import { Providers } from "@/components/Providers";
 
-const bebasNeue = Bebas_Neue({
+const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
-  weight: "400",
-  variable: "--font-marquee",
+  weight: ["500", "600", "700"],
+  variable: "--font-space-grotesk",
   display: "swap",
 });
 
@@ -46,7 +46,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`theme-dark ${bebasNeue.variable} ${instrumentSerif.variable} ${inter.variable} ${jetbrainsMono.variable}`}
+      className={`theme-dark ${spaceGrotesk.variable} ${instrumentSerif.variable} ${inter.variable} ${jetbrainsMono.variable}`}
       data-theme="dark"
     >
       <body>

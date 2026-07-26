@@ -3,12 +3,15 @@
 import { useEffect, useRef, useState } from "react";
 
 import { signalIntroComplete } from "@/animations/loader";
-import { playReveal, prefersReducedShapeMotion } from "@/animations/shapeOverlay";
+import { playLoaderReveal, prefersReducedShapeMotion } from "@/animations/shapeOverlay";
 import { resetIntroDocumentState } from "@/lib/introDocument";
 
-import { DevLoaderBypass } from "./DevLoaderBypass";
 import {
   getLoaderTiming,
+  MIN_LOADER_ASSETS_READY_MS,
+  MIN_LOADER_REPEAT_ASSETS_READY_MS,
+  MIN_LOADER_REPEAT_VISIBLE_MS,
+  MIN_LOADER_VISIBLE_MS,
   nextLoaderCount,
   readLoaderSeen,
   writeLoaderSeen,
@@ -24,10 +27,6 @@ type LoaderWindow = Window & {
 };
 
 export function Loader() {
-  if (process.env.NODE_ENV === "development") {
-    return <DevLoaderBypass />;
-  }
-
   return <ProductionLoader />;
 }
 
@@ -35,9 +34,13 @@ function ProductionLoader() {
   const [count, setCount] = useState(0);
   const [message, setMessage] = useState(loaderMessages[0].text);
   const [isExiting, setIsExiting] = useState(false);
+  const [isFading, setIsFading] = useState(false);
+  const [isHidden, setIsHidden] = useState(false);
   const loaderRef = useRef<HTMLDivElement>(null);
   const hasCompleted = useRef(false);
   const assetsReadyRef = useRef(false);
+  const mountedAtRef = useRef(0);
+  const hasSeenLoaderRef = useRef(false);
   const timingRef = useRef(getLoaderTiming(false, false));
 
   useEffect(() => {
@@ -46,7 +49,10 @@ function ProductionLoader() {
     ).matches;
     const hasSeenLoader = readLoaderSeen();
     const timing = getLoaderTiming(hasSeenLoader, prefersReducedMotion);
+
+    hasSeenLoaderRef.current = hasSeenLoader;
     timingRef.current = timing;
+    mountedAtRef.current = Date.now();
 
     resetIntroDocumentState();
     document.documentElement.classList.add("intro-loading");
@@ -57,16 +63,11 @@ function ProductionLoader() {
     if (prefersReducedMotion) {
       assetsReadyRef.current = true;
       setCount(100);
-      return () => {
-        if (!hasCompleted.current) {
-          document.documentElement.classList.remove("loader-active", "intro-loading");
-          (window as LoaderWindow).__lenis__?.start();
-        }
-      };
+      return;
     }
 
     if (hasSeenLoader) {
-      setCount(88);
+      setCount(65);
     }
 
     let cancelled = false;
@@ -89,7 +90,7 @@ function ProductionLoader() {
     const interval = window.setInterval(() => {
       setCount((current) => {
         const increment = hasSeenLoader
-          ? 12
+          ? 8
           : Math.max(1, Math.ceil(Math.random() * 7));
         return nextLoaderCount(
           current,
@@ -102,7 +103,11 @@ function ProductionLoader() {
     return () => {
       cancelled = true;
       window.clearInterval(interval);
+    };
+  }, []);
 
+  useEffect(() => {
+    return () => {
       if (!hasCompleted.current) {
         document.documentElement.classList.remove("loader-active", "intro-loading");
         (window as LoaderWindow).__lenis__?.start();
@@ -117,14 +122,30 @@ function ProductionLoader() {
     document.documentElement.classList.remove("loader-active");
     (window as LoaderWindow).__lenis__?.start();
     signalIntroComplete();
+    setIsHidden(true);
   };
 
   useEffect(() => {
     if (count < 100 || isExiting) return;
 
+    const minVisibleMs = hasSeenLoaderRef.current
+      ? MIN_LOADER_REPEAT_VISIBLE_MS
+      : MIN_LOADER_VISIBLE_MS;
+    const assetsReadyCap = hasSeenLoaderRef.current
+      ? MIN_LOADER_REPEAT_ASSETS_READY_MS
+      : MIN_LOADER_ASSETS_READY_MS;
+    const effectiveMinVisibleMs = assetsReadyRef.current
+      ? Math.min(minVisibleMs, assetsReadyCap)
+      : minVisibleMs;
+    const elapsed = Date.now() - mountedAtRef.current;
+    const delay = Math.max(
+      timingRef.current.exitDelayMs,
+      effectiveMinVisibleMs - elapsed,
+    );
+
     const timeout = window.setTimeout(() => {
       setIsExiting(true);
-    }, timingRef.current.exitDelayMs);
+    }, delay);
 
     return () => window.clearTimeout(timeout);
   }, [count, isExiting]);
@@ -138,8 +159,9 @@ function ProductionLoader() {
     }
 
     let cancelled = false;
+    setIsFading(true);
 
-    void playReveal().then(() => {
+    void playLoaderReveal().then(() => {
       if (!cancelled) {
         finish();
       }
@@ -150,10 +172,14 @@ function ProductionLoader() {
     };
   }, [isExiting]);
 
+  if (isHidden) {
+    return null;
+  }
+
   return (
     <div
       ref={loaderRef}
-      className={`${styles.loader} ${isExiting ? styles.loaderExiting : ""}`}
+      className={`${styles.loader} ${isFading ? styles.loaderExiting : ""}`}
       role="status"
       aria-live="polite"
       aria-label={`Loading ${count}%`}

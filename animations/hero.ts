@@ -1,6 +1,6 @@
 import { gsap } from "gsap";
 
-import { DURATION, EASE_CSS } from "@/lib/motion";
+import { EASE_CSS, INTRO_DURATION } from "@/lib/motion";
 
 export const HERO_COMPLETE_EVENT = "hero:complete";
 
@@ -25,23 +25,23 @@ export function playHeroIntro({ marqueeLines, portrait }: HeroIntroTargets) {
       marqueeLines,
       {
         clipPath: "inset(0% 0 0 0)",
-        duration: DURATION.large,
-        stagger: 0.12,
+        duration: INTRO_DURATION.heroMarquee,
+        stagger: INTRO_DURATION.heroMarqueeStagger,
       },
       0,
     );
   }
 
   if (portrait) {
-    gsap.set(portrait, { clipPath: "inset(100% 0 0 0)", scale: 1.08 });
+    gsap.set(portrait, { clipPath: "inset(100% 0 0 0)", scale: 1.05 });
     tl.to(
       portrait,
       {
         clipPath: "inset(0% 0 0 0)",
         scale: 1,
-        duration: DURATION.hero,
+        duration: INTRO_DURATION.heroPortrait,
       },
-      0.2,
+      INTRO_DURATION.heroPortraitDelay,
     );
   }
 

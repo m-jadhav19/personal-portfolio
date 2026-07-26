@@ -1,15 +1,20 @@
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
+import { INTRO_DURATION } from "@/lib/motion";
+
 const NUM_POINTS = 10;
 const DELAY_POINTS_MAX = 0.3;
 const DELAY_PER_PATH = 0.25;
 const DURATION = 0.9;
+const LOADER_DELAY_POINTS_MAX = 0.18;
+const LOADER_DELAY_PER_PATH = 0.14;
 const EASE = "power2.inOut";
 const SCROLL_TOP_THRESHOLD = 4;
 
 export type ShapeOverlayController = {
   playReveal: () => Promise<void>;
+  playLoaderReveal: () => Promise<void>;
   playCover: () => Promise<void>;
   isAnimating: () => boolean;
 };
@@ -22,6 +27,10 @@ export function registerShapeOverlay(next: ShapeOverlayController | null) {
 
 export function playReveal() {
   return controller?.playReveal() ?? Promise.resolve();
+}
+
+export function playLoaderReveal() {
+  return controller?.playLoaderReveal() ?? Promise.resolve();
 }
 
 export function playCover() {
@@ -136,8 +145,7 @@ export function createShapeOverlayController(paths: SVGPathElement[]) {
     }
   }
 
-  const startRevealed =
-    process.env.NODE_ENV === "development" || prefersReducedShapeMotion();
+  const startRevealed = prefersReducedShapeMotion();
 
   if (startRevealed) {
     for (let i = 0; i < numPaths; i++) {
@@ -154,7 +162,18 @@ export function createShapeOverlayController(paths: SVGPathElement[]) {
     }
   };
 
-  const runToggle = (target: 0 | 100) => {
+  const runToggle = (
+    target: 0 | 100,
+    options?: {
+      duration?: number;
+      delayPointsMax?: number;
+      delayPerPath?: number;
+    },
+  ) => {
+    const duration = options?.duration ?? DURATION;
+    const delayPointsMax = options?.delayPointsMax ?? DELAY_POINTS_MAX;
+    const delayPerPath = options?.delayPerPath ?? DELAY_PER_PATH;
+
     if (prefersReducedShapeMotion()) {
       for (let i = 0; i < numPaths; i++) {
         for (let j = 0; j < NUM_POINTS; j++) {
@@ -172,7 +191,7 @@ export function createShapeOverlayController(paths: SVGPathElement[]) {
     const revealing = target === 0;
 
     for (let i = 0; i < NUM_POINTS; i++) {
-      pointsDelay[i] = Math.random() * DELAY_POINTS_MAX;
+      pointsDelay[i] = Math.random() * delayPointsMax;
     }
 
     isAnimating = true;
@@ -182,7 +201,7 @@ export function createShapeOverlayController(paths: SVGPathElement[]) {
         onUpdate: render,
         defaults: {
           ease: EASE,
-          duration: DURATION,
+          duration,
         },
         onComplete: () => {
           isAnimating = false;
@@ -193,7 +212,7 @@ export function createShapeOverlayController(paths: SVGPathElement[]) {
       for (let i = 0; i < numPaths; i++) {
         const points = allPoints[i];
         const pathDelay =
-          DELAY_PER_PATH * (revealing ? i : numPaths - i - 1);
+          delayPerPath * (revealing ? i : numPaths - i - 1);
 
         for (let j = 0; j < NUM_POINTS; j++) {
           const delay = pointsDelay[j];
@@ -217,6 +236,16 @@ export function createShapeOverlayController(paths: SVGPathElement[]) {
         return Promise.resolve();
       }
       return runToggle(0);
+    },
+    playLoaderReveal: () => {
+      if (isRevealed(allPoints) && !isAnimating) {
+        return Promise.resolve();
+      }
+      return runToggle(0, {
+        duration: INTRO_DURATION.loaderReveal,
+        delayPointsMax: LOADER_DELAY_POINTS_MAX,
+        delayPerPath: LOADER_DELAY_PER_PATH,
+      });
     },
     playCover: () => {
       if (isCovered(allPoints) && !isAnimating) {
