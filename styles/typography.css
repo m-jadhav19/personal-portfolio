@@ -1,0 +1,138 @@
+/* ─── Font Families ──────────────────────────────────────────────────────── */
+
+:root {
+  --font-display: var(--font-instrument-serif), "Instrument Serif", Georgia, serif;
+  --font-body: var(--font-inter), "Inter", system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), "Geist Mono", ui-monospace, monospace;
+  --font-marquee-family: var(--font-marquee), "Bebas Neue", "Arial Narrow", sans-serif;
+}
+
+/* ─── Type Scale ─────────────────────────────────────────────────────────── */
+
+:root {
+  /* Display */
+  --text-display-xl-size: clamp(4.5rem, 10vw, 9rem);
+  --text-display-xl-leading: 0.92;
+  --text-display-xl-tracking: -0.03em;
+
+  --text-display-l-size: clamp(3.5rem, 7vw, 6.5rem);
+  --text-display-l-leading: 0.94;
+  --text-display-l-tracking: -0.025em;
+
+  --text-display-m-size: clamp(2.75rem, 5vw, 4.5rem);
+  --text-display-m-leading: 0.96;
+  --text-display-m-tracking: -0.02em;
+
+  /* Heading */
+  --text-heading-xl-size: clamp(2.25rem, 4vw, 3.5rem);
+  --text-heading-xl-leading: 1.05;
+  --text-heading-xl-tracking: -0.02em;
+
+  --text-heading-l-size: clamp(1.75rem, 3vw, 2.5rem);
+  --text-heading-l-leading: 1.1;
+  --text-heading-l-tracking: -0.015em;
+
+  --text-heading-m-size: clamp(1.375rem, 2vw, 1.75rem);
+  --text-heading-m-leading: 1.15;
+  --text-heading-m-tracking: -0.01em;
+
+  /* Body */
+  --text-body-xl-size: clamp(1.125rem, 1.5vw, 1.375rem);
+  --text-body-xl-leading: 1.6;
+
+  --text-body-l-size: clamp(1rem, 1.2vw, 1.125rem);
+  --text-body-l-leading: 1.65;
+
+  --text-body-m-size: 0.9375rem;
+  --text-body-m-leading: 1.6;
+
+  /* Utility */
+  --text-caption-size: 0.8125rem;
+  --text-caption-leading: 1.5;
+  --text-caption-tracking: 0.01em;
+
+  --text-label-size: 0.75rem;
+  --text-label-leading: 1.4;
+  --text-label-tracking: 0.08em;
+}
+
+/* ─── Type Classes ─────────────────────────────────────────────────────────── */
+
+.text-display-xl {
+  font-family: var(--font-display);
+  font-size: var(--text-display-xl-size);
+  line-height: var(--text-display-xl-leading);
+  letter-spacing: var(--text-display-xl-tracking);
+}
+
+.text-display-l {
+  font-family: var(--font-display);
+  font-size: var(--text-display-l-size);
+  line-height: var(--text-display-l-leading);
+  letter-spacing: var(--text-display-l-tracking);
+}
+
+.text-display-m {
+  font-family: var(--font-display);
+  font-size: var(--text-display-m-size);
+  line-height: var(--text-display-m-leading);
+  letter-spacing: var(--text-display-m-tracking);
+}
+
+.text-heading-xl {
+  font-family: var(--font-body);
+  font-size: var(--text-heading-xl-size);
+  line-height: var(--text-heading-xl-leading);
+  letter-spacing: var(--text-heading-xl-tracking);
+  font-weight: 500;
+}
+
+.text-heading-l {
+  font-family: var(--font-body);
+  font-size: var(--text-heading-l-size);
+  line-height: var(--text-heading-l-leading);
+  letter-spacing: var(--text-heading-l-tracking);
+  font-weight: 500;
+}
+
+.text-heading-m {
+  font-family: var(--font-body);
+  font-size: var(--text-heading-m-size);
+  line-height: var(--text-heading-m-leading);
+  letter-spacing: var(--text-heading-m-tracking);
+  font-weight: 500;
+}
+
+.text-body-xl {
+  font-family: var(--font-body);
+  font-size: var(--text-body-xl-size);
+  line-height: var(--text-body-xl-leading);
+}
+
+.text-body-l {
+  font-family: var(--font-body);
+  font-size: var(--text-body-l-size);
+  line-height: var(--text-body-l-leading);
+}
+
+.text-body-m {
+  font-family: var(--font-body);
+  font-size: var(--text-body-m-size);
+  line-height: var(--text-body-m-leading);
+}
+
+.text-caption {
+  font-family: var(--font-body);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-leading);
+  letter-spacing: var(--text-caption-tracking);
+  color: var(--muted);
+}
+
+.text-label {
+  font-family: var(--font-mono);
+  font-size: var(--text-label-size);
+  line-height: var(--text-label-leading);
+  letter-spacing: var(--text-label-tracking);
+  text-transform: uppercase;
+}

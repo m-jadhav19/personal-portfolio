@@ -1,0 +1,64 @@
+/* ─── Color Tokens ───────────────────────────────────────────────────────── */
+
+:root {
+  --background: #f5f4f0;
+  --foreground: #0e0e0e;
+
+  --muted: #6b6b6b;
+  --border: rgba(14, 14, 14, 0.12);
+
+  --accent: #0ea5e9;
+  --success: #22c55e;
+
+  --surface: #ffffff;
+
+  /* Dark theme (Contact section) — toggled via .theme-dark on <html> */
+  --background-dark: #0e0e0e;
+  --foreground-dark: #f5f4f0;
+  --muted-dark: #8a8a8a;
+  --border-dark: rgba(245, 244, 240, 0.12);
+
+  /* ─── Spacing Scale ──────────────────────────────────────────────────── */
+
+  --space-4: 0.25rem;   /*  4px */
+  --space-8: 0.5rem;    /*  8px */
+  --space-16: 1rem;     /* 16px */
+  --space-24: 1.5rem;   /* 24px */
+  --space-40: 2.5rem;   /* 40px */
+  --space-64: 4rem;     /* 64px */
+  --space-96: 6rem;     /* 96px */
+  --space-160: 10rem;   /* 160px */
+
+  /* ─── Layout ─────────────────────────────────────────────────────────── */
+
+  --grid-max: 1920px;
+  --grid-padding-inline: clamp(20px, 2.5vw, 40px);
+  --section-padding-block: clamp(120px, 15vw, 240px);
+
+  /* ─── Border ─────────────────────────────────────────────────────────── */
+
+  --radius: 0;
+  --border-width: 1px;
+  --border-color: rgba(0, 0, 0, 0.1);
+
+  /* ─── Motion ─────────────────────────────────────────────────────────── */
+
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --duration-fast: 0.4s;
+  --duration-medium: 0.8s;
+  --duration-large: 1.2s;
+  --duration-hero: 1.6s;
+
+  --nav-height: 80px;
+}
+
+/* ─── Dark theme (Contact section centered) ──────────────────────────────── */
+
+html.theme-dark {
+  --background: var(--background-dark);
+  --foreground: var(--foreground-dark);
+  --muted: var(--muted-dark);
+  --border: var(--border-dark);
+  --border-color: var(--border-dark);
+  color-scheme: dark;
+}
