@@ -29,7 +29,7 @@ export const portfolio: Portfolio = {
   hero: {
     roles: ["Frontend Developer", "UX/UI Designer", "Creative"],
     portrait: {
-      src: "/me-clean.png",
+      src: "/me-cutout.png",
     },
     location: "Mumbai, India",
     availability: true,

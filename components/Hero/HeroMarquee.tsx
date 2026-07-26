@@ -19,20 +19,37 @@ function MarqueeTrack({ text }: { text: string }) {
 }
 
 export function HeroMarquee({ lines, lineRefs, portrait }: HeroMarqueeProps) {
+  const backLines = lines.slice(0, 2);
+  const frontLines = lines.slice(2);
+
   return (
     <div className={styles.marquee} aria-label="Roles marquee">
-      {lines.map((line, index) => (
+      {backLines.map((line, index) => (
         <div
           key={line}
           ref={lineRefs?.[index]}
-          className={`${styles.marqueeRow} ${
-            index === 1 ? styles.marqueeRowBehind : styles.marqueeRowFront
-          }`}
+          className={`${styles.marqueeRow} ${styles.marqueeRowBack}`}
           data-intro="marquee-line"
+          style={{ gridRow: index + 1 }}
         >
           <MarqueeTrack text={line} />
         </div>
       ))}
+
+      <div className={styles.portraitBackdrop} aria-hidden="true" />
+
+      {frontLines.map((line, index) => (
+        <div
+          key={line}
+          ref={lineRefs?.[index + 2]}
+          className={`${styles.marqueeRow} ${styles.marqueeRowFront}`}
+          data-intro="marquee-line"
+          style={{ gridRow: index + 3 }}
+        >
+          <MarqueeTrack text={line} />
+        </div>
+      ))}
+
       {portrait}
     </div>
   );

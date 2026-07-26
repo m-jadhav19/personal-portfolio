@@ -27,21 +27,25 @@ export function HeroPortrait({ portraitRef }: HeroPortraitProps) {
   return (
     <div
       ref={setRef}
-      className={styles.portrait}
+      className={styles.portraitStage}
       data-intro="portrait"
       data-cursor="interactive"
-      style={{ ["--portrait-src" as string]: `url(${portraitSrc})` }}
       tabIndex={0}
       role="img"
       aria-label={`Portrait of ${portfolio.headerTaglineTwo}`}
     >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={portraitSrc}
-        alt=""
-        className={styles.portraitImage}
-        draggable={false}
-      />
+      <div
+        className={styles.portrait}
+        style={{ ["--portrait-src" as string]: `url(${portraitSrc})` }}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={portraitSrc}
+          alt=""
+          className={styles.portraitCutout}
+          draggable={false}
+        />
+      </div>
     </div>
   );
 }
