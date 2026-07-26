@@ -1,6 +1,7 @@
 import { ScrambleText } from "@/components/About/ScrambleText";
 import { portfolio } from "@/content/portfolio";
 
+import { BackToTopLink } from "./BackToTopLink";
 import styles from "./ContactFooter.module.css";
 
 export function ContactFooter() {
@@ -63,9 +64,9 @@ export function ContactFooter() {
       <div className={styles.bottom}>
         <p>© {new Date().getFullYear()} {portfolio.name} Jadhav</p>
         <p>{portfolio.contact.credit}</p>
-        <a href="#top" data-cursor="interactive">
+        <BackToTopLink>
           Back to top <span aria-hidden="true">↑</span>
-        </a>
+        </BackToTopLink>
       </div>
     </footer>
   );

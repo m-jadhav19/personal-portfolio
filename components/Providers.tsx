@@ -3,6 +3,7 @@
 import { Cursor } from "@/components/Cursor/Cursor";
 import { Loader } from "@/components/Loader/Loader";
 import { Navigation } from "@/components/Navigation";
+import { ShapeOverlay } from "@/components/ShapeOverlay";
 import { useLenis } from "@/hooks/useLenis";
 
 type ProvidersProps = {
@@ -14,6 +15,7 @@ export function Providers({ children }: ProvidersProps) {
 
   return (
     <>
+      <ShapeOverlay />
       <Loader />
       <Navigation />
       <Cursor />

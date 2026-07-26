@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import { signalIntroComplete } from "@/animations/loader";
+import { playReveal, prefersReducedShapeMotion } from "@/animations/shapeOverlay";
 import { resetIntroDocumentState } from "@/lib/introDocument";
 
 import { DevLoaderBypass } from "./DevLoaderBypass";
@@ -129,8 +130,24 @@ function ProductionLoader() {
   }, [count, isExiting]);
 
   useEffect(() => {
-    if (!isExiting || timingRef.current.exitDuration > 0) return;
-    finish();
+    if (!isExiting) return;
+
+    if (timingRef.current.exitDuration === 0 || prefersReducedShapeMotion()) {
+      finish();
+      return;
+    }
+
+    let cancelled = false;
+
+    void playReveal().then(() => {
+      if (!cancelled) {
+        finish();
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, [isExiting]);
 
   return (
@@ -140,11 +157,6 @@ function ProductionLoader() {
       role="status"
       aria-live="polite"
       aria-label={`Loading ${count}%`}
-      onTransitionEnd={(event) => {
-        if (event.propertyName === "transform" && isExiting) {
-          finish();
-        }
-      }}
     >
       <div className={styles.copy}>
         <p className={styles.message}>{message}</p>

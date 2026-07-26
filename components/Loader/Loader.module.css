@@ -9,12 +9,13 @@
   background: #000;
   color: #fff;
   pointer-events: all;
-  transform: translateY(0);
-  transition: transform 1s cubic-bezier(0.76, 0, 0.24, 1);
+  opacity: 1;
+  transition: opacity 0.5s cubic-bezier(0.76, 0, 0.24, 1);
 }
 
 .loaderExiting {
-  transform: translateY(-100vh);
+  opacity: 0;
+  pointer-events: none;
 }
 
 .copy {
