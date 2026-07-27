@@ -1,0 +1,232 @@
+.featuredWork {
+  position: relative;
+  padding-top: clamp(10rem, 26vh, 18rem);
+  border-top: 1px solid var(--border);
+}
+
+.heading {
+  position: sticky;
+  top: 35vh;
+  z-index: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-16);
+  padding-inline: var(--grid-padding-inline);
+  text-align: center;
+  pointer-events: none;
+}
+
+.headingTitle {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: clamp(2.75rem, 7vw, 5.5rem);
+  font-weight: 700;
+  line-height: 0.92;
+  letter-spacing: -0.045em;
+  text-transform: uppercase;
+  color: var(--foreground);
+}
+
+.headingCue {
+  font-size: 0.65rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.projects {
+  position: relative;
+  z-index: 1;
+  margin-top: clamp(18rem, 48vh, 32rem);
+}
+
+.projectRow {
+  position: relative;
+  display: grid;
+  min-height: 110vh;
+  grid-template-columns: minmax(0, 1.35fr) minmax(18rem, 0.65fr);
+  align-items: center;
+  gap: clamp(2rem, 7vw, 8rem);
+  padding: clamp(5rem, 12vh, 9rem) var(--grid-padding-inline);
+}
+
+.mediaColumn {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  will-change: transform;
+}
+
+.media {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  background: var(--surface);
+  isolation: isolate;
+}
+
+.mediaImage {
+  object-fit: cover;
+  object-position: center;
+  transition: transform 0.7s var(--ease);
+}
+
+.media:hover .mediaImage,
+.media:focus-visible .mediaImage {
+  transform: scale(1.045);
+}
+
+.viewBtn {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 9rem;
+  padding: 0.9rem 1.25rem;
+  background: #fff;
+  color: #000;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(-50%, -50%);
+  transition: opacity 0.2s var(--ease);
+  mix-blend-mode: difference;
+}
+
+.viewBtnVisible,
+.media:focus-visible .viewBtn {
+  opacity: 1;
+}
+
+.info {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  max-width: 32rem;
+  flex-direction: column;
+  gap: var(--space-16);
+  justify-self: end;
+  padding: var(--space-24);
+  background: var(--background);
+  will-change: transform;
+}
+
+.projectRowRight .mediaColumn {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.projectRowRight {
+  grid-template-columns: minmax(18rem, 0.65fr) minmax(0, 1.35fr);
+}
+
+.projectRowRight .info {
+  grid-column: 1;
+  grid-row: 1;
+  justify-self: start;
+}
+
+.index,
+.meta,
+.description,
+.tags {
+  margin: 0;
+}
+
+.index {
+  font-family: var(--font-mono);
+  font-size: var(--text-label-size);
+  letter-spacing: var(--text-label-tracking);
+  color: var(--accent);
+}
+
+.meta,
+.tags {
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.title {
+  margin: var(--space-8) 0 0;
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 4vw, 3.5rem);
+  font-weight: 400;
+  line-height: 0.98;
+  letter-spacing: -0.025em;
+}
+
+.description {
+  font-size: clamp(1rem, 1.35vw, 1.3rem);
+  line-height: 1.55;
+  color: var(--muted);
+}
+
+.tags {
+  padding-top: var(--space-16);
+  border-top: 1px solid var(--border);
+}
+
+@media (hover: none) {
+  .viewBtn {
+    top: auto;
+    left: var(--space-16);
+    bottom: var(--space-16);
+    opacity: 1;
+    transform: none !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .featuredWork {
+    padding-top: var(--space-96);
+  }
+
+  .heading {
+    position: relative;
+    top: auto;
+    height: auto;
+    padding-bottom: var(--space-96);
+  }
+
+  .projects {
+    margin-top: 0;
+  }
+
+  .projectRow {
+    min-height: auto;
+    grid-template-columns: 1fr;
+    gap: var(--space-24);
+    padding-block: var(--space-64);
+  }
+
+  .projectRowRight .mediaColumn,
+  .projectRowRight .info {
+    grid-column: auto;
+    grid-row: auto;
+  }
+
+  .info {
+    max-width: none;
+    justify-self: stretch;
+    padding: 0;
+    background: transparent;
+    will-change: auto;
+  }
+
+  .mediaColumn {
+    will-change: auto;
+  }
+}
