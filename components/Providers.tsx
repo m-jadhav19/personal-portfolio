@@ -1,7 +1,7 @@
 "use client";
 
 import { Cursor } from "@/components/Cursor/Cursor";
-import { KonamiMelt } from "@/components/KonamiMelt";
+import { EasterEggManager } from "@/components/EasterEggs";
 import { Loader } from "@/components/Loader/Loader";
 import { Navigation } from "@/components/Navigation";
 import { ShapeOverlay } from "@/components/ShapeOverlay";
@@ -20,7 +20,7 @@ export function Providers({ children }: ProvidersProps) {
       <Loader />
       <Navigation />
       <Cursor />
-      <KonamiMelt />
+      <EasterEggManager />
       {children}
     </>
   );

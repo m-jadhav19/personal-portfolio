@@ -1,1 +1,0 @@
-export { KonamiMelt } from "./KonamiMelt";
