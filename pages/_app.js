@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import Lenis from "@studio-freight/lenis";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import KonamiMelt from "../components/KonamiMelt";
 
 // Register GSAP plugins
 if (typeof window !== 'undefined') {
@@ -79,6 +80,7 @@ const App = ({ Component, pageProps }) => {
     >
       <ThemeScript />
       <SmoothScroll />
+      <KonamiMelt />
       <Component {...pageProps} />
     </ThemeProvider>
   );
