@@ -36,7 +36,7 @@ export function HeroMarquee({ lines, lineRefs, portrait }: HeroMarqueeProps) {
         </div>
       ))}
 
-      <div className={styles.portraitBackdrop} aria-hidden="true" />
+      {portrait}
 
       {frontLines.map((line, index) => (
         <div
@@ -49,8 +49,6 @@ export function HeroMarquee({ lines, lineRefs, portrait }: HeroMarqueeProps) {
           <MarqueeTrack text={line} />
         </div>
       ))}
-
-      {portrait}
     </div>
   );
 }

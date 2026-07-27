@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { getLenis, getScrollY, scrollByDelta } from "@/lib/lenis";
+
 import styles from "./BrokenUxSimulator.module.css";
 
 type BrokenUxSimulatorProps = {
@@ -23,8 +25,7 @@ type AdPopup = {
   title: string;
   body: string;
   cta: string;
-  x: number;
-  y: number;
+  slot: number;
   accent: string;
 };
 
@@ -59,74 +60,87 @@ const TOAST_MESSAGES = [
   "Your scroll wheel has been patched.",
 ];
 
-const AD_TEMPLATES: Omit<AdPopup, "id" | "x" | "y">[] = [
+const AD_TEMPLATES: Omit<AdPopup, "id" | "slot">[] = [
   {
-    title: "🎉 CONGRATULATIONS!",
+    title: "CONGRATULATIONS!",
     body: "You are our 1,000,000th visitor! Claim your FREE iPod Nano NOW!!!",
     cta: "CLAIM PRIZE",
-    accent: "#ff00ff",
+    accent: "#c000c0",
   },
   {
-    title: "⚠️ VIRUS DETECTED",
+    title: "VIRUS DETECTED",
     body: "47 threats found on your portfolio. Mandar Antivirus™ can fix this in 3 easy payments.",
     cta: "SCAN NOW",
-    accent: "#ff3b30",
+    accent: "#cc0000",
   },
   {
-    title: "💾 DOWNLOAD RAM",
+    title: "DOWNLOAD RAM",
     body: "Your browser is running low on RAM. Download 16GB instantly. 100% legit.",
     cta: "DOWNLOAD",
-    accent: "#00aa00",
+    accent: "#008000",
   },
   {
-    title: "🔥 HOT SINGLES",
+    title: "HOT SINGLES",
     body: "Frontend developers in Mumbai want to pair program with YOU tonight.",
     cta: "MEET THEM",
-    accent: "#ff6600",
+    accent: "#cc6600",
   },
   {
-    title: "🏆 YOU WON!",
+    title: "YOU WON!",
     body: "Mandar has selected you for an exclusive NFT of his resume. Gas fees apply.",
     cta: "MINT NOW",
-    accent: "#9900ff",
+    accent: "#6600cc",
   },
   {
-    title: "📢 SPONSORED",
+    title: "SPONSORED",
     body: "Tired of good UX? Try Broken UX Simulator PRO™ — now with 200% more modals.",
     cta: "SUBSCRIBE",
-    accent: "#0066ff",
+    accent: "#0000cc",
   },
   {
-    title: "🍪 COOKIES!!!",
+    title: "COOKIES!!!",
     body: "We use cookies, trackers, pixels, vibes, and your hopes and dreams.",
     cta: "ACCEPT ALL",
-    accent: "#cc9900",
+    accent: "#996600",
   },
   {
-    title: "💰 MAKE $5000/DAY",
+    title: "MAKE $5000/DAY",
     body: "Work from home scrolling inverted! Recruiters HATE this one trick.",
     cta: "LEARN MORE",
-    accent: "#00cccc",
+    accent: "#008888",
   },
 ];
 
-const SCROLL_MODE_LABELS: Record<ScrollMode, string> = {
-  normal: "Scroll: Normal (for now…)",
-  inverted: "Scroll: INVERTED ↕️",
-  chaotic: "Scroll: CHAOTIC 🎲",
-  sideways: "Scroll: SIDEWAYS ↔️",
-  sticky: "Scroll: STICKY 🧲",
+const SCROLL_MODE_META: Record<
+  ScrollMode,
+  { label: string; short: string; tone: string }
+> = {
+  normal: { label: "Normal (temporary)", short: "NORMAL", tone: "modeNormal" },
+  inverted: { label: "Inverted scroll", short: "INVERTED", tone: "modeInverted" },
+  chaotic: { label: "Chaotic scroll", short: "CHAOTIC", tone: "modeChaotic" },
+  sideways: { label: "Sideways scroll", short: "SIDEWAYS", tone: "modeSideways" },
+  sticky: { label: "Sticky / fighting back", short: "STICKY", tone: "modeSticky" },
 };
 
-const RUNAWAY_SELECTOR = "a, button, [role='button']";
-const MAX_ADS = 6;
+const AD_SLOTS = [
+  { x: 4, y: 14 },
+  { x: 58, y: 16 },
+  { x: 30, y: 38 },
+  { x: 62, y: 48 },
+  { x: 6, y: 52 },
+  { x: 42, y: 24 },
+];
 
-function pickScrollMode(): ScrollMode {
+const RUNAWAY_SELECTOR = "a, button, [role='button']";
+const MAX_ADS = 5;
+
+function pickScrollMode(current: ScrollMode): ScrollMode {
   const roll = Math.random();
-  if (roll < 0.3) return "inverted";
-  if (roll < 0.5) return "chaotic";
-  if (roll < 0.65) return "sideways";
-  if (roll < 0.8) return "sticky";
+  if (current === "inverted" && roll < 0.45) return "inverted";
+  if (roll < 0.4) return "inverted";
+  if (roll < 0.55) return "chaotic";
+  if (roll < 0.7) return "sticky";
+  if (roll < 0.85) return "sideways";
   return "normal";
 }
 
@@ -136,11 +150,11 @@ export function BrokenUxSimulator({ onExit }: BrokenUxSimulatorProps) {
   const [spinnerMessage, setSpinnerMessage] = useState<string | null>(null);
   const [ads, setAds] = useState<AdPopup[]>([]);
   const [scrollMode, setScrollMode] = useState<ScrollMode>("inverted");
-  const [showCookieBanner, setShowCookieBanner] = useState(true);
   const [downloadProgress, setDownloadProgress] = useState<number | null>(null);
   const [cursorTip, setCursorTip] = useState<{ x: number; y: number; text: string } | null>(
     null,
   );
+  const [modeFlash, setModeFlash] = useState(false);
 
   const toastIdRef = useRef(0);
   const adIdRef = useRef(0);
@@ -148,13 +162,19 @@ export function BrokenUxSimulator({ onExit }: BrokenUxSimulatorProps) {
   const bypassClickRef = useRef(false);
   const scrollModeRef = useRef<ScrollMode>("inverted");
   const lastScrollYRef = useRef(0);
+  const usedSlotsRef = useRef<Set<number>>(new Set());
 
   const pushToast = useCallback((message: string) => {
     const id = ++toastIdRef.current;
-    setToasts((current) => [...current.slice(-4), { id, message }]);
+    setToasts((current) => [...current.slice(-3), { id, message }]);
     window.setTimeout(() => {
       setToasts((current) => current.filter((toast) => toast.id !== id));
-    }, 3500);
+    }, 3200);
+  }, []);
+
+  const flashMode = useCallback(() => {
+    setModeFlash(true);
+    window.setTimeout(() => setModeFlash(false), 500);
   }, []);
 
   const showSpinner = useCallback((message: string, duration = 1400) => {
@@ -166,26 +186,43 @@ export function BrokenUxSimulator({ onExit }: BrokenUxSimulatorProps) {
     const template =
       AD_TEMPLATES[Math.floor(Math.random() * AD_TEMPLATES.length)];
 
+    const availableSlots = AD_SLOTS.map((_, index) => index).filter(
+      (index) => !usedSlotsRef.current.has(index),
+    );
+    const slot =
+      availableSlots.length > 0
+        ? availableSlots[Math.floor(Math.random() * availableSlots.length)]
+        : Math.floor(Math.random() * AD_SLOTS.length);
+
+    usedSlotsRef.current.add(slot);
+
     const ad: AdPopup = {
       ...template,
       id: ++adIdRef.current,
-      x: 5 + Math.random() * 55,
-      y: 12 + Math.random() * 50,
+      slot,
     };
 
-    setAds((current) => [...current.slice(-(MAX_ADS - 1)), ad]);
+    setAds((current) => {
+      const next = [...current, ad];
+      if (next.length > MAX_ADS) {
+        const removed = next.shift();
+        if (removed) usedSlotsRef.current.delete(removed.slot);
+      }
+      return next;
+    });
   }, []);
 
   const dismissAd = useCallback(
-    (id: number) => {
+    (id: number, slot: number) => {
+      usedSlotsRef.current.delete(slot);
       setAds((current) => current.filter((ad) => ad.id !== id));
 
-      if (Math.random() > 0.35) {
+      if (Math.random() > 0.4) {
         window.setTimeout(() => {
           pushToast("Ad closed. Opening 2 more ads…");
           spawnAd();
-          window.setTimeout(spawnAd, 400);
-        }, 300);
+          window.setTimeout(spawnAd, 350);
+        }, 250);
       }
     },
     [pushToast, spawnAd],
@@ -201,49 +238,43 @@ export function BrokenUxSimulator({ onExit }: BrokenUxSimulatorProps) {
     event.preventDefault();
   }, []);
 
-  const applyScroll = useCallback(
-    (deltaY: number, deltaX: number) => {
-      const mode = scrollModeRef.current;
-      let top = deltaY;
-      let left = deltaX;
+  const applyScroll = useCallback((deltaY: number, deltaX: number) => {
+    const mode = scrollModeRef.current;
+    let top = deltaY;
+    let left = deltaX;
 
-      switch (mode) {
-        case "inverted":
-          top = -deltaY;
-          break;
-        case "chaotic":
-          top = (Math.random() > 0.5 ? 1 : -1) * Math.abs(deltaY) * 1.4;
-          left = (Math.random() - 0.5) * Math.abs(deltaY) * 0.6;
-          break;
-        case "sideways":
-          top = deltaY * 0.15;
-          left = deltaY * 1.2;
-          break;
-        case "sticky": {
-          const currentY = window.scrollY;
-          const fightingBack = Math.random() > 0.4;
-          top = fightingBack ? -deltaY * 0.85 : deltaY * 0.25;
-          if (fightingBack && Math.abs(currentY - lastScrollYRef.current) < 2) {
-            top = -deltaY * 1.5;
-          }
-          break;
+    switch (mode) {
+      case "inverted":
+        top = -deltaY;
+        break;
+      case "chaotic":
+        top = (Math.random() > 0.5 ? 1 : -1) * Math.abs(deltaY) * 1.5;
+        left = (Math.random() - 0.5) * Math.abs(deltaY) * 0.8;
+        break;
+      case "sideways":
+        top = deltaY * 0.1;
+        left = deltaY * 1.4;
+        break;
+      case "sticky": {
+        const fightingBack = Math.random() > 0.35;
+        top = fightingBack ? -deltaY * 0.9 : deltaY * 0.2;
+        if (fightingBack && Math.abs(getScrollY() - lastScrollYRef.current) < 2) {
+          top = -deltaY * 1.6;
         }
-        default:
-          break;
+        break;
       }
+      default:
+        break;
+    }
 
-      window.scrollBy({ top, left, behavior: "auto" });
-      lastScrollYRef.current = window.scrollY;
+    scrollByDelta(top, left);
+    lastScrollYRef.current = getScrollY();
 
-      if (Math.random() > 0.72) {
-        const snapBack = -top * (0.4 + Math.random() * 0.5);
-        window.setTimeout(() => {
-          window.scrollBy({ top: snapBack, behavior: "auto" });
-        }, 80 + Math.random() * 120);
-      }
-    },
-    [],
-  );
+    if ((mode === "chaotic" || mode === "sticky") && Math.random() > 0.65) {
+      const snapBack = -top * (0.35 + Math.random() * 0.4);
+      window.setTimeout(() => scrollByDelta(snapBack), 90 + Math.random() * 100);
+    }
+  }, []);
 
   useEffect(() => {
     scrollModeRef.current = scrollMode;
@@ -251,6 +282,9 @@ export function BrokenUxSimulator({ onExit }: BrokenUxSimulatorProps) {
 
   useEffect(() => {
     document.body.classList.add("easter-egg-broken-ux-active");
+
+    const lenis = getLenis();
+    lenis?.stop();
 
     const interactiveElements = Array.from(
       document.querySelectorAll<HTMLElement>(RUNAWAY_SELECTOR),
@@ -272,9 +306,14 @@ export function BrokenUxSimulator({ onExit }: BrokenUxSimulatorProps) {
     });
 
     const handleWheel = (event: WheelEvent) => {
-      event.preventDefault();
+      if (event.target instanceof HTMLElement && event.target.closest("[data-broken-ux-ignore]")) {
+        return;
+      }
 
-      if (Math.random() < 0.18) {
+      event.preventDefault();
+      event.stopPropagation();
+
+      if (Math.random() < 0.1) {
         const message =
           SCROLL_MESSAGES[Math.floor(Math.random() * SCROLL_MESSAGES.length)];
 
@@ -289,10 +328,6 @@ export function BrokenUxSimulator({ onExit }: BrokenUxSimulatorProps) {
       }
 
       applyScroll(event.deltaY, event.deltaX);
-
-      if (Math.random() < 0.08) {
-        pushToast(`Scroll hijacked: ${SCROLL_MODE_LABELS[scrollModeRef.current]}`);
-      }
     };
 
     const handleClick = (event: MouseEvent) => {
@@ -329,7 +364,7 @@ export function BrokenUxSimulator({ onExit }: BrokenUxSimulatorProps) {
     };
 
     const handleMouseMove = (event: MouseEvent) => {
-      if (Math.random() > 0.97) {
+      if (Math.random() > 0.975) {
         const tips = [
           "Did you know? Scrolling is optional.",
           "This tooltip is sponsored by Bad UX Inc.",
@@ -342,63 +377,65 @@ export function BrokenUxSimulator({ onExit }: BrokenUxSimulatorProps) {
           y: event.clientY + 14,
           text: tips[Math.floor(Math.random() * tips.length)],
         });
-        window.setTimeout(() => setCursorTip(null), 1800);
+        window.setTimeout(() => setCursorTip(null), 1600);
       }
     };
 
     const toastInterval = window.setInterval(() => {
-      if (Math.random() > 0.35) return;
+      if (Math.random() > 0.38) return;
       const message =
         TOAST_MESSAGES[Math.floor(Math.random() * TOAST_MESSAGES.length)];
       pushToast(message);
-    }, 3500);
+    }, 4000);
 
     const adInterval = window.setInterval(() => {
-      if (Math.random() > 0.25) return;
+      if (Math.random() > 0.3) return;
       spawnAd();
-    }, 2800);
+    }, 3200);
 
     const scrollModeInterval = window.setInterval(() => {
-      const nextMode = pickScrollMode();
+      const nextMode = pickScrollMode(scrollModeRef.current);
       scrollModeRef.current = nextMode;
       setScrollMode(nextMode);
-      pushToast(SCROLL_MODE_LABELS[nextMode]);
-    }, 7000 + Math.random() * 5000);
+      flashMode();
+      pushToast(`Scroll mode → ${SCROLL_MODE_META[nextMode].label}`);
+    }, 9000);
 
     const downloadInterval = window.setInterval(() => {
-      if (Math.random() > 0.4) return;
+      if (Math.random() > 0.45) return;
 
       let progress = 0;
       setDownloadProgress(0);
 
       const tick = window.setInterval(() => {
-        progress += 4 + Math.random() * 18;
+        progress += 4 + Math.random() * 16;
         if (progress >= 100) {
           progress = 100;
           window.clearInterval(tick);
-          window.setTimeout(() => setDownloadProgress(null), 1200);
+          window.setTimeout(() => setDownloadProgress(null), 1000);
         }
         setDownloadProgress(Math.min(progress, 100));
-      }, 200);
-    }, 12000);
+      }, 220);
+    }, 14000);
 
-    window.addEventListener("wheel", handleWheel, { passive: false });
+    document.addEventListener("wheel", handleWheel, { passive: false, capture: true });
     document.addEventListener("click", handleClick, true);
     window.addEventListener("mousemove", handleMouseMove);
 
-    pushToast("Broken UX Simulator activated. Good luck.");
-    pushToast(SCROLL_MODE_LABELS.inverted);
+    pushToast("Broken UX Simulator activated. Scroll is inverted.");
     spawnAd();
-    window.setTimeout(spawnAd, 800);
 
     return () => {
       document.body.classList.remove("easter-egg-broken-ux-active");
+      lenis?.start();
+      usedSlotsRef.current = new Set();
+
       interactiveElements.forEach((element) => {
         element.removeEventListener("mouseenter", handleMouseEnter);
         element.classList.remove("broken-ux-runaway");
         element.style.transform = "";
       });
-      window.removeEventListener("wheel", handleWheel);
+      document.removeEventListener("wheel", handleWheel, true);
       document.removeEventListener("click", handleClick, true);
       window.removeEventListener("mousemove", handleMouseMove);
       window.clearInterval(toastInterval);
@@ -406,86 +443,113 @@ export function BrokenUxSimulator({ onExit }: BrokenUxSimulatorProps) {
       window.clearInterval(scrollModeInterval);
       window.clearInterval(downloadInterval);
     };
-  }, [applyScroll, pushToast, showSpinner, spawnAd]);
+  }, [applyScroll, flashMode, pushToast, showSpinner, spawnAd]);
+
+  const modeMeta = SCROLL_MODE_META[scrollMode];
 
   return (
     <div className={styles.overlay} aria-live="polite">
-      <div className={styles.banner} data-broken-ux-ignore>
-        <span>⚠️ Broken UX Simulator</span>
-        <span className={styles.bannerText}>
-          Konami code accepted — scroll mode: {SCROLL_MODE_LABELS[scrollMode]}
-        </span>
-        <button
-          type="button"
-          className={styles.exitButton}
-          onClick={onExit}
-          data-broken-ux-ignore
+      {modeFlash ? <div className={styles.modeFlash} aria-hidden="true" /> : null}
+
+      <header className={styles.hud} data-broken-ux-ignore>
+        <div className={styles.hudBrand}>
+          <span className={styles.hudIcon}>⚠</span>
+          <div>
+            <p className={styles.hudTitle}>Broken UX Simulator</p>
+            <p className={styles.hudSubtitle}>Konami code accepted</p>
+          </div>
+        </div>
+
+        <div
+          className={`${styles.modePill} ${styles[modeMeta.tone]}`}
+          title={modeMeta.label}
         >
-          ESC / Exit
+          <span className={styles.modeDot} />
+          {modeMeta.short}
+        </div>
+
+        <div className={styles.hudStats}>
+          <span>{ads.length} ads</span>
+          <span>{toasts.length} alerts</span>
+        </div>
+
+        <button type="button" className={styles.exitButton} onClick={onExit}>
+          Exit <kbd>ESC</kbd>
         </button>
-      </div>
+      </header>
 
       {downloadProgress !== null ? (
         <div className={styles.downloadBar} data-broken-ux-ignore>
-          <span>Downloading more_scroll.exe</span>
+          <span className={styles.downloadLabel}>more_scroll.exe</span>
           <div className={styles.downloadTrack}>
             <div
               className={styles.downloadFill}
               style={{ width: `${downloadProgress}%` }}
             />
           </div>
-          <span>{Math.round(downloadProgress)}%</span>
+          <span className={styles.downloadPercent}>{Math.round(downloadProgress)}%</span>
         </div>
       ) : null}
 
       <div className={styles.toastStack}>
         {toasts.map((toast) => (
           <div key={toast.id} className={styles.toast}>
+            <span className={styles.toastIcon}>!</span>
             {toast.message}
           </div>
         ))}
       </div>
 
-      {ads.map((ad, index) => (
-        <div
-          key={ad.id}
-          className={styles.adPopup}
-          style={{
-            left: `${ad.x + index * 2}%`,
-            top: `${ad.y + index * 1.5}%`,
-            borderColor: ad.accent,
-          }}
-          data-broken-ux-ignore
-        >
-          <div className={styles.adHeader} style={{ background: ad.accent }}>
-            <span className={styles.adTitle}>{ad.title}</span>
-            <button
-              type="button"
-              className={styles.adClose}
-              onClick={() => dismissAd(ad.id)}
-              onMouseEnter={(event) => {
-                const button = event.currentTarget;
-                button.style.transform = `translate(${(Math.random() - 0.5) * 60}px, ${(Math.random() - 0.5) * 40}px)`;
-              }}
-              aria-label="Close ad"
-            >
-              ✕
-            </button>
-          </div>
-          <p className={styles.adBody}>{ad.body}</p>
-          <button
-            type="button"
-            className={styles.adCta}
-            style={{ background: ad.accent }}
-            onClick={() => {
-              pushToast("Ad clicked. Installing toolbar…");
-              spawnAd();
+      {ads.map((ad, index) => {
+        const slot = AD_SLOTS[ad.slot] ?? AD_SLOTS[0];
+        return (
+          <div
+            key={ad.id}
+            className={styles.adPopup}
+            style={{
+              left: `${slot.x}%`,
+              top: `${slot.y}%`,
+              zIndex: 10068 + index,
             }}
+            data-broken-ux-ignore
           >
-            {ad.cta}
-          </button>
-        </div>
-      ))}
+            <div className={styles.adTitleBar} style={{ background: ad.accent }}>
+              <span className={styles.adTitle}>{ad.title}</span>
+              <div className={styles.adWindowControls}>
+                <button type="button" className={styles.adWinBtn} aria-hidden="true">
+                  _
+                </button>
+                <button
+                  type="button"
+                  className={styles.adWinBtn}
+                  onClick={() => dismissAd(ad.id, ad.slot)}
+                  onMouseEnter={(event) => {
+                    const button = event.currentTarget;
+                    button.style.transform = `translate(${(Math.random() - 0.5) * 50}px, ${(Math.random() - 0.5) * 30}px)`;
+                  }}
+                  aria-label="Close ad"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+            <div className={styles.adContent}>
+              <p className={styles.adBody}>{ad.body}</p>
+              <button
+                type="button"
+                className={styles.adCta}
+                style={{ background: ad.accent }}
+                onClick={() => {
+                  pushToast("Ad clicked. Installing toolbar…");
+                  spawnAd();
+                }}
+              >
+                {ad.cta}
+              </button>
+            </div>
+          </div>
+        );
+      })}
 
       {cursorTip ? (
         <div
@@ -497,47 +561,46 @@ export function BrokenUxSimulator({ onExit }: BrokenUxSimulatorProps) {
         </div>
       ) : null}
 
-      {showCookieBanner ? (
-        <div className={styles.cookieBanner} data-broken-ux-ignore>
-          <p>
-            🍪 This site uses cookies, localStorage, your soul, and inverted
-            scrolling. By continuing you agree to everything forever.
-          </p>
-          <div className={styles.cookieActions}>
-            <button
-              type="button"
-              className={styles.cookieReject}
-              onClick={() => pushToast("Reject ignored. Cookies installed anyway.")}
-            >
-              Reject
-            </button>
-            <button
-              type="button"
-              className={styles.cookieAccept}
-              onClick={() => {
-                pushToast("Thanks! Here's another ad.");
-                spawnAd();
-              }}
-            >
-              Accept
-            </button>
-            <button
-              type="button"
-              className={styles.cookieClose}
-              onMouseEnter={(event) => {
-                event.currentTarget.style.opacity = "0";
-                window.setTimeout(() => {
-                  event.currentTarget.style.opacity = "1";
-                }, 600);
-              }}
-              onClick={() => pushToast("You cannot escape the cookies.")}
-              aria-label="Close"
-            >
-              ✕
-            </button>
-          </div>
+      <div className={styles.cookieBanner} data-broken-ux-ignore>
+        <div className={styles.cookieIcon}>🍪</div>
+        <p className={styles.cookieText}>
+          We use cookies, localStorage, your soul, and <strong>inverted scrolling</strong>.
+          By continuing you agree to everything forever.
+        </p>
+        <div className={styles.cookieActions}>
+          <button
+            type="button"
+            className={styles.cookieReject}
+            onClick={() => pushToast("Reject ignored. Cookies installed anyway.")}
+          >
+            Reject all
+          </button>
+          <button
+            type="button"
+            className={styles.cookieAccept}
+            onClick={() => {
+              pushToast("Thanks! Here's another ad.");
+              spawnAd();
+            }}
+          >
+            Accept all
+          </button>
+          <button
+            type="button"
+            className={styles.cookieClose}
+            onMouseEnter={(event) => {
+              event.currentTarget.style.opacity = "0.15";
+              window.setTimeout(() => {
+                event.currentTarget.style.opacity = "1";
+              }, 500);
+            }}
+            onClick={() => pushToast("You cannot escape the cookies.")}
+            aria-label="Close"
+          >
+            ✕
+          </button>
         </div>
-      ) : null}
+      </div>
 
       {spinnerMessage ? (
         <div className={styles.spinnerOverlay} data-broken-ux-ignore>
@@ -551,25 +614,29 @@ export function BrokenUxSimulator({ onExit }: BrokenUxSimulatorProps) {
       {modal ? (
         <div className={styles.modalBackdrop} data-broken-ux-ignore>
           <div className={styles.modal} role="dialog" aria-modal="true">
-            <h2 className={styles.modalTitle}>Windows Portfolio Experience</h2>
-            <p className={styles.modalBody}>{modal.message}</p>
-            <div className={styles.modalActions}>
-              <button
-                ref={noButtonRef}
-                type="button"
-                className={`${styles.modalButton} ${styles.runawayNo}`}
-                onMouseEnter={dodgeNoButton}
-                onClick={dodgeNoButton}
-              >
-                No
-              </button>
-              <button
-                type="button"
-                className={`${styles.modalButton} ${styles.modalButtonPrimary}`}
-                onClick={modal.onConfirm}
-              >
-                Yes
-              </button>
+            <div className={styles.modalTitleBar}>
+              <span>Windows Portfolio Experience</span>
+            </div>
+            <div className={styles.modalContent}>
+              <p className={styles.modalBody}>{modal.message}</p>
+              <div className={styles.modalActions}>
+                <button
+                  ref={noButtonRef}
+                  type="button"
+                  className={`${styles.modalButton} ${styles.runawayNo}`}
+                  onMouseEnter={dodgeNoButton}
+                  onClick={dodgeNoButton}
+                >
+                  No
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.modalButton} ${styles.modalButtonPrimary}`}
+                  onClick={modal.onConfirm}
+                >
+                  Yes
+                </button>
+              </div>
             </div>
           </div>
         </div>
