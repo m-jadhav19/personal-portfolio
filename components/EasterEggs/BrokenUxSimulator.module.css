@@ -1,0 +1,419 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10050;
+  pointer-events: none;
+}
+
+.banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10060;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.65rem 1rem;
+  background: repeating-linear-gradient(
+    -45deg,
+    #ff3b30,
+    #ff3b30 10px,
+    #000 10px,
+    #000 20px
+  );
+  color: #fff;
+  font-family: "Comic Sans MS", "Comic Sans", cursive;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  pointer-events: auto;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
+}
+
+.bannerText {
+  flex: 1;
+  text-align: center;
+  font-size: 0.72rem;
+}
+
+.exitButton {
+  flex-shrink: 0;
+  padding: 0.35rem 0.75rem;
+  border: 2px solid #fff;
+  border-radius: 999px;
+  background: #111;
+  color: #fff;
+  font: inherit;
+  cursor: pointer;
+}
+
+.exitButton:hover {
+  background: #fff;
+  color: #000;
+}
+
+.downloadBar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 10062;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 1rem;
+  background: #1a1a2e;
+  border-top: 2px solid #00ff00;
+  color: #00ff00;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.7rem;
+  pointer-events: none;
+}
+
+.downloadTrack {
+  flex: 1;
+  height: 10px;
+  background: #333;
+  border: 1px solid #00ff00;
+}
+
+.downloadFill {
+  height: 100%;
+  background: repeating-linear-gradient(
+    90deg,
+    #00ff00,
+    #00ff00 8px,
+    #003300 8px,
+    #003300 16px
+  );
+  transition: width 0.15s linear;
+}
+
+.toastStack {
+  position: fixed;
+  bottom: 5.5rem;
+  right: 1rem;
+  z-index: 10070;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-width: min(320px, calc(100vw - 2rem));
+  pointer-events: none;
+}
+
+.toast {
+  padding: 0.75rem 1rem;
+  border: 3px solid #000;
+  border-radius: 0;
+  background: #ffea00;
+  color: #000;
+  font-family: Tahoma, Verdana, sans-serif;
+  font-size: 0.8rem;
+  box-shadow: 6px 6px 0 #000;
+  animation: toastPop 0.25s ease-out;
+}
+
+@keyframes toastPop {
+  from {
+    opacity: 0;
+    transform: translateX(20px) scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+.adPopup {
+  position: fixed;
+  z-index: 10068;
+  width: min(280px, calc(100vw - 2rem));
+  border: 3px solid #000;
+  background: #ffffcc;
+  box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.45);
+  pointer-events: auto;
+  animation: adBounceIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes adBounceIn {
+  from {
+    opacity: 0;
+    transform: scale(0.6) rotate(-4deg);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+.adHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.35rem 0.5rem;
+  color: #fff;
+  font-family: Impact, Haettenschweiler, sans-serif;
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
+}
+
+.adTitle {
+  flex: 1;
+}
+
+.adClose {
+  flex-shrink: 0;
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 2px solid #fff;
+  background: #000;
+  color: #fff;
+  font-size: 0.7rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: transform 0.1s ease-out;
+}
+
+.adBody {
+  margin: 0;
+  padding: 0.65rem 0.75rem;
+  color: #000;
+  font-family: "Comic Sans MS", "Comic Sans", cursive;
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+.adCta {
+  display: block;
+  width: calc(100% - 1rem);
+  margin: 0 0.5rem 0.5rem;
+  padding: 0.45rem;
+  border: 2px solid #000;
+  color: #fff;
+  font-family: Impact, sans-serif;
+  font-size: 0.85rem;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  animation: adPulse 1s ease-in-out infinite;
+}
+
+@keyframes adPulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.03);
+  }
+}
+
+.cookieBanner {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 10075;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  background: #222;
+  border-top: 4px solid #ffea00;
+  color: #fff;
+  font-family: Tahoma, Verdana, sans-serif;
+  font-size: 0.8rem;
+  pointer-events: auto;
+  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.cookieBanner p {
+  margin: 0;
+  flex: 1 1 220px;
+  line-height: 1.45;
+}
+
+.cookieActions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.cookieReject,
+.cookieAccept,
+.cookieClose {
+  padding: 0.4rem 0.85rem;
+  border: 2px solid #fff;
+  font: inherit;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.cookieReject {
+  background: transparent;
+  color: #aaa;
+}
+
+.cookieAccept {
+  background: #00aa00;
+  color: #fff;
+  font-weight: 700;
+}
+
+.cookieClose {
+  background: #ff3b30;
+  color: #fff;
+  padding: 0.4rem 0.55rem;
+  transition: opacity 0.15s;
+}
+
+.cursorTip {
+  position: fixed;
+  z-index: 10071;
+  max-width: 200px;
+  padding: 0.35rem 0.5rem;
+  border: 2px solid #000;
+  background: #fffacd;
+  color: #000;
+  font-family: "Comic Sans MS", "Comic Sans", cursive;
+  font-size: 0.65rem;
+  pointer-events: none;
+  animation: tipFade 1.8s ease-out forwards;
+}
+
+@keyframes tipFade {
+  0%,
+  70% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+.modalBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10080;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.55);
+  pointer-events: auto;
+}
+
+.modal {
+  width: min(420px, 100%);
+  padding: 1.25rem;
+  border: 4px solid #000;
+  background: #c0c0c0;
+  box-shadow:
+    inset -2px -2px 0 #808080,
+    inset 2px 2px 0 #fff,
+    8px 8px 0 #000;
+  font-family: Tahoma, Verdana, sans-serif;
+  color: #000;
+}
+
+.modalTitle {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.modalBody {
+  margin: 0 0 1rem;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.modalButton {
+  min-width: 5.5rem;
+  padding: 0.4rem 0.9rem;
+  border: 2px solid #000;
+  background: #e8e8e8;
+  color: #000;
+  font: inherit;
+  cursor: pointer;
+  box-shadow:
+    inset -1px -1px 0 #808080,
+    inset 1px 1px 0 #fff;
+}
+
+.modalButtonPrimary {
+  background: #0000ff;
+  color: #fff;
+}
+
+.runawayNo {
+  position: relative;
+}
+
+.spinnerOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10085;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.35);
+  pointer-events: auto;
+}
+
+.spinnerCard {
+  padding: 1.5rem 2rem;
+  border: 3px solid #000;
+  background: #fff;
+  text-align: center;
+  font-family: Tahoma, Verdana, sans-serif;
+  font-size: 0.95rem;
+}
+
+.spinner {
+  width: 2.5rem;
+  height: 2.5rem;
+  margin: 0 auto 0.75rem;
+  border: 4px solid #ddd;
+  border-top-color: #0000ff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 640px) {
+  .banner {
+    flex-wrap: wrap;
+    font-size: 0.72rem;
+  }
+
+  .bannerText {
+    order: 3;
+    width: 100%;
+  }
+
+  .adPopup {
+    width: min(240px, calc(100vw - 1.5rem));
+  }
+}

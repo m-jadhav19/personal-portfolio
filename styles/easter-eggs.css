@@ -1,0 +1,70 @@
+/* ─── Easter egg global overrides ─────────────────────────────────────────── */
+
+html[data-easter-egg="myspace"] {
+  filter: saturate(1.45) contrast(1.05);
+}
+
+html[data-easter-egg="myspace"] body {
+  background: linear-gradient(
+    135deg,
+    #ff99ff 0%,
+    #99ffff 35%,
+    #ffff99 70%,
+    #ff99ff 100%
+  ) !important;
+}
+
+html[data-easter-egg="myspace"] h1,
+html[data-easter-egg="myspace"] h2,
+html[data-easter-egg="myspace"] h3,
+html[data-easter-egg="myspace"] [class*="marquee"],
+html[data-easter-egg="myspace"] [class*="title"] {
+  font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif !important;
+  text-shadow:
+    2px 2px 0 #ff00ff,
+    -1px -1px 0 #00ffff !important;
+}
+
+html[data-easter-egg="myspace"] p,
+html[data-easter-egg="myspace"] span,
+html[data-easter-egg="myspace"] a,
+html[data-easter-egg="myspace"] button,
+html[data-easter-egg="myspace"] li {
+  font-family: "Comic Sans MS", "Comic Sans", cursive !important;
+}
+
+html[data-easter-egg="myspace"] a,
+html[data-easter-egg="myspace"] button {
+  text-decoration: underline wavy #ff0099;
+}
+
+body.easter-egg-myspace-active.custom-cursor-active,
+body.easter-egg-myspace-active.custom-cursor-active a,
+body.easter-egg-myspace-active.custom-cursor-active button {
+  cursor: auto !important;
+}
+
+html[data-easter-egg="broken-ux"] {
+  scroll-behavior: auto !important;
+}
+
+html[data-easter-egg="broken-ux"] * {
+  scroll-behavior: auto !important;
+}
+
+body.easter-egg-broken-ux-active,
+body.easter-egg-broken-ux-active * {
+  cursor: wait !important;
+}
+
+.broken-ux-runaway {
+  transition: transform 0.15s ease-out !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-easter-egg="myspace"] * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
