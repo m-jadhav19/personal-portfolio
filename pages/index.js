@@ -268,13 +268,13 @@ export default function Home() {
 	const total = data.projects.length
 
 	return (
-		<div className="relative">
+		<div className="relative overflow-x-hidden">
 			<Head>
 				<title>{data.name}</title>
 			</Head>
 			<FluidDitherBackground />
 
-			<div className='relative z-10'>
+			<div className='relative z-10 overflow-x-hidden'>
 				<Header
 					handleWorkScroll={handleWorkScroll}
 					handleAboutScroll={handleAboutScroll}

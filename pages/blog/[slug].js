@@ -31,7 +31,7 @@ const BlogPost = ({ post }) => {
       {data.showCursor && <Cursor />}
 
       <div
-        className={`container mx-auto mt-10 px-5 mob:px-6 tablet:px-12 ${
+        className={`container mx-auto mt-10 px-5 mob:px-6 tablet:px-12 overflow-x-hidden ${
           data.showCursor && "cursor-none"
         }`}
       >

@@ -4,6 +4,8 @@
 
 .markdown-class {
   @apply mt-5 p-5;
+  overflow-x: hidden;
+  max-width: 100%;
 }
 
 /* Headings */
@@ -78,14 +80,32 @@
 .markdown-class pre,
 .markdown-class code {
   @apply overflow-x-auto;
+  max-width: 100%;
 }
 
 .markdown-class pre {
   @apply p-4 rounded-lg;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
 }
 
 .markdown-class code {
   @apply text-sm;
+  word-break: break-word;
+}
+
+/* Code block wrapper for syntax highlighting */
+.markdown-class .code-block-wrapper {
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.markdown-class .code-block-wrapper > div {
+  max-width: 100%;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
 }
 
 /* Image */
