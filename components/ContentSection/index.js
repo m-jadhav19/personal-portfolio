@@ -7,14 +7,21 @@ const CodeBlock = {
   code({ node, inline, className, children, ...props }) {
     const match = /language-(\w+)/.exec(className || "");
     return !inline && match ? (
-      <SyntaxHighlighter
-        style={dracula}
-        language={match[1]}
-        PreTag="div"
-        {...props}
-      >
-        {String(children).replace(/\n$/, "")}
-      </SyntaxHighlighter>
+      <div className="code-block-wrapper" style={{ maxWidth: '100%', overflow: 'hidden' }}>
+        <SyntaxHighlighter
+          style={dracula}
+          language={match[1]}
+          PreTag="div"
+          customStyle={{
+            maxWidth: '100%',
+            overflow: 'auto',
+            WebkitOverflowScrolling: 'touch',
+          }}
+          {...props}
+        >
+          {String(children).replace(/\n$/, "")}
+        </SyntaxHighlighter>
+      </div>
     ) : (
       <code className={className} {...props}>
         {children}
