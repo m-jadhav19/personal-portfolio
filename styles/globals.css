@@ -34,6 +34,13 @@ html[data-theme="light"] body {
 
 html, body {
 	overflow-x: clip;
+	overflow-x: hidden;
+}
+
+/* Ensure the page container doesn't create extra scroll space */
+body {
+	min-height: 100vh;
+	min-height: 100dvh;
 }
 
 @tailwind base;
