@@ -1,9 +1,10 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 
 import { portfolio } from "@/content/portfolio";
 
+import { PortraitMorphFrame } from "./PortraitMorphFrame";
 import styles from "./Hero.module.css";
 
 type HeroPortraitProps = {
@@ -12,6 +13,7 @@ type HeroPortraitProps = {
 
 export function HeroPortrait({ portraitRef }: HeroPortraitProps) {
   const localRef = useRef<HTMLDivElement>(null);
+  const [isHovered, setIsHovered] = useState(false);
 
   const setRef = (node: HTMLDivElement | null) => {
     localRef.current = node;
@@ -33,11 +35,13 @@ export function HeroPortrait({ portraitRef }: HeroPortraitProps) {
       tabIndex={0}
       role="img"
       aria-label={`Portrait of ${portfolio.headerTaglineTwo}`}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      onFocus={() => setIsHovered(true)}
+      onBlur={() => setIsHovered(false)}
     >
-      <div
-        className={styles.portrait}
-        style={{ ["--portrait-src" as string]: `url(${portraitSrc})` }}
-      >
+      <PortraitMorphFrame isHovered={isHovered} />
+      <div className={styles.portrait}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={portraitSrc}
