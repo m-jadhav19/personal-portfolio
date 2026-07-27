@@ -45,6 +45,7 @@ html {
   color-scheme: dark;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
 }
 
 html.loader-active,
@@ -60,6 +61,9 @@ body {
   color: var(--foreground);
   background-color: var(--background);
   overflow-x: clip;
+  overflow-x: hidden;
+  min-height: 100vh;
+  min-height: 100dvh;
 }
 
 img,
