@@ -1,0 +1,165 @@
+.prompt {
+  position: fixed;
+  z-index: 10020;
+  max-width: min(320px, calc(100vw - 2.5rem));
+  padding: 0.85rem 1rem 0.9rem;
+  border: 1px solid var(--border);
+  background: rgba(14, 14, 14, 0.92);
+  backdrop-filter: blur(12px);
+  color: var(--foreground);
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  line-height: 1.45;
+  pointer-events: auto;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+  transition:
+    opacity 0.45s var(--ease),
+    transform 0.45s var(--ease);
+}
+
+.promptVisible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.promptHidden {
+  opacity: 0;
+  transform: translateY(8px);
+  pointer-events: none;
+}
+
+.topLeft {
+  top: calc(var(--nav-height) + 1rem);
+  left: 1.25rem;
+}
+
+.topRight {
+  top: calc(var(--nav-height) + 1rem);
+  right: 1.25rem;
+}
+
+.bottomLeft {
+  bottom: 1.5rem;
+  left: 1.25rem;
+}
+
+.bottomRight {
+  bottom: 1.5rem;
+  right: 1.25rem;
+}
+
+.whisper {
+  border-color: rgba(245, 244, 240, 0.14);
+  font-style: italic;
+  color: var(--muted);
+}
+
+.fact {
+  border-color: rgba(245, 244, 240, 0.18);
+}
+
+.quiz {
+  border-color: rgba(14, 165, 233, 0.28);
+}
+
+.label {
+  display: block;
+  margin-bottom: 0.35rem;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.text {
+  margin: 0;
+}
+
+.feedbackTag {
+  display: block;
+  margin-top: 0.45rem;
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.quizActions {
+  display: flex;
+  gap: 0.45rem;
+  margin-top: 0.65rem;
+}
+
+.quizButton {
+  flex: 1;
+  padding: 0.4rem 0.55rem;
+  border: 1px solid var(--border);
+  background: rgba(245, 244, 240, 0.04);
+  color: var(--foreground);
+  font: inherit;
+  font-size: 0.72rem;
+  cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease;
+}
+
+.quizButton:hover {
+  border-color: var(--foreground);
+  background: rgba(245, 244, 240, 0.08);
+}
+
+.dismiss {
+  position: absolute;
+  top: 0.45rem;
+  right: 0.45rem;
+  width: 1.25rem;
+  height: 1.25rem;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.7rem;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.prompt:hover .dismiss,
+.prompt:focus-within .dismiss {
+  opacity: 1;
+}
+
+.dismiss:hover {
+  color: var(--foreground);
+  border-color: var(--foreground);
+}
+
+@media (max-width: 640px) {
+  .prompt {
+    left: 1rem !important;
+    right: 1rem !important;
+    max-width: none;
+  }
+
+  .topLeft,
+  .topRight {
+    top: calc(var(--nav-height) + 0.5rem);
+  }
+
+  .bottomLeft,
+  .bottomRight {
+    bottom: 1rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .prompt {
+    transition: none;
+  }
+}

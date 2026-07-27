@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Mandar Jadhav">
+  <rect width="32" height="32" fill="#0e0e0e"/>
+  <path
+    d="M7 24V8l9 11 9-11v16"
+    fill="none"
+    stroke="#f5f4f0"
+    stroke-width="2.4"
+    stroke-linecap="square"
+    stroke-linejoin="miter"
+  />
+  <rect x="11" y="26" width="10" height="2" fill="#0ea5e9"/>
+  <rect x="24" y="6" width="2" height="2" fill="#0ea5e9" opacity="0.7"/>
+</svg>
