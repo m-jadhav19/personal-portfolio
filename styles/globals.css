@@ -54,6 +54,10 @@ html.loader-active body {
   overflow: hidden;
 }
 
+html.catalog-open {
+  overflow: hidden;
+}
+
 body {
   margin: 0;
   font-family: var(--font-body);

@@ -1,6 +1,8 @@
 "use client";
 
+import { BarOverlay } from "@/components/BarOverlay";
 import { Cursor } from "@/components/Cursor/Cursor";
+import { DynamicFavicon } from "@/components/DynamicFavicon";
 import { EasterEggManager } from "@/components/EasterEggs";
 import { Loader } from "@/components/Loader/Loader";
 import { Navigation } from "@/components/Navigation";
@@ -17,10 +19,12 @@ export function Providers({ children }: ProvidersProps) {
   return (
     <>
       <ShapeOverlay />
+      <BarOverlay />
       <Loader />
       <Navigation />
       <Cursor />
       <EasterEggManager />
+      <DynamicFavicon />
       {children}
     </>
   );

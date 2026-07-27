@@ -1,0 +1,1 @@
+export { DynamicFavicon } from "./DynamicFavicon";

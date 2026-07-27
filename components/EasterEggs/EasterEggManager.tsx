@@ -11,6 +11,7 @@ import { useCheatCode } from "@/hooks/useCheatCode";
 import { useKeySequence } from "@/hooks/useKeySequence";
 
 import { BrokenUxSimulator } from "./BrokenUxSimulator";
+import { EasterEggPrompts } from "./EasterEggPrompts";
 import { Y2kMySpace } from "./Y2kMySpace";
 
 export function EasterEggManager() {
@@ -59,6 +60,7 @@ export function EasterEggManager() {
 
   return (
     <>
+      <EasterEggPrompts paused={activeEgg !== null} />
       {activeEgg === "broken-ux" ? (
         <BrokenUxSimulator onExit={() => setActiveEgg(null)} />
       ) : null}

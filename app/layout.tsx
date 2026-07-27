@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Instrument_Serif, Inter, JetBrains_Mono, Space_Grotesk } from "next/font/google";
 
 import "@/styles/globals.css";
@@ -32,6 +32,10 @@ const jetbrainsMono = JetBrains_Mono({
   variable: "--font-geist-mono",
   display: "swap",
 });
+
+export const viewport: Viewport = {
+  themeColor: "#0e0e0e",
+};
 
 export const metadata: Metadata = {
   title: `${portfolio.name} | ${portfolio.headerTaglineThree}`,
