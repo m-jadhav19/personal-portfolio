@@ -11,7 +11,6 @@ import {
   playBarReveal,
   prefersReducedBarMotion,
 } from "@/animations/barOverlay";
-import { ScrambleText } from "@/components/About/ScrambleText";
 import { portfolio } from "@/content/portfolio";
 import {
   lockPageScroll,
@@ -93,12 +92,15 @@ export function FeaturedWork() {
     if (!section) return;
 
     const cleanup = initFeaturedWorkScroll(section);
-    const onResize = () => ScrollTrigger.refresh();
 
-    window.addEventListener("resize", onResize);
+    const refresh = () => ScrollTrigger.refresh();
+    const refreshTimeout = window.setTimeout(refresh, 100);
+
+    window.addEventListener("resize", refresh);
 
     return () => {
-      window.removeEventListener("resize", onResize);
+      window.clearTimeout(refreshTimeout);
+      window.removeEventListener("resize", refresh);
       cleanup();
     };
   }, []);
@@ -112,22 +114,18 @@ export function FeaturedWork() {
   return (
     <>
       <section id="projects" ref={sectionRef} className={styles.featuredWork}>
-        <div className={styles.pinTrack} data-featured-pin-track>
-          <div className={styles.heading}>
-            <ScrambleText
-              as="h2"
-              text="Featured Work"
-              className={styles.headingTitle}
-            />
-            <span className={styles.headingCue}>Scroll to explore more</span>
-          </div>
+        <div className={styles.stickyHeading} data-featured-heading-wrap>
+          <h2 className={styles.headingTitle} data-featured-heading>
+            Featured Work
+          </h2>
+          <span className={styles.headingCue}>[Scroll to explore more]</span>
+        </div>
 
-          <div className={styles.projects}>
+        <div className={styles.projects} data-featured-projects>
             {projects.map((project, index) => (
               <ProjectSlide key={project.id} project={project} index={index} />
             ))}
           </div>
-        </div>
 
         {hasMoreProjects ? (
           <div className={styles.showMoreWrap}>

@@ -59,6 +59,24 @@ export function useLenis() {
     }
 
     gsap.registerPlugin(ScrollTrigger);
+
+    ScrollTrigger.scrollerProxy(document.documentElement, {
+      scrollTop(value) {
+        if (typeof value === "number") {
+          lenis.scrollTo(value, { immediate: true });
+        }
+        return lenis.scroll;
+      },
+      getBoundingClientRect() {
+        return {
+          top: 0,
+          left: 0,
+          width: window.innerWidth,
+          height: window.innerHeight,
+        };
+      },
+    });
+
     lenis.on("scroll", ScrollTrigger.update);
 
     document.documentElement.classList.add("lenis");
@@ -77,6 +95,7 @@ export function useLenis() {
     return () => {
       cancelAnimationFrame(frame);
       lenis.off("scroll", ScrollTrigger.update);
+      ScrollTrigger.scrollerProxy(document.documentElement, {});
       lenis.destroy();
       document.documentElement.classList.remove("lenis");
       delete win.__lenis__;

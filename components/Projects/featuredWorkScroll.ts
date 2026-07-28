@@ -1,6 +1,10 @@
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
+import { TextScramble } from "@/animations/scramble";
+
+gsap.registerPlugin(ScrollTrigger);
+
 const DESKTOP_MEDIA_QUERY = "(min-width: 901px)";
 
 type FeaturedWorkScrollCleanup = () => void;
@@ -12,93 +16,124 @@ function isDesktopViewport() {
 export function setupFeaturedWorkScroll(
   section: HTMLElement,
 ): FeaturedWorkScrollCleanup {
-  const pinTrack = section.querySelector<HTMLElement>(
-    "[data-featured-pin-track]",
+  const headingWrap = section.querySelector<HTMLElement>(
+    "[data-featured-heading-wrap]",
   );
-  const rows = gsap.utils.toArray<HTMLElement>(
-    "[data-project-row]",
-    section,
-  );
+  const projects = section.querySelector<HTMLElement>("[data-featured-projects]");
+  const heading = section.querySelector<HTMLElement>("[data-featured-heading]");
+  const rows = gsap.utils.toArray<HTMLElement>("[data-project-row]", section);
+  const triggers: ScrollTrigger[] = [];
+  const tweens: gsap.core.Tween[] = [];
 
-  if (!pinTrack || rows.length === 0) {
-    return () => {};
-  }
-
-  gsap.set(rows, { autoAlpha: 0, y: 48 });
-
-  const getScrollDistance = () => window.innerHeight * rows.length;
-
-  const timeline = gsap.timeline({
-    defaults: { ease: "none" },
-    scrollTrigger: {
-      trigger: pinTrack,
+  if (headingWrap && projects) {
+    const pinTrigger = ScrollTrigger.create({
+      trigger: section,
       start: "top top",
-      end: () => `+=${getScrollDistance()}`,
-      pin: true,
-      pinSpacing: true,
-      scrub: 0.65,
+      end: () => `+=${projects.offsetHeight}`,
+      pin: headingWrap,
+      pinSpacing: false,
       anticipatePin: 1,
       invalidateOnRefresh: true,
-    },
-  });
+    });
 
-  rows.forEach((row, index) => {
-    const media = row.querySelector<HTMLElement>("[data-project-media]");
-    const info = row.querySelector<HTMLElement>("[data-project-info]");
+    triggers.push(pinTrigger);
+  }
 
-    if (index > 0) {
-      timeline.to(
-        rows[index - 1],
-        {
-          autoAlpha: 0,
-          y: -32,
-          duration: 0.22,
-          ease: "power2.in",
-        },
-        index - 0.18,
-      );
-    }
+  if (heading) {
+    const finalText = heading.textContent?.trim() ?? "Featured Work";
+    const scramble = new TextScramble(heading);
+    let lastProgress = -1;
 
-    timeline.fromTo(
-      row,
-      { autoAlpha: 0, y: 48 },
-      {
+    const headingTrigger = ScrollTrigger.create({
+      trigger: section,
+      start: "top bottom",
+      end: "bottom top",
+      onUpdate: (self) => {
+        const progress = Math.round(self.progress * 24) / 24;
+        if (progress === lastProgress) return;
+        lastProgress = progress;
+        void scramble.setText(finalText);
+      },
+    });
+
+    triggers.push(headingTrigger);
+  }
+
+  rows.forEach((row) => {
+    const reveals = gsap.utils.toArray<HTMLElement>("[data-reveal]", row);
+
+    reveals.forEach((element, index) => {
+      gsap.set(element, { autoAlpha: 0, y: 24 });
+
+      const tween = gsap.to(element, {
         autoAlpha: 1,
         y: 0,
-        duration: 0.78,
-        ease: "power2.out",
-      },
-      index,
-    );
+        duration: 0.8,
+        ease: "power3.out",
+        delay: index * 0.08,
+        scrollTrigger: {
+          trigger: row,
+          start: "top 82%",
+          toggleActions: "play none none none",
+        },
+      });
+
+      tweens.push(tween);
+      if (tween.scrollTrigger) triggers.push(tween.scrollTrigger);
+    });
+
+    const media = row.querySelector<HTMLElement>("[data-project-media-inner]");
+    const info = row.querySelector<HTMLElement>("[data-project-info]");
 
     if (media) {
-      timeline.fromTo(
-        media,
-        { y: 28 },
-        { y: -28, duration: 1, ease: "none" },
-        index,
-      );
+      gsap.set(media, { y: 28 });
+
+      const mediaParallax = gsap.to(media, {
+        y: -28,
+        ease: "none",
+        scrollTrigger: {
+          trigger: row,
+          start: "top bottom",
+          end: "bottom top",
+          scrub: true,
+        },
+      });
+
+      tweens.push(mediaParallax);
+      if (mediaParallax.scrollTrigger) triggers.push(mediaParallax.scrollTrigger);
     }
 
     if (info) {
-      timeline.fromTo(
-        info,
-        { y: -16 },
-        { y: 16, duration: 1, ease: "none" },
-        index,
-      );
+      gsap.set(info, { y: -16 });
+
+      const infoParallax = gsap.to(info, {
+        y: 16,
+        ease: "none",
+        scrollTrigger: {
+          trigger: row,
+          start: "top bottom",
+          end: "bottom top",
+          scrub: true,
+        },
+      });
+
+      tweens.push(infoParallax);
+      if (infoParallax.scrollTrigger) triggers.push(infoParallax.scrollTrigger);
     }
   });
 
-  return () => {
-    timeline.scrollTrigger?.kill();
-    timeline.kill();
-    gsap.set(rows, { clearProps: "all" });
+  ScrollTrigger.refresh();
 
+  return () => {
+    triggers.forEach((trigger) => trigger.kill());
+    tweens.forEach((tween) => tween.kill());
     rows.forEach((row) => {
-      const media = row.querySelector<HTMLElement>("[data-project-media]");
-      const info = row.querySelector<HTMLElement>("[data-project-info]");
-      gsap.set([media, info].filter(Boolean), { clearProps: "all" });
+      gsap.utils
+        .toArray<HTMLElement>(
+          "[data-reveal], [data-project-media-inner], [data-project-info]",
+          row,
+        )
+        .forEach((element) => gsap.set(element, { clearProps: "all" }));
     });
   };
 }
@@ -110,22 +145,23 @@ export function initFeaturedWorkScroll(
     "(prefers-reduced-motion: reduce)",
   ).matches;
 
-  if (prefersReducedMotion || !isDesktopViewport()) {
+  if (prefersReducedMotion) {
     return () => {};
   }
 
   section.setAttribute("data-scroll-sequence", "true");
 
-  let cleanup = setupFeaturedWorkScroll(section);
+  let cleanup = isDesktopViewport() ? setupFeaturedWorkScroll(section) : () => {};
   const desktopMedia = window.matchMedia(DESKTOP_MEDIA_QUERY);
 
   const handleViewportChange = () => {
     cleanup();
-    section.removeAttribute("data-scroll-sequence");
+    cleanup = isDesktopViewport() ? setupFeaturedWorkScroll(section) : () => {};
 
-    if (!prefersReducedMotion && desktopMedia.matches) {
+    if (isDesktopViewport()) {
       section.setAttribute("data-scroll-sequence", "true");
-      cleanup = setupFeaturedWorkScroll(section);
+    } else {
+      section.removeAttribute("data-scroll-sequence");
     }
 
     ScrollTrigger.refresh();

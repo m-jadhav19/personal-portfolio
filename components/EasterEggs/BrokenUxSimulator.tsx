@@ -2,7 +2,19 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { getLenis, getScrollY, scrollByDelta } from "@/lib/lenis";
+import { getLenis } from "@/lib/lenis";
+import {
+  AD_TEMPLATES,
+  createAdPosition,
+  MAX_ADS,
+  type AdPopup,
+} from "@/lib/easterEggs/brokenAds";
+import {
+  createBrokenScrollController,
+  pickScrollMode,
+  SCROLL_MODE_META,
+  type ScrollMode,
+} from "@/lib/easterEggs/brokenScroll";
 
 import styles from "./BrokenUxSimulator.module.css";
 
@@ -20,16 +32,11 @@ type ModalState = {
   onConfirm: () => void;
 };
 
-type AdPopup = {
+type DragState = {
   id: number;
-  title: string;
-  body: string;
-  cta: string;
-  slot: number;
-  accent: string;
-};
-
-type ScrollMode = "normal" | "inverted" | "chaotic" | "sideways" | "sticky";
+  offsetX: number;
+  offsetY: number;
+} | null;
 
 const SCROLL_MESSAGES = [
   "Are you sure you want to scroll? This action cannot be undone.",
@@ -60,109 +67,33 @@ const TOAST_MESSAGES = [
   "Your scroll wheel has been patched.",
 ];
 
-const AD_TEMPLATES: Omit<AdPopup, "id" | "slot">[] = [
-  {
-    title: "CONGRATULATIONS!",
-    body: "You are our 1,000,000th visitor! Claim your FREE iPod Nano NOW!!!",
-    cta: "CLAIM PRIZE",
-    accent: "#c000c0",
-  },
-  {
-    title: "VIRUS DETECTED",
-    body: "47 threats found on your portfolio. Mandar Antivirus™ can fix this in 3 easy payments.",
-    cta: "SCAN NOW",
-    accent: "#cc0000",
-  },
-  {
-    title: "DOWNLOAD RAM",
-    body: "Your browser is running low on RAM. Download 16GB instantly. 100% legit.",
-    cta: "DOWNLOAD",
-    accent: "#008000",
-  },
-  {
-    title: "HOT SINGLES",
-    body: "Frontend developers in Mumbai want to pair program with YOU tonight.",
-    cta: "MEET THEM",
-    accent: "#cc6600",
-  },
-  {
-    title: "YOU WON!",
-    body: "Mandar has selected you for an exclusive NFT of his resume. Gas fees apply.",
-    cta: "MINT NOW",
-    accent: "#6600cc",
-  },
-  {
-    title: "SPONSORED",
-    body: "Tired of good UX? Try Broken UX Simulator PRO™ — now with 200% more modals.",
-    cta: "SUBSCRIBE",
-    accent: "#0000cc",
-  },
-  {
-    title: "COOKIES!!!",
-    body: "We use cookies, trackers, pixels, vibes, and your hopes and dreams.",
-    cta: "ACCEPT ALL",
-    accent: "#996600",
-  },
-  {
-    title: "MAKE $5000/DAY",
-    body: "Work from home scrolling inverted! Recruiters HATE this one trick.",
-    cta: "LEARN MORE",
-    accent: "#008888",
-  },
-];
-
-const SCROLL_MODE_META: Record<
-  ScrollMode,
-  { label: string; short: string; tone: string }
-> = {
-  normal: { label: "Normal (temporary)", short: "NORMAL", tone: "modeNormal" },
-  inverted: { label: "Inverted scroll", short: "INVERTED", tone: "modeInverted" },
-  chaotic: { label: "Chaotic scroll", short: "CHAOTIC", tone: "modeChaotic" },
-  sideways: { label: "Sideways scroll", short: "SIDEWAYS", tone: "modeSideways" },
-  sticky: { label: "Sticky / fighting back", short: "STICKY", tone: "modeSticky" },
-};
-
-const AD_SLOTS = [
-  { x: 4, y: 14 },
-  { x: 58, y: 16 },
-  { x: 30, y: 38 },
-  { x: 62, y: 48 },
-  { x: 6, y: 52 },
-  { x: 42, y: 24 },
-];
-
 const RUNAWAY_SELECTOR = "a, button, [role='button']";
-const MAX_ADS = 5;
-
-function pickScrollMode(current: ScrollMode): ScrollMode {
-  const roll = Math.random();
-  if (current === "inverted" && roll < 0.45) return "inverted";
-  if (roll < 0.4) return "inverted";
-  if (roll < 0.55) return "chaotic";
-  if (roll < 0.7) return "sticky";
-  if (roll < 0.85) return "sideways";
-  return "normal";
-}
 
 export function BrokenUxSimulator({ onExit }: BrokenUxSimulatorProps) {
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [modal, setModal] = useState<ModalState | null>(null);
   const [spinnerMessage, setSpinnerMessage] = useState<string | null>(null);
   const [ads, setAds] = useState<AdPopup[]>([]);
+  const [adOffsets, setAdOffsets] = useState<Record<number, { x: number; y: number }>>(
+    {},
+  );
   const [scrollMode, setScrollMode] = useState<ScrollMode>("inverted");
   const [downloadProgress, setDownloadProgress] = useState<number | null>(null);
   const [cursorTip, setCursorTip] = useState<{ x: number; y: number; text: string } | null>(
     null,
   );
   const [modeFlash, setModeFlash] = useState(false);
+  const [topAdId, setTopAdId] = useState<number | null>(null);
 
   const toastIdRef = useRef(0);
   const adIdRef = useRef(0);
   const noButtonRef = useRef<HTMLButtonElement>(null);
   const bypassClickRef = useRef(false);
+  const scrollControllerRef = useRef<ReturnType<typeof createBrokenScrollController> | null>(
+    null,
+  );
+  const dragRef = useRef<DragState>(null);
   const scrollModeRef = useRef<ScrollMode>("inverted");
-  const lastScrollYRef = useRef(0);
-  const usedSlotsRef = useRef<Set<number>>(new Set());
 
   const pushToast = useCallback((message: string) => {
     const id = ++toastIdRef.current;
@@ -182,47 +113,58 @@ export function BrokenUxSimulator({ onExit }: BrokenUxSimulatorProps) {
     window.setTimeout(() => setSpinnerMessage(null), duration);
   }, []);
 
-  const spawnAd = useCallback(() => {
+  const spawnAd = useCallback((withProgress = false) => {
     const template =
       AD_TEMPLATES[Math.floor(Math.random() * AD_TEMPLATES.length)];
-
-    const availableSlots = AD_SLOTS.map((_, index) => index).filter(
-      (index) => !usedSlotsRef.current.has(index),
-    );
-    const slot =
-      availableSlots.length > 0
-        ? availableSlots[Math.floor(Math.random() * availableSlots.length)]
-        : Math.floor(Math.random() * AD_SLOTS.length);
-
-    usedSlotsRef.current.add(slot);
+    const position = createAdPosition(ads.length);
 
     const ad: AdPopup = {
       ...template,
       id: ++adIdRef.current,
-      slot,
+      ...position,
+      progress: withProgress ? 0 : undefined,
     };
 
     setAds((current) => {
       const next = [...current, ad];
       if (next.length > MAX_ADS) {
-        const removed = next.shift();
-        if (removed) usedSlotsRef.current.delete(removed.slot);
+        return next.slice(-MAX_ADS);
       }
       return next;
     });
-  }, []);
+    setTopAdId(ad.id);
+
+    if (withProgress) {
+      let progress = 0;
+      const tick = window.setInterval(() => {
+        progress += 6 + Math.random() * 14;
+        setAds((current) =>
+          current.map((item) =>
+            item.id === ad.id
+              ? { ...item, progress: Math.min(progress, 100) }
+              : item,
+          ),
+        );
+        if (progress >= 100) window.clearInterval(tick);
+      }, 180);
+    }
+  }, [ads.length]);
 
   const dismissAd = useCallback(
-    (id: number, slot: number) => {
-      usedSlotsRef.current.delete(slot);
+    (id: number) => {
       setAds((current) => current.filter((ad) => ad.id !== id));
+      setAdOffsets((current) => {
+        const next = { ...current };
+        delete next[id];
+        return next;
+      });
 
-      if (Math.random() > 0.4) {
+      if (Math.random() > 0.25) {
         window.setTimeout(() => {
           pushToast("Ad closed. Opening 2 more ads…");
-          spawnAd();
-          window.setTimeout(spawnAd, 350);
-        }, 250);
+          spawnAd(true);
+          window.setTimeout(() => spawnAd(), 300);
+        }, 200);
       }
     },
     [pushToast, spawnAd],
@@ -238,53 +180,51 @@ export function BrokenUxSimulator({ onExit }: BrokenUxSimulatorProps) {
     event.preventDefault();
   }, []);
 
-  const applyScroll = useCallback((deltaY: number, deltaX: number) => {
-    const mode = scrollModeRef.current;
-    let top = deltaY;
-    let left = deltaX;
-
-    switch (mode) {
-      case "inverted":
-        top = -deltaY;
-        break;
-      case "chaotic":
-        top = (Math.random() > 0.5 ? 1 : -1) * Math.abs(deltaY) * 1.5;
-        left = (Math.random() - 0.5) * Math.abs(deltaY) * 0.8;
-        break;
-      case "sideways":
-        top = deltaY * 0.1;
-        left = deltaY * 1.4;
-        break;
-      case "sticky": {
-        const fightingBack = Math.random() > 0.35;
-        top = fightingBack ? -deltaY * 0.9 : deltaY * 0.2;
-        if (fightingBack && Math.abs(getScrollY() - lastScrollYRef.current) < 2) {
-          top = -deltaY * 1.6;
-        }
-        break;
-      }
-      default:
-        break;
-    }
-
-    scrollByDelta(top, left);
-    lastScrollYRef.current = getScrollY();
-
-    if ((mode === "chaotic" || mode === "sticky") && Math.random() > 0.65) {
-      const snapBack = -top * (0.35 + Math.random() * 0.4);
-      window.setTimeout(() => scrollByDelta(snapBack), 90 + Math.random() * 100);
-    }
+  const bringAdToFront = useCallback((id: number) => {
+    setTopAdId(id);
   }, []);
 
-  useEffect(() => {
-    scrollModeRef.current = scrollMode;
-  }, [scrollMode]);
+  const handleAdPointerDown = useCallback(
+    (event: React.PointerEvent<HTMLDivElement>, ad: AdPopup) => {
+      if ((event.target as HTMLElement).closest("button")) return;
+
+      const offset = adOffsets[ad.id] ?? { x: 0, y: 0 };
+      dragRef.current = {
+        id: ad.id,
+        offsetX: event.clientX - offset.x,
+        offsetY: event.clientY - offset.y,
+      };
+      bringAdToFront(ad.id);
+      event.currentTarget.setPointerCapture(event.pointerId);
+    },
+    [adOffsets, bringAdToFront],
+  );
+
+  const handleAdPointerMove = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
+    const drag = dragRef.current;
+    if (!drag || drag.id !== Number(event.currentTarget.dataset.adId)) return;
+
+    setAdOffsets((current) => ({
+      ...current,
+      [drag.id]: {
+        x: event.clientX - drag.offsetX,
+        y: event.clientY - drag.offsetY,
+      },
+    }));
+  }, []);
+
+  const handleAdPointerUp = useCallback(() => {
+    dragRef.current = null;
+  }, []);
 
   useEffect(() => {
     document.body.classList.add("easter-egg-broken-ux-active");
 
     const lenis = getLenis();
     lenis?.stop();
+
+    scrollControllerRef.current = createBrokenScrollController();
+    scrollControllerRef.current.setMode("inverted");
 
     const interactiveElements = Array.from(
       document.querySelectorAll<HTMLElement>(RUNAWAY_SELECTOR),
@@ -313,7 +253,7 @@ export function BrokenUxSimulator({ onExit }: BrokenUxSimulatorProps) {
       event.preventDefault();
       event.stopPropagation();
 
-      if (Math.random() < 0.1) {
+      if (Math.random() < 0.08) {
         const message =
           SCROLL_MESSAGES[Math.floor(Math.random() * SCROLL_MESSAGES.length)];
 
@@ -321,13 +261,13 @@ export function BrokenUxSimulator({ onExit }: BrokenUxSimulatorProps) {
           message,
           onConfirm: () => {
             setModal(null);
-            applyScroll(event.deltaY, event.deltaX);
+            scrollControllerRef.current?.apply(event.deltaY, event.deltaX);
           },
         });
         return;
       }
 
-      applyScroll(event.deltaY, event.deltaX);
+      scrollControllerRef.current?.apply(event.deltaY, event.deltaX);
     };
 
     const handleClick = (event: MouseEvent) => {
@@ -349,7 +289,7 @@ export function BrokenUxSimulator({ onExit }: BrokenUxSimulatorProps) {
 
       if (Math.random() > 0.45) {
         showSpinner(message);
-        if (Math.random() > 0.5) spawnAd();
+        if (Math.random() > 0.4) spawnAd(true);
         return;
       }
 
@@ -389,17 +329,18 @@ export function BrokenUxSimulator({ onExit }: BrokenUxSimulatorProps) {
     }, 4000);
 
     const adInterval = window.setInterval(() => {
-      if (Math.random() > 0.3) return;
-      spawnAd();
-    }, 3200);
+      if (Math.random() > 0.22) return;
+      spawnAd(Math.random() > 0.5);
+    }, 2800);
 
     const scrollModeInterval = window.setInterval(() => {
       const nextMode = pickScrollMode(scrollModeRef.current);
       scrollModeRef.current = nextMode;
+      scrollControllerRef.current?.setMode(nextMode);
       setScrollMode(nextMode);
       flashMode();
       pushToast(`Scroll mode → ${SCROLL_MODE_META[nextMode].label}`);
-    }, 9000);
+    }, 8500);
 
     const downloadInterval = window.setInterval(() => {
       if (Math.random() > 0.45) return;
@@ -423,12 +364,14 @@ export function BrokenUxSimulator({ onExit }: BrokenUxSimulatorProps) {
     window.addEventListener("mousemove", handleMouseMove);
 
     pushToast("Broken UX Simulator activated. Scroll is inverted.");
-    spawnAd();
+    spawnAd(true);
+    window.setTimeout(() => spawnAd(), 500);
 
     return () => {
       document.body.classList.remove("easter-egg-broken-ux-active");
       lenis?.start();
-      usedSlotsRef.current = new Set();
+      scrollControllerRef.current?.destroy();
+      scrollControllerRef.current = null;
 
       interactiveElements.forEach((element) => {
         element.removeEventListener("mouseenter", handleMouseEnter);
@@ -443,7 +386,7 @@ export function BrokenUxSimulator({ onExit }: BrokenUxSimulatorProps) {
       window.clearInterval(scrollModeInterval);
       window.clearInterval(downloadInterval);
     };
-  }, [applyScroll, flashMode, pushToast, showSpinner, spawnAd]);
+  }, [flashMode, pushToast, showSpinner, spawnAd]);
 
   const modeMeta = SCROLL_MODE_META[scrollMode];
 
@@ -501,31 +444,52 @@ export function BrokenUxSimulator({ onExit }: BrokenUxSimulatorProps) {
       </div>
 
       {ads.map((ad, index) => {
-        const slot = AD_SLOTS[ad.slot] ?? AD_SLOTS[0];
+        const offset = adOffsets[ad.id] ?? { x: 0, y: 0 };
+        const variantClass =
+          ad.variant === "banner"
+            ? styles.adBanner
+            : ad.variant === "alert"
+              ? styles.adAlert
+              : styles.adPopup;
+
         return (
           <div
             key={ad.id}
-            className={styles.adPopup}
+            data-ad-id={ad.id}
+            className={`${styles.adWindow} ${variantClass} ${styles.adShake}`}
             style={{
-              left: `${slot.x}%`,
-              top: `${slot.y}%`,
-              zIndex: 10068 + index,
+              left: `calc(${ad.x}% + ${offset.x}px)`,
+              top: `calc(${ad.y}% + ${offset.y}px)`,
+              zIndex: 10068 + (topAdId === ad.id ? 20 : index),
+              transform: `rotate(${ad.rotation}deg)`,
             }}
             data-broken-ux-ignore
+            onPointerDown={(event) => handleAdPointerDown(event, ad)}
+            onPointerMove={handleAdPointerMove}
+            onPointerUp={handleAdPointerUp}
+            onPointerCancel={handleAdPointerUp}
           >
             <div className={styles.adTitleBar} style={{ background: ad.accent }}>
-              <span className={styles.adTitle}>{ad.title}</span>
+              {ad.urgent ? <span className={styles.adUrgent}>URGENT</span> : null}
+              <span className={styles.adTitle}>
+                <span className={styles.adMarquee}>{ad.title}</span>
+              </span>
               <div className={styles.adWindowControls}>
-                <button type="button" className={styles.adWinBtn} aria-hidden="true">
+                <button
+                  type="button"
+                  className={styles.adWinBtn}
+                  onClick={() => pushToast("Minimize failed. Opening another ad.")}
+                  aria-label="Minimize ad"
+                >
                   _
                 </button>
                 <button
                   type="button"
                   className={styles.adWinBtn}
-                  onClick={() => dismissAd(ad.id, ad.slot)}
+                  onClick={() => dismissAd(ad.id)}
                   onMouseEnter={(event) => {
                     const button = event.currentTarget;
-                    button.style.transform = `translate(${(Math.random() - 0.5) * 50}px, ${(Math.random() - 0.5) * 30}px)`;
+                    button.style.transform = `translate(${(Math.random() - 0.5) * 70}px, ${(Math.random() - 0.5) * 50}px)`;
                   }}
                   aria-label="Close ad"
                 >
@@ -533,14 +497,26 @@ export function BrokenUxSimulator({ onExit }: BrokenUxSimulatorProps) {
                 </button>
               </div>
             </div>
+
             <div className={styles.adContent}>
               <p className={styles.adBody}>{ad.body}</p>
+
+              {ad.progress !== undefined ? (
+                <div className={styles.adProgressTrack}>
+                  <div
+                    className={styles.adProgressFill}
+                    style={{ width: `${ad.progress}%`, background: ad.accent }}
+                  />
+                </div>
+              ) : null}
+
               <button
                 type="button"
                 className={styles.adCta}
                 style={{ background: ad.accent }}
                 onClick={() => {
                   pushToast("Ad clicked. Installing toolbar…");
+                  spawnAd(true);
                   spawnAd();
                 }}
               >
@@ -580,7 +556,7 @@ export function BrokenUxSimulator({ onExit }: BrokenUxSimulatorProps) {
             className={styles.cookieAccept}
             onClick={() => {
               pushToast("Thanks! Here's another ad.");
-              spawnAd();
+              spawnAd(true);
             }}
           >
             Accept all
