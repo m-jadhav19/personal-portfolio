@@ -134,6 +134,16 @@
   color: #000;
 }
 
+.modeLaggy {
+  background: #5856d6;
+  color: #fff;
+}
+
+.modeRubberband {
+  background: #34c759;
+  color: #000;
+}
+
 .hudStats {
   display: flex;
   gap: 0.65rem;
@@ -272,25 +282,98 @@
   }
 }
 
-.adPopup {
+.adWindow {
   position: fixed;
-  width: min(260px, calc(100vw - 2rem));
   border: 2px solid #000;
   background: #ffffcc;
   box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.4);
   pointer-events: auto;
-  animation: adBounceIn 0.3s cubic-bezier(0.34, 1.4, 0.64, 1);
+  cursor: grab;
+  touch-action: none;
+  animation: adBounceIn 0.35s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+
+.adWindow:active {
+  cursor: grabbing;
+}
+
+.adPopup {
+  width: min(260px, calc(100vw - 2rem));
+}
+
+.adBanner {
+  width: min(340px, calc(100vw - 1.5rem));
+  border-width: 3px;
+  box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.5);
+}
+
+.adAlert {
+  width: min(300px, calc(100vw - 2rem));
+  border-color: #cc0000;
+  border-width: 3px;
+  background: #fff5f5;
+  box-shadow:
+    0 0 0 3px #ff0000,
+    6px 6px 0 rgba(0, 0, 0, 0.45);
+  animation:
+    adBounceIn 0.35s cubic-bezier(0.34, 1.4, 0.64, 1),
+    adAlertPulse 1.4s ease-in-out infinite;
+}
+
+.adShake {
+  animation:
+    adBounceIn 0.35s cubic-bezier(0.34, 1.4, 0.64, 1),
+    adShake 2.8s ease-in-out infinite;
 }
 
 @keyframes adBounceIn {
   from {
     opacity: 0;
-    transform: scale(0.85);
+    scale: 0.82;
   }
 
   to {
     opacity: 1;
-    transform: scale(1);
+    scale: 1;
+  }
+}
+
+@keyframes adShake {
+  0%,
+  100% {
+    margin-left: 0;
+    margin-top: 0;
+  }
+
+  20% {
+    margin-left: 3px;
+    margin-top: -2px;
+  }
+
+  40% {
+    margin-left: -2px;
+    margin-top: 2px;
+  }
+
+  60% {
+    margin-left: 2px;
+    margin-top: 1px;
+  }
+
+  80% {
+    margin-left: -1px;
+    margin-top: -1px;
+  }
+}
+
+@keyframes adAlertPulse {
+  0%,
+  100% {
+    filter: brightness(1);
+  }
+
+  50% {
+    filter: brightness(1.08);
   }
 }
 
@@ -306,11 +389,47 @@
   font-weight: 700;
 }
 
+.adUrgent {
+  flex-shrink: 0;
+  padding: 0.05rem 0.3rem;
+  border: 1px solid #fff;
+  background: #ff0000;
+  font-size: 0.55rem;
+  letter-spacing: 0.08em;
+  animation: urgentBlink 0.7s step-end infinite;
+}
+
+@keyframes urgentBlink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.4;
+  }
+}
+
 .adTitle {
   flex: 1;
   overflow: hidden;
-  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.adMarquee {
+  display: inline-block;
   white-space: nowrap;
+  animation: adMarquee 6s linear infinite;
+}
+
+@keyframes adMarquee {
+  0% {
+    transform: translateX(100%);
+  }
+
+  100% {
+    transform: translateX(-120%);
+  }
 }
 
 .adWindowControls {
@@ -343,6 +462,26 @@
   font-family: "Comic Sans MS", "Comic Sans", cursive;
   font-size: 0.72rem;
   line-height: 1.4;
+}
+
+.adProgressTrack {
+  height: 10px;
+  margin-bottom: 0.5rem;
+  border: 2px solid #000;
+  background: #e8e8e8;
+  overflow: hidden;
+}
+
+.adProgressFill {
+  height: 100%;
+  background: repeating-linear-gradient(
+    90deg,
+    currentColor,
+    currentColor 8px,
+    transparent 8px,
+    transparent 16px
+  );
+  transition: width 0.15s linear;
 }
 
 .adCta {
@@ -587,6 +726,14 @@
 
   .adPopup {
     width: min(220px, calc(100vw - 1.25rem));
+  }
+
+  .adBanner {
+    width: min(280px, calc(100vw - 1.25rem));
+  }
+
+  .adAlert {
+    width: min(260px, calc(100vw - 1.25rem));
   }
 
   .cookieBanner {
