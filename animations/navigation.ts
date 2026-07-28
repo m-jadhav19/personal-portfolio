@@ -49,6 +49,8 @@ type MobileMenuTargets = {
 };
 
 export function openMobileMenu({ overlay, panel, links }: MobileMenuTargets) {
+  gsap.killTweensOf([overlay, panel, ...links]);
+
   const tl = gsap.timeline({ defaults: { ease: EASE_CSS } });
 
   tl.set(overlay, { pointerEvents: "auto", visibility: "visible" })
@@ -63,41 +65,55 @@ export function openMobileMenu({ overlay, panel, links }: MobileMenuTargets) {
       { clipPath: "inset(0 0 100% 0)" },
       { clipPath: "inset(0 0 0% 0)", duration: DURATION.medium },
       0,
-    )
-    .from(
+    );
+
+  if (links.length) {
+    // fromTo (not from): close leaves opacity/y mutated, so reopen must
+    // explicitly restore visible end state.
+    tl.fromTo(
       links,
+      { y: 32, opacity: 0 },
       {
-        y: 32,
-        opacity: 0,
+        y: 0,
+        opacity: 1,
         duration: DURATION.fast,
         stagger: 0.06,
+        clearProps: "transform",
       },
       0.25,
     );
+  }
 
   return tl;
 }
 
 export function closeMobileMenu({ overlay, panel, links }: MobileMenuTargets) {
+  gsap.killTweensOf([overlay, panel, ...links]);
+
   const tl = gsap.timeline({
     defaults: { ease: EASE_CSS },
     onComplete: () => {
       gsap.set(overlay, { pointerEvents: "none", visibility: "hidden" });
+      if (links.length) {
+        gsap.set(links, { clearProps: "opacity,transform" });
+      }
     },
   });
 
-  tl.to(links, {
-    y: -16,
-    opacity: 0,
-    duration: 0.25,
-    stagger: 0.03,
-  })
-    .to(
-      panel,
-      { clipPath: "inset(0 0 100% 0)", duration: DURATION.fast },
-      0.05,
-    )
-    .to(overlay, { opacity: 0, duration: DURATION.fast }, 0.1);
+  if (links.length) {
+    tl.to(links, {
+      y: -16,
+      opacity: 0,
+      duration: 0.25,
+      stagger: 0.03,
+    });
+  }
+
+  tl.to(
+    panel,
+    { clipPath: "inset(0 0 100% 0)", duration: DURATION.fast },
+    links.length ? 0.05 : 0,
+  ).to(overlay, { opacity: 0, duration: DURATION.fast }, links.length ? 0.1 : 0);
 
   return tl;
 }
