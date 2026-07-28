@@ -68,7 +68,10 @@ export function Navigation() {
     if (element) linkRefs.current[index] = element;
   };
 
-  const headerClassName = [styles.header, isHidden ? styles.headerHidden : ""]
+  const headerClassName = [
+    styles.header,
+    isHidden && !isMobileMenuOpen ? styles.headerHidden : "",
+  ]
     .filter(Boolean)
     .join(" ");
 
@@ -105,6 +108,7 @@ export function Navigation() {
           <MobileNav
             isOpen={isMobileMenuOpen}
             onOpen={() => setIsMobileMenuOpen(true)}
+            onClose={() => setIsMobileMenuOpen(false)}
           />
         </div>
       </header>

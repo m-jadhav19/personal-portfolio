@@ -5,9 +5,10 @@ import styles from "./Navigation.module.css";
 type MobileNavProps = {
   isOpen: boolean;
   onOpen: () => void;
+  onClose: () => void;
 };
 
-export function MobileNav({ isOpen, onOpen }: MobileNavProps) {
+export function MobileNav({ isOpen, onOpen, onClose }: MobileNavProps) {
   return (
     <div className={styles.mobileControls}>
       <button
@@ -16,9 +17,9 @@ export function MobileNav({ isOpen, onOpen }: MobileNavProps) {
         data-cursor="nav"
         aria-expanded={isOpen}
         aria-controls="mobile-navigation"
-        onClick={onOpen}
+        onClick={isOpen ? onClose : onOpen}
       >
-        Menu
+        {isOpen ? "Close" : "Menu"}
       </button>
     </div>
   );

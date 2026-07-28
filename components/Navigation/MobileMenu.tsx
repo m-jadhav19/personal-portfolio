@@ -84,15 +84,6 @@ export function MobileMenu({ isOpen, onClose, onNavigate }: MobileMenuProps) {
         aria-label="Site navigation"
         onClick={(event) => event.stopPropagation()}
       >
-        <button
-          type="button"
-          className={styles.closeButton}
-          data-cursor="nav"
-          onClick={onClose}
-        >
-          Close
-        </button>
-
         <nav className={styles.mobileLinks} aria-label="Mobile">
           {navigation.map((item, index) => (
             <a
