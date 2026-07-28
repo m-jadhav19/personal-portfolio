@@ -4,6 +4,30 @@
   border-top: 1px solid var(--border);
 }
 
+.pinTrack {
+  position: relative;
+}
+
+.featuredWork[data-scroll-sequence="true"] .pinTrack {
+  min-height: 100vh;
+}
+
+.featuredWork[data-scroll-sequence="true"] .heading {
+  top: clamp(8rem, 22vh, 14rem);
+}
+
+.featuredWork[data-scroll-sequence="true"] .projects {
+  margin-top: clamp(8rem, 18vh, 12rem);
+  min-height: clamp(28rem, 62vh, 40rem);
+}
+
+.featuredWork[data-scroll-sequence="true"] .projectRow {
+  position: absolute;
+  inset: 0;
+  min-height: 100%;
+  padding-block: clamp(2rem, 5vh, 4rem);
+}
+
 .heading {
   position: sticky;
   top: 35vh;
