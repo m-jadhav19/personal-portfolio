@@ -7,7 +7,8 @@ const REPEAT_COUNT = 8;
 type HeroMarqueeProps = {
   lines: string[];
   lineRefs?: Ref<HTMLDivElement>[];
-  portrait?: ReactNode;
+  portraitBlob?: ReactNode;
+  portraitFigure?: ReactNode;
 };
 
 function MarqueeTrack({ text }: { text: string }) {
@@ -15,40 +16,55 @@ function MarqueeTrack({ text }: { text: string }) {
     <span key={index}>{text}</span>
   ));
 
-  return <div className={styles.track}>{items}</div>;
+  return <div className={styles.track} data-marquee-track>{items}</div>;
 }
 
-export function HeroMarquee({ lines, lineRefs, portrait }: HeroMarqueeProps) {
-  const backLines = lines.slice(0, 2);
-  const frontLines = lines.slice(2);
+export function HeroMarquee({
+  lines,
+  lineRefs,
+  portraitBlob,
+  portraitFigure,
+}: HeroMarqueeProps) {
+  const [backLine, middleLine, frontLine] = lines;
 
   return (
-    <div className={styles.marquee} aria-label="Roles marquee">
-      {backLines.map((line, index) => (
+    <div className={styles.marquee} aria-label="Roles marquee" data-marquee>
+      {backLine ? (
         <div
-          key={line}
-          ref={lineRefs?.[index]}
+          ref={lineRefs?.[0]}
           className={`${styles.marqueeRow} ${styles.marqueeRowBack}`}
           data-intro="marquee-line"
-          style={{ gridRow: index + 1 }}
+          style={{ gridRow: 1 }}
         >
-          <MarqueeTrack text={line} />
+          <MarqueeTrack text={backLine} />
         </div>
-      ))}
+      ) : null}
 
-      {portrait}
+      {portraitBlob}
 
-      {frontLines.map((line, index) => (
+      {middleLine ? (
         <div
-          key={line}
-          ref={lineRefs?.[index + 2]}
+          ref={lineRefs?.[1]}
+          className={`${styles.marqueeRow} ${styles.marqueeRowMiddle}`}
+          data-intro="marquee-line"
+          style={{ gridRow: 2 }}
+        >
+          <MarqueeTrack text={middleLine} />
+        </div>
+      ) : null}
+
+      {portraitFigure}
+
+      {frontLine ? (
+        <div
+          ref={lineRefs?.[2]}
           className={`${styles.marqueeRow} ${styles.marqueeRowFront}`}
           data-intro="marquee-line"
-          style={{ gridRow: index + 3 }}
+          style={{ gridRow: 3 }}
         >
-          <MarqueeTrack text={line} />
+          <MarqueeTrack text={frontLine} />
         </div>
-      ))}
+      ) : null}
     </div>
   );
 }

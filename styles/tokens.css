@@ -27,7 +27,7 @@
 
   --grid-max: 1920px;
   --grid-padding-inline: clamp(20px, 2.5vw, 40px);
-  --section-padding-block: clamp(120px, 15vw, 240px);
+  --section-padding-block: clamp(120px, 8vw, 240px);
 
   /* ─── Border ─────────────────────────────────────────────────────────── */
 

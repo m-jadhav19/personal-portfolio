@@ -9,7 +9,7 @@ import { portfolio } from "@/content/portfolio";
 
 import { HeroMarquee } from "./HeroMarquee";
 import { HeroMeta } from "./HeroMeta";
-import { HeroPortrait } from "./HeroPortrait";
+import { useHeroPortrait } from "./HeroPortrait";
 import styles from "./Hero.module.css";
 
 export function Hero() {
@@ -20,15 +20,28 @@ export function Hero() {
   const hasPlayedIntro = useRef(false);
 
   const marqueeLines = portfolio.hero.roles;
+  const { blob: portraitBlob, figure: portraitFigure } =
+    useHeroPortrait(portraitRef);
 
   useEffect(() => {
-    const rows = [lineOneRef, lineTwoRef, lineThreeRef]
-      .map((ref) => ref.current)
-      .filter((row): row is HTMLDivElement => Boolean(row));
+    const getRows = () =>
+      [lineOneRef, lineTwoRef, lineThreeRef]
+        .map((ref) => ref.current)
+        .filter((row): row is HTMLDivElement => Boolean(row));
 
-    const unsubscribeParallax = bindMarqueeParallax(rows);
+    let destroyMarquee: (() => void) | undefined;
+
+    const initMarquee = () => {
+      const rows = getRows();
+      if (!rows.length) return;
+      destroyMarquee?.();
+      destroyMarquee = bindMarqueeParallax(rows);
+    };
 
     const runIntro = () => {
+      const rows = getRows();
+      if (!rows.length) return;
+
       if (hasPlayedIntro.current && process.env.NODE_ENV !== "development") {
         return;
       }
@@ -40,15 +53,25 @@ export function Hero() {
       });
     };
 
-    if (document.documentElement.dataset.intro === "complete") {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(initMarquee);
+    });
+
+    const onIntroComplete = () => {
       runIntro();
+    };
+
+    if (document.documentElement.dataset.intro === "complete") {
+      onIntroComplete();
     } else {
-      window.addEventListener(INTRO_COMPLETE_EVENT, runIntro, { once: true });
+      window.addEventListener(INTRO_COMPLETE_EVENT, onIntroComplete, {
+        once: true,
+      });
     }
 
     return () => {
-      unsubscribeParallax();
-      window.removeEventListener(INTRO_COMPLETE_EVENT, runIntro);
+      destroyMarquee?.();
+      window.removeEventListener(INTRO_COMPLETE_EVENT, onIntroComplete);
     };
   }, []);
 
@@ -58,7 +81,8 @@ export function Hero() {
         <HeroMarquee
           lines={marqueeLines}
           lineRefs={[lineOneRef, lineTwoRef, lineThreeRef]}
-          portrait={<HeroPortrait portraitRef={portraitRef} />}
+          portraitBlob={portraitBlob}
+          portraitFigure={portraitFigure}
         />
       </div>
 
