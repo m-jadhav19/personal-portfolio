@@ -16,6 +16,12 @@ import {
   readLoaderSeen,
   writeLoaderSeen,
 } from "./loaderState";
+import {
+  buildLoaderCountPaletteCss,
+  LOADER_COUNT_PALETTE_NAME,
+  loaderCountColor,
+  resolveBitcountInkFamily,
+} from "./loaderCountColor";
 import { loaderMessages, pickLoaderMessage } from "./loaderMessages";
 import styles from "./Loader.module.css";
 
@@ -26,8 +32,43 @@ type LoaderWindow = Window & {
   };
 };
 
+const PALETTE_STYLE_ID = "loader-count-palette";
+
 export function Loader() {
   return <ProductionLoader />;
+}
+
+function syncLoaderCountPalette(progress: number) {
+  const color = loaderCountColor(progress);
+  const family = resolveBitcountInkFamily();
+  let style = document.getElementById(PALETTE_STYLE_ID) as HTMLStyleElement | null;
+
+  if (!style) {
+    style = document.createElement("style");
+    style.id = PALETTE_STYLE_ID;
+    document.head.appendChild(style);
+  }
+
+  style.textContent = buildLoaderCountPaletteCss(family, color);
+}
+
+function lockLoaderScroll() {
+  const scrollY = window.scrollY;
+  document.documentElement.classList.add("loader-active");
+  document.documentElement.style.setProperty("--loader-scroll-lock-y", `-${scrollY}px`);
+  document.documentElement.dataset.loaderScrollY = String(scrollY);
+  (window as LoaderWindow).__lenis__?.stop();
+  return scrollY;
+}
+
+function unlockLoaderScroll() {
+  const raw = document.documentElement.dataset.loaderScrollY;
+  const scrollY = raw ? Number.parseInt(raw, 10) || 0 : 0;
+  document.documentElement.classList.remove("loader-active");
+  document.documentElement.style.removeProperty("--loader-scroll-lock-y");
+  delete document.documentElement.dataset.loaderScrollY;
+  (window as LoaderWindow).__lenis__?.start();
+  window.scrollTo(0, scrollY);
 }
 
 function ProductionLoader() {
@@ -56,9 +97,9 @@ function ProductionLoader() {
 
     resetIntroDocumentState();
     document.documentElement.classList.add("intro-loading");
-    document.documentElement.classList.add("loader-active");
-    (window as LoaderWindow).__lenis__?.stop();
+    lockLoaderScroll();
     setMessage(pickLoaderMessage(loaderMessages));
+    syncLoaderCountPalette(hasSeenLoader ? 65 : 0);
 
     if (prefersReducedMotion) {
       assetsReadyRef.current = true;
@@ -107,10 +148,15 @@ function ProductionLoader() {
   }, []);
 
   useEffect(() => {
+    syncLoaderCountPalette(count);
+  }, [count]);
+
+  useEffect(() => {
     return () => {
       if (!hasCompleted.current) {
-        document.documentElement.classList.remove("loader-active", "intro-loading");
-        (window as LoaderWindow).__lenis__?.start();
+        document.documentElement.classList.remove("intro-loading");
+        unlockLoaderScroll();
+        document.getElementById(PALETTE_STYLE_ID)?.remove();
       }
     };
   }, []);
@@ -119,8 +165,9 @@ function ProductionLoader() {
     if (hasCompleted.current) return;
     hasCompleted.current = true;
     writeLoaderSeen();
-    document.documentElement.classList.remove("loader-active");
-    (window as LoaderWindow).__lenis__?.start();
+    document.documentElement.classList.remove("intro-loading");
+    unlockLoaderScroll();
+    document.getElementById(PALETTE_STYLE_ID)?.remove();
     signalIntroComplete();
     setIsHidden(true);
   };
@@ -176,6 +223,8 @@ function ProductionLoader() {
     return null;
   }
 
+  const countColor = loaderCountColor(count);
+
   return (
     <div
       ref={loaderRef}
@@ -189,7 +238,9 @@ function ProductionLoader() {
         <p
           className={styles.count}
           style={{
-            color: `color-mix(in srgb, var(--accent) ${count}%, var(--muted))`,
+            color: countColor,
+            WebkitTextFillColor: countColor,
+            fontPalette: LOADER_COUNT_PALETTE_NAME,
           }}
         >
           {count}%

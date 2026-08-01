@@ -46,18 +46,19 @@
   font-variant-ligatures: none;
   font-variant-numeric: normal;
   font-feature-settings: "liga" 0, "calt" 0;
+  /* Keep paint layers off; COLR color is driven by font-palette overrides. */
   font-variation-settings:
-    "ELXP" 45,
-    "ELSH" 40,
+    "ELXP" 28,
+    "ELSH" 35,
     "SZP1" 0,
     "SZP2" 0,
     "XPN1" 0,
     "XPN2" 0,
     "YPN1" 0,
     "YPN2" 0;
-  /* Progress color is set inline: grey → accent blue as count → 100. */
   color: var(--muted);
-  transition: color 0.18s linear;
+  -webkit-text-fill-color: var(--muted);
+  transition: color 0.18s linear, -webkit-text-fill-color 0.18s linear;
 }
 
 @media (max-width: 700px) {
