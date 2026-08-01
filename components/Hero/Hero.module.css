@@ -57,15 +57,12 @@
 .marqueeRowFront .track {
   color: var(--foreground);
   opacity: 0.96;
-  /* Opposite of the middle row (nth-child even → right). */
-  animation-name: marquee-left;
 }
 
 .track {
   display: inline-flex;
   width: max-content;
   white-space: nowrap;
-  /* Non-ink Grid Single — same monotone look as mobile. */
   font-family: var(--font-bitcount);
   font-weight: 500;
   font-size: clamp(3.25rem, 12vw, 9rem);
@@ -80,8 +77,13 @@
   will-change: transform;
 }
 
-.marqueeRow:nth-child(even) .track {
+/* Middle back row only — bottom front row matches the first (right → left). */
+.marqueeRowBack:nth-child(even) .track {
   animation-name: marquee-right;
+}
+
+.marqueeRow.marqueeRowFront .track {
+  animation-name: marquee-left;
 }
 
 .track span {
@@ -126,25 +128,25 @@
 
 .portraitBackdrop {
   position: absolute;
-  inset: -8%;
+  inset: -14%;
   z-index: 0;
   pointer-events: none;
-  opacity: 0.85;
+  opacity: 0.9;
   transform-origin: center;
 }
 
 .asciiMatrix {
   position: absolute;
-  inset: 0;
+  inset: -4%;
   display: grid;
-  grid-template-columns: repeat(20, 1fr);
-  grid-template-rows: repeat(16, 1fr);
-  font-family: var(--font-mono);
-  font-size: clamp(0.55rem, 1.15vw, 0.8rem);
-  font-weight: 500;
+  grid-template-columns: repeat(28, 1fr);
+  grid-template-rows: repeat(22, 1fr);
+  font-family: var(--font-bitcount);
+  font-size: clamp(0.62rem, 1.35vw, 0.95rem);
+  font-weight: 600;
   line-height: 1;
-  letter-spacing: 0.04em;
-  color: rgba(245, 244, 240, 0.42);
+  letter-spacing: 0.02em;
+  color: rgba(245, 244, 240, 0.5);
   overflow: visible;
 }
 

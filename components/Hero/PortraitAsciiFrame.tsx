@@ -14,8 +14,8 @@ type PortraitAsciiFrameProps = {
 };
 
 const CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#$%&*+=<>/\\|{}[]~^._";
-const COLS = 20;
-const ROWS = 16;
+const COLS = 28;
+const ROWS = 22;
 
 const PORTRAIT_RADIUS = 0.3;
 const PORTRAIT_PUSH = 36;
@@ -50,8 +50,9 @@ export function PortraitAsciiFrame({ isHovered = false }: PortraitAsciiFrameProp
         const ny = (row + 0.5) / ROWS;
         const dx = nx - 0.5;
         const dy = ny - 0.48;
-        const radius = Math.hypot(dx * 1.1, dy);
-        const visible = radius > 0.28 && radius < 0.52 && (index * 7) % 5 !== 0;
+        const radius = Math.hypot(dx * 1.05, dy * 0.95);
+        // Wider, denser ring around the portrait.
+        const visible = radius > 0.22 && radius < 0.58 && (index * 11) % 7 !== 0;
         return {
           key: `${col}-${row}`,
           col,
@@ -82,9 +83,9 @@ export function PortraitAsciiFrame({ isHovered = false }: PortraitAsciiFrameProp
       }
 
       const intro = gsap.to(nodes, {
-        opacity: () => 0.18 + Math.random() * 0.35,
+        opacity: () => 0.28 + Math.random() * 0.4,
         duration: 0.55,
-        stagger: { each: 0.012, from: "random" },
+        stagger: { each: 0.01, from: "random" },
         ease: "power1.out",
       });
 
@@ -100,7 +101,7 @@ export function PortraitAsciiFrame({ isHovered = false }: PortraitAsciiFrameProp
         batch.forEach((node) => {
           gsap.to(node, {
             duration: gsap.utils.random(0.28, 0.55) / speed,
-            opacity: gsap.utils.random(0.14, 0.5),
+            opacity: gsap.utils.random(0.22, 0.62),
             scrambleText: {
               text: pickChar(),
               chars: CHARS,

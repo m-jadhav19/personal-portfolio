@@ -30,7 +30,6 @@
 
 .message {
   margin: 0;
-  /* Non-ink Grid Single — square filled pixels, matches mobile. */
   font-family: var(--font-bitcount);
   font-size: clamp(3rem, 5vw, 4.375rem);
   font-weight: 500;

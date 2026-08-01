@@ -1,15 +1,26 @@
 import type { Metadata, Viewport } from "next";
-import { Bitcount_Grid_Single, Honk, Open_Sans } from "next/font/google";
+import { Bitcount_Single, Honk, Open_Sans } from "next/font/google";
+import localFont from "next/font/local";
 
 import "@/styles/globals.css";
 
 import { portfolio } from "@/content/portfolio";
 import { Providers } from "@/components/Providers";
 
-const bitcountGridSingle = Bitcount_Grid_Single({
+const bitcountSingle = Bitcount_Single({
   subsets: ["latin"],
   weight: "variable",
-  variable: "--font-bitcount-grid-single",
+  variable: "--font-bitcount-single",
+  display: "swap",
+  adjustFontFallback: false,
+});
+
+/** Not yet in next/font/google — self-hosted latin variable cut. */
+const bitcountSingleInk = localFont({
+  src: "./fonts/bitcount-single-ink-latin.woff2",
+  weight: "100 900",
+  style: "normal",
+  variable: "--font-bitcount-single-ink",
   display: "swap",
   adjustFontFallback: false,
 });
@@ -49,10 +60,10 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`theme-dark ${bitcountGridSingle.variable} ${openSans.variable} ${honk.variable}`}
+      className={`theme-dark ${bitcountSingle.variable} ${bitcountSingleInk.variable} ${openSans.variable} ${honk.variable}`}
       data-theme="dark"
     >
-      <body className={bitcountGridSingle.className}>
+      <body className={bitcountSingle.className}>
         <Providers>{children}</Providers>
       </body>
     </html>
