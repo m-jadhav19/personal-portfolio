@@ -36,12 +36,25 @@
 }
 
 .count {
-  font-family: var(--font-display-sans);
+  font-family: var(--font-bitcount-ink);
   font-size: clamp(6rem, 18vw, 12rem);
   font-weight: 700;
-  line-height: 0.82;
-  letter-spacing: -0.06em;
-  font-variant-numeric: tabular-nums;
+  line-height: 0.9;
+  /* Negative tracking + Bitcount ink paint axes create stray side dots. */
+  letter-spacing: 0.04em;
+  font-kerning: none;
+  font-variant-ligatures: none;
+  font-variant-numeric: normal;
+  font-feature-settings: "liga" 0, "calt" 0;
+  font-variation-settings:
+    "ELXP" 45,
+    "ELSH" 40,
+    "SZP1" 0,
+    "SZP2" 0,
+    "XPN1" 0,
+    "XPN2" 0,
+    "YPN1" 0,
+    "YPN2" 0;
 }
 
 @media (max-width: 700px) {
@@ -50,7 +63,8 @@
   }
 
   .count {
-    font-size: clamp(4.5rem, 24vw, 7rem);
+    font-size: clamp(4.5rem, 22vw, 7rem);
+    letter-spacing: 0.06em;
   }
 }
 

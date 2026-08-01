@@ -2,11 +2,15 @@
 
 html[data-easter-egg="myspace"] {
   filter: saturate(1.45) contrast(1.05);
+  font-family: var(--font-easter-myspace);
+  font-variation-settings: "MORF" 28, "SHLN" 62;
   cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Ctext y='18' font-size='18'%3E%E2%99%A5%3C/text%3E%3C/svg%3E")
     12 12, auto;
 }
 
 html[data-easter-egg="myspace"] body {
+  font-family: var(--font-easter-myspace) !important;
+  font-variation-settings: "MORF" 28, "SHLN" 62;
   background: linear-gradient(
     135deg,
     #ff99ff 0%,
@@ -27,12 +31,6 @@ html[data-easter-egg="myspace"] body {
   50% {
     background-position: 100% 50%;
   }
-}
-
-html[data-easter-egg="myspace"],
-html[data-easter-egg="myspace"] body {
-  font-family: var(--font-easter-myspace) !important;
-  font-variation-settings: "MORF" 28, "SHLN" 62;
 }
 
 html[data-easter-egg="myspace"] h1,
