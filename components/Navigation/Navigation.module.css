@@ -45,7 +45,7 @@
   display: block;
   font-family: var(--font-bitcount);
   font-size: clamp(0.95rem, 1.15vw, 1.1rem);
-  font-weight: 500;
+  font-weight: var(--font-bitcount-weight);
   line-height: 1.05;
   letter-spacing: -0.01em;
   text-transform: uppercase;
@@ -82,7 +82,7 @@
   padding-block: var(--space-4);
   font-family: var(--font-bitcount);
   font-size: 0.85rem;
-  font-weight: 500;
+  font-weight: var(--font-bitcount-weight);
   letter-spacing: 0.05em;
   text-transform: uppercase;
   color: inherit;
@@ -111,7 +111,7 @@
 .navNumber {
   font-family: inherit;
   font-size: inherit;
-  font-weight: 500;
+  font-weight: var(--font-bitcount-weight);
   letter-spacing: inherit;
   color: inherit;
 }
@@ -156,7 +156,7 @@
 .menuButton {
   font-family: var(--font-bitcount);
   font-size: 0.85rem;
-  font-weight: 500;
+  font-weight: var(--font-bitcount-weight);
   letter-spacing: 0.05em;
   text-transform: lowercase;
   color: inherit;
@@ -223,7 +223,7 @@
 
 .mobileExtraLink {
   font-size: 13px;
-  font-weight: 500;
+  font-weight: var(--font-bitcount-weight);
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--footer-muted);

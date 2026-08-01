@@ -17,7 +17,11 @@ import {
   writeLoaderSeen,
 } from "./loaderState";
 import { loaderCountColor } from "./loaderCountColor";
-import { loaderMessages, pickLoaderMessage } from "./loaderMessages";
+import {
+  formatLoaderMessageLines,
+  loaderMessages,
+  pickLoaderMessage,
+} from "./loaderMessages";
 import styles from "./Loader.module.css";
 
 type LoaderWindow = Window & {
@@ -196,6 +200,7 @@ function ProductionLoader() {
   }
 
   const countColor = loaderCountColor(count);
+  const [messageLineOne, messageLineTwo] = formatLoaderMessageLines(message);
 
   return (
     <div
@@ -206,7 +211,10 @@ function ProductionLoader() {
       aria-label={`Loading ${count}%`}
     >
       <div className={styles.copy}>
-        <p className={styles.message}>{message}</p>
+        <p className={styles.message}>
+          <span className={styles.messageLine}>{messageLineOne}</span>
+          <span className={styles.messageLine}>{messageLineTwo}</span>
+        </p>
         <div className={styles.countClip}>
           <p
             className={styles.count}

@@ -30,16 +30,24 @@
 
 .message {
   margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.12em;
+  max-width: min(44rem, 88vw);
   font-family: var(--font-bitcount);
-  font-size: clamp(3rem, 5vw, 4.375rem);
-  font-weight: 500;
-  line-height: 0.95;
-  letter-spacing: 0.02em;
+  font-size: clamp(1.2rem, 2.4vw, 1.85rem);
+  font-weight: var(--font-bitcount-weight);
+  line-height: 0.98;
+  letter-spacing: 0.03em;
   text-transform: uppercase;
   color: #fff;
   -webkit-text-fill-color: #fff;
   overflow: hidden;
   font-palette: normal;
+}
+
+.messageLine {
+  display: block;
 }
 
 .countClip {
@@ -58,9 +66,9 @@
   margin: 0;
   font-family: var(--font-bitcount);
   font-size: clamp(6rem, 18vw, 12rem);
-  font-weight: 500;
+  font-weight: var(--font-bitcount-weight);
   line-height: 0.95;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
   font-kerning: none;
   font-variant-ligatures: none;
   font-variant-numeric: normal;
@@ -75,7 +83,8 @@
 
 @media (max-width: 700px) {
   .message {
-    font-size: clamp(2rem, 8vw, 2.75rem);
+    font-size: clamp(0.95rem, 4.2vw, 1.35rem);
+    max-width: min(36rem, 94vw);
   }
 
   .count {

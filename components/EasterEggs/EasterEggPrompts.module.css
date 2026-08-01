@@ -68,7 +68,7 @@
   color: var(--muted);
   font-family: var(--font-mono);
   font-size: 0.62rem;
-  font-weight: 500;
+  font-weight: var(--font-bitcount-weight);
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }

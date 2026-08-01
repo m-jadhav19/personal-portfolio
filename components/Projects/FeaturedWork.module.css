@@ -24,7 +24,7 @@
   margin: 0;
   font-family: var(--font-display-sans);
   font-size: clamp(2rem, 1rem + 6vw, 6rem);
-  font-weight: 700;
+  font-weight: var(--font-bitcount-weight-semibold);
   font-style: normal;
   line-height: 0.95;
   letter-spacing: -0.04em;
@@ -36,7 +36,7 @@
   margin-top: var(--space-16);
   font-family: var(--font-mono);
   font-size: 0.65rem;
-  font-weight: 600;
+  font-weight: var(--font-bitcount-weight-medium);
   font-style: normal;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -143,7 +143,7 @@
   color: #000;
   font-family: var(--font-mono);
   font-size: 0.72rem;
-  font-weight: 700;
+  font-weight: var(--font-bitcount-weight-semibold);
   font-style: normal;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -182,7 +182,7 @@
 .index {
   font-family: var(--font-mono);
   font-size: var(--text-label-size);
-  font-weight: 700;
+  font-weight: var(--font-bitcount-weight-semibold);
   font-style: normal;
   letter-spacing: var(--text-label-tracking);
   color: var(--accent);
@@ -192,7 +192,7 @@
 .tags {
   font-family: var(--font-mono);
   font-size: 0.72rem;
-  font-weight: 600;
+  font-weight: var(--font-bitcount-weight-medium);
   font-style: normal;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -203,7 +203,7 @@
   margin: var(--space-8) 0 0;
   font-family: var(--font-display-sans);
   font-size: clamp(2rem, 3.5vw, 3.25rem);
-  font-weight: 700;
+  font-weight: var(--font-bitcount-weight-semibold);
   font-style: normal;
   line-height: 0.92;
   letter-spacing: -0.04em;
@@ -213,7 +213,7 @@
 .description {
   font-family: var(--font-display-sans);
   font-size: clamp(1rem, 1.2vw, 1.1rem);
-  font-weight: 500;
+  font-weight: var(--font-bitcount-weight);
   font-style: normal;
   line-height: 1.5;
   color: var(--muted);
@@ -244,7 +244,7 @@
   color: var(--foreground);
   font-family: var(--font-mono);
   font-size: 0.72rem;
-  font-weight: 700;
+  font-weight: var(--font-bitcount-weight-semibold);
   font-style: normal;
   letter-spacing: 0.12em;
   text-transform: uppercase;

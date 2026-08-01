@@ -37,7 +37,7 @@
   margin: 0;
   font-family: var(--font-mono);
   font-size: 0.62rem;
-  font-weight: 500;
+  font-weight: var(--font-bitcount-weight);
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--accent);
@@ -47,7 +47,7 @@
   margin: 0;
   font-family: var(--font-body);
   font-size: clamp(2.5rem, 8vw, 6rem);
-  font-weight: 700;
+  font-weight: var(--font-bitcount-weight-semibold);
   line-height: 0.9;
   letter-spacing: -0.05em;
   text-transform: uppercase;
@@ -140,7 +140,7 @@
   margin: 0;
   font-family: var(--font-mono);
   font-size: clamp(1.5rem, 3vw, 2.5rem);
-  font-weight: 600;
+  font-weight: var(--font-bitcount-weight-medium);
   line-height: 1;
   letter-spacing: -0.04em;
   color: color-mix(in srgb, var(--foreground) 18%, transparent);
@@ -186,7 +186,7 @@
   margin: 0;
   font-family: var(--font-display);
   font-size: clamp(1.35rem, 2.5vw, 2.25rem);
-  font-weight: 400;
+  font-weight: var(--font-bitcount-weight-light);
   line-height: 1;
   letter-spacing: -0.02em;
 }

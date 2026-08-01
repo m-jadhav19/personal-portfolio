@@ -41,3 +41,29 @@ export function pickLoaderMessage(messages: readonly LoaderMessage[]) {
 
   return messages[0]?.text ?? "";
 }
+
+/** Balance words across exactly two display lines for the loader copy. */
+export function formatLoaderMessageLines(text: string): [string, string] {
+  const words = text.trim().split(/\s+/).filter(Boolean);
+  if (words.length === 0) return ["", ""];
+  if (words.length === 1) return [words[0] ?? "", ""];
+
+  let bestSplit = 1;
+  let bestScore = Number.POSITIVE_INFINITY;
+
+  for (let split = 1; split < words.length; split += 1) {
+    const first = words.slice(0, split).join(" ");
+    const second = words.slice(split).join(" ");
+    const score = Math.abs(first.length - second.length);
+
+    if (score < bestScore) {
+      bestScore = score;
+      bestSplit = split;
+    }
+  }
+
+  return [
+    words.slice(0, bestSplit).join(" "),
+    words.slice(bestSplit).join(" "),
+  ];
+}

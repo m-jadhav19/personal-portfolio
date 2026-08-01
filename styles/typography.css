@@ -15,6 +15,13 @@
   --font-body: var(--font-bitcount);
   --font-mono: var(--font-bitcount);
   --font-description: var(--font-open-sans-family);
+
+  /* Bitcount Single wght axis — lower = smaller dots, more air between them */
+  --font-bitcount-weight-light: 300;
+  --font-bitcount-weight: 350;
+  --font-bitcount-weight-medium: 450;
+  --font-bitcount-weight-semibold: 550;
+  --font-bitcount-weight-bold: 650;
 }
 
 /* ─── Type Scale ─────────────────────────────────────────────────────────── */
@@ -23,15 +30,15 @@
   /* Display */
   --text-display-xl-size: clamp(4.5rem, 10vw, 9rem);
   --text-display-xl-leading: 0.92;
-  --text-display-xl-tracking: -0.03em;
+  --text-display-xl-tracking: -0.01em;
 
   --text-display-l-size: clamp(3.5rem, 7vw, 6.5rem);
   --text-display-l-leading: 0.94;
-  --text-display-l-tracking: -0.025em;
+  --text-display-l-tracking: -0.01em;
 
   --text-display-m-size: clamp(2.75rem, 5vw, 4.5rem);
   --text-display-m-leading: 0.96;
-  --text-display-m-tracking: -0.02em;
+  --text-display-m-tracking: -0.005em;
 
   /* Heading */
   --text-heading-xl-size: clamp(2.25rem, 4vw, 3.5rem);
@@ -94,7 +101,7 @@
   font-size: var(--text-heading-xl-size);
   line-height: var(--text-heading-xl-leading);
   letter-spacing: var(--text-heading-xl-tracking);
-  font-weight: 500;
+  font-weight: var(--font-bitcount-weight-medium);
 }
 
 .text-heading-l {
@@ -102,7 +109,7 @@
   font-size: var(--text-heading-l-size);
   line-height: var(--text-heading-l-leading);
   letter-spacing: var(--text-heading-l-tracking);
-  font-weight: 500;
+  font-weight: var(--font-bitcount-weight-medium);
 }
 
 .text-heading-m {
@@ -110,7 +117,7 @@
   font-size: var(--text-heading-m-size);
   line-height: var(--text-heading-m-leading);
   letter-spacing: var(--text-heading-m-tracking);
-  font-weight: 500;
+  font-weight: var(--font-bitcount-weight-medium);
 }
 
 .text-body-xl {

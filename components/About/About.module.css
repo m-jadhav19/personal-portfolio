@@ -31,9 +31,9 @@
   border-bottom: 1px solid var(--border);
   font-family: var(--font-display);
   font-size: clamp(3rem, 10vw, 7rem);
-  font-weight: 400;
+  font-weight: var(--font-bitcount-weight-light);
   line-height: 0.9;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.01em;
   text-transform: uppercase;
 }
 

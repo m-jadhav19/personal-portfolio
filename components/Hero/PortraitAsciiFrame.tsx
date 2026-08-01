@@ -18,10 +18,10 @@ const COLS = 28;
 const ROWS = 22;
 
 const PORTRAIT_RADIUS = 0.3;
-const PORTRAIT_PUSH = 36;
-const CURSOR_RADIUS = 0.32;
-const CURSOR_PUSH = 48;
-const CURSOR_SWIRL = 14;
+const PORTRAIT_PUSH = 16;
+const CURSOR_RADIUS = 0.22;
+const CURSOR_PUSH = 20;
+const CURSOR_SWIRL = 5;
 
 function prefersReducedMotion() {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -53,12 +53,14 @@ export function PortraitAsciiFrame({ isHovered = false }: PortraitAsciiFrameProp
         const radius = Math.hypot(dx * 1.05, dy * 0.95);
         // Wider, denser ring around the portrait.
         const visible = radius > 0.22 && radius < 0.58 && (index * 11) % 7 !== 0;
+        const depth = 1 - Math.min(1, Math.max(0, (radius - 0.22) / 0.36));
         return {
           key: `${col}-${row}`,
           col,
           row,
           nx,
           ny,
+          depth,
           char: visible ? pickChar(index + 11) : "",
           visible,
         };
@@ -75,15 +77,29 @@ export function PortraitAsciiFrame({ isHovered = false }: PortraitAsciiFrameProp
       const nodes = Array.from(root.querySelectorAll<HTMLElement>("[data-char]"));
       const cellByKey = new Map(cells.map((cell) => [`${cell.col}-${cell.row}`, cell]));
 
-      gsap.set(nodes, { opacity: 0, x: 0, y: 0 });
+      gsap.set(nodes, { opacity: 0, x: 0, y: 0, scale: 1 });
 
       if (prefersReducedMotion()) {
         gsap.set(nodes, { opacity: 0.35 });
         return;
       }
 
+      nodes.forEach((node) => {
+        const cell = cellByKey.get(`${node.dataset.col}-${node.dataset.row}`);
+        const depth = cell?.depth ?? 0.5;
+        gsap.set(node, {
+          opacity: 0.18 + depth * 0.42,
+          scale: 0.82 + depth * 0.28,
+        });
+      });
+
       const intro = gsap.to(nodes, {
-        opacity: () => 0.28 + Math.random() * 0.4,
+        opacity: (index) => {
+          const node = nodes[index];
+          const cell = cellByKey.get(`${node?.dataset.col}-${node?.dataset.row}`);
+          const depth = cell?.depth ?? 0.5;
+          return 0.22 + depth * 0.48 + Math.random() * 0.12;
+        },
         duration: 0.55,
         stagger: { each: 0.01, from: "random" },
         ease: "power1.out",
@@ -123,6 +139,7 @@ export function PortraitAsciiFrame({ isHovered = false }: PortraitAsciiFrameProp
       const setters = nodes.map((node) => ({
         x: gsap.quickSetter(node, "x", "px"),
         y: gsap.quickSetter(node, "y", "px"),
+        scale: gsap.quickSetter(node, "scale"),
       }));
 
       const onPointerMove = (event: PointerEvent) => {
@@ -161,8 +178,11 @@ export function PortraitAsciiFrame({ isHovered = false }: PortraitAsciiFrameProp
           const cell = cellByKey.get(`${node.dataset.col}-${node.dataset.row}`);
           if (!cell) continue;
 
-          let ox = 0;
-          let oy = 0;
+          const depth = cell.depth;
+          const depthInfluence = 0.35 + depth * 0.65;
+
+          let ox = (pointer.x - 0.5) * depth * 18 * pushScale;
+          let oy = (pointer.y - 0.5) * depth * 18 * pushScale;
 
           const pdx = cell.nx - 0.5;
           const pdy = cell.ny - 0.48;
@@ -170,10 +190,10 @@ export function PortraitAsciiFrame({ isHovered = false }: PortraitAsciiFrameProp
           const pForce = falloff(pDist, PORTRAIT_RADIUS);
           if (pForce > 0) {
             const inv = 1 / pDist;
-            ox += pdx * inv * pForce * PORTRAIT_PUSH * pushScale;
-            oy += pdy * inv * pForce * PORTRAIT_PUSH * pushScale;
-            ox += -pdy * inv * pForce * 8 * pushScale;
-            oy += pdx * inv * pForce * 8 * pushScale;
+            ox += pdx * inv * pForce * PORTRAIT_PUSH * pushScale * depthInfluence;
+            oy += pdy * inv * pForce * PORTRAIT_PUSH * pushScale * depthInfluence;
+            ox += -pdy * inv * pForce * 4 * pushScale * depthInfluence;
+            oy += pdx * inv * pForce * 4 * pushScale * depthInfluence;
           }
 
           if (pointer.strength > 0.01) {
@@ -183,15 +203,16 @@ export function PortraitAsciiFrame({ isHovered = false }: PortraitAsciiFrameProp
             const cForce = falloff(cDist, CURSOR_RADIUS) * pointer.strength;
             if (cForce > 0) {
               const inv = 1 / cDist;
-              ox += cdx * inv * cForce * CURSOR_PUSH * pushScale;
-              oy += cdy * inv * cForce * CURSOR_PUSH * pushScale;
-              ox += -cdy * inv * cForce * CURSOR_SWIRL * pushScale;
-              oy += cdx * inv * cForce * CURSOR_SWIRL * pushScale;
+              ox += cdx * inv * cForce * CURSOR_PUSH * pushScale * depthInfluence;
+              oy += cdy * inv * cForce * CURSOR_PUSH * pushScale * depthInfluence;
+              ox += -cdy * inv * cForce * CURSOR_SWIRL * pushScale * depthInfluence;
+              oy += cdx * inv * cForce * CURSOR_SWIRL * pushScale * depthInfluence;
             }
           }
 
           setter.x(ox);
           setter.y(oy);
+          setter.scale(0.82 + depth * 0.28 + pointer.strength * depth * 0.08);
         }
       };
 
@@ -217,14 +238,14 @@ export function PortraitAsciiFrame({ isHovered = false }: PortraitAsciiFrameProp
       if (!root || prefersReducedMotion()) return;
 
       gsap.to(scrambleScaleRef.current, {
-        value: isHovered ? 1.8 : 1,
+        value: isHovered ? 1.25 : 1,
         duration: 0.35,
         ease: "power2.out",
         overwrite: true,
       });
 
       gsap.to(root, {
-        opacity: isHovered ? 1 : 0.85,
+        opacity: isHovered ? 1 : 0.88,
         duration: 0.35,
         ease: "power2.out",
         overwrite: "auto",
