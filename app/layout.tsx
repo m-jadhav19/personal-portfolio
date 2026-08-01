@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { Bitcount_Grid_Single, Honk, Open_Sans } from "next/font/google";
-import localFont from "next/font/local";
 
 import "@/styles/globals.css";
 
@@ -11,15 +10,6 @@ const bitcountGridSingle = Bitcount_Grid_Single({
   subsets: ["latin"],
   weight: "variable",
   variable: "--font-bitcount-grid-single",
-  display: "swap",
-  adjustFontFallback: false,
-});
-
-const bitcountGridSingleInk = localFont({
-  src: "./fonts/bitcount-grid-single-ink-latin.woff2",
-  weight: "100 900",
-  style: "normal",
-  variable: "--font-bitcount-grid-single-ink",
   display: "swap",
   adjustFontFallback: false,
 });
@@ -59,7 +49,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`theme-dark ${bitcountGridSingle.variable} ${bitcountGridSingleInk.variable} ${openSans.variable} ${honk.variable}`}
+      className={`theme-dark ${bitcountGridSingle.variable} ${openSans.variable} ${honk.variable}`}
       data-theme="dark"
     >
       <body className={bitcountGridSingle.className}>
