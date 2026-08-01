@@ -24,6 +24,7 @@ test("ink palette css overrides every CPAL entry", () => {
     "rgb(14 165 233)",
   );
   assert.match(css, new RegExp(LOADER_COUNT_PALETTE_NAME));
+  assert.match(css, /font-family: "Bitcount Grid Single Ink"/);
   assert.equal(
     (css.match(/\d+ rgb\(14 165 233\)/g) ?? []).length,
     LOADER_INK_PALETTE_SIZE,

@@ -72,7 +72,7 @@ html.loader-active body {
   touch-action: none;
 }
 
-/* Keep hero pixel sparks / travelers from peeking around the loader. */
+/* Keep portrait effects from peeking around the loader. */
 html.loader-active [data-intro="portrait"] {
   visibility: hidden !important;
 }
