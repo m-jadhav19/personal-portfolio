@@ -1,11 +1,18 @@
 /* ─── Font Families ──────────────────────────────────────────────────────── */
 
 :root {
-  --font-bitcount: var(--font-bitcount-prop-single), "Bitcount Prop Single", sans-serif;
-  --font-display: var(--font-bitcount);
+  /* Bitcount Grid Single — without ink (body / labels) */
+  --font-bitcount: var(--font-bitcount-grid-single), "Bitcount Grid Single", sans-serif;
+  /* Bitcount Grid Single Ink — with ink (display / headlines) */
+  --font-bitcount-ink: var(--font-bitcount-grid-single-ink), "Bitcount Grid Single Ink",
+    var(--font-bitcount);
+  --font-open-sans-family: var(--font-open-sans), "Open Sans", sans-serif;
+
+  --font-display: var(--font-bitcount-ink);
+  --font-display-sans: var(--font-bitcount-ink);
   --font-body: var(--font-bitcount);
   --font-mono: var(--font-bitcount);
-  --font-display-sans: var(--font-bitcount);
+  --font-description: var(--font-open-sans-family);
 }
 
 /* ─── Type Scale ─────────────────────────────────────────────────────────── */

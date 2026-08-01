@@ -29,6 +29,7 @@
   --font-display-sans: var(--font-display-sans);
   --font-body: var(--font-body);
   --font-mono: var(--font-mono);
+  --font-description: var(--font-description);
 
   --ease-editorial: var(--ease);
 }
