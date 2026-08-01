@@ -1,0 +1,30 @@
+.clock {
+  font-family: var(--font-mono);
+  font-size: calc(0.72rem * var(--font-scale, 1));
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--typo-ash, var(--muted));
+  white-space: nowrap;
+}
+
+.colon {
+  animation: blink 1s steps(1, end) infinite;
+  animation-delay: var(--blink-offset, 0ms);
+}
+
+@keyframes blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0.2;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .colon {
+    animation: none;
+  }
+}

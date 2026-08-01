@@ -7,7 +7,8 @@
     "dev:clean": "node -e \"require('fs').rmSync('.next',{recursive:true,force:true})\" && next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "enhance-images": "node scripts/enhance-project-images.mjs"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",
@@ -20,6 +21,7 @@
     "three": "^0.185.1"
   },
   "devDependencies": {
+    "@google/generative-ai": "^0.24.0",
     "@tailwindcss/postcss": "^4.1.0",
     "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",
@@ -27,6 +29,7 @@
     "@types/three": "^0.185.1",
     "eslint": "^9.0.0",
     "eslint-config-next": "^15.5.0",
+    "sharp": "^0.34.3",
     "tailwindcss": "^4.1.0",
     "typescript": "^5.8.0"
   }

@@ -11,6 +11,17 @@ export const navigation: NavigationItem[] = [
   { id: "contact", label: "Contact", number: "04" },
 ];
 
+export type TypoClock = {
+  label: string;
+  timezone: string;
+  blinkOffset?: number;
+};
+
+export const typoClocks: TypoClock[] = [
+  { label: "MUM(IN)", timezone: "Asia/Kolkata", blinkOffset: 0 },
+  { label: "UTC", timezone: "UTC", blinkOffset: 100 },
+];
+
 export type MobileExtraLink = {
   label: string;
   href: string;

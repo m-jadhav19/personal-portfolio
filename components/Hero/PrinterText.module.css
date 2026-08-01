@@ -1,0 +1,44 @@
+.printer {
+  position: relative;
+  width: min(92vw, 56rem);
+  margin-inline: auto;
+  aspect-ratio: 800 / 220;
+}
+
+.word {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  font-family: var(--font-display-sans);
+  font-size: clamp(3rem, 12vw, 7.5rem);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(255, 255, 255, 0.15);
+}
+
+.lines {
+  position: absolute;
+  inset: 8% 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+}
+
+.line {
+  display: block;
+  height: 0.55rem;
+  border-radius: 999px;
+  background: var(--typo-white, #fdfdfd);
+  transform: translateX(-110%);
+}
+
+@media (max-width: 768px) {
+  .line {
+    transform: translateX(0);
+    opacity: 0.35;
+  }
+}

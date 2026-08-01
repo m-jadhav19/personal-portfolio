@@ -128,10 +128,40 @@ function drawMyspace(ctx: CanvasRenderingContext2D, frame: number) {
   }
 }
 
+function drawTypo(ctx: CanvasRenderingContext2D, frame: number, ascii = false) {
+  clear(ctx);
+  ctx.fillStyle = "#0f0f0f";
+  ctx.fillRect(0, 0, SIZE, SIZE);
+
+  if (ascii) {
+    ctx.font = "5px monospace";
+    ctx.fillStyle = "#cecece";
+    const glyphs = "@#*+=-:. ";
+    for (let row = 0; row < 5; row += 1) {
+      let line = "";
+      for (let col = 0; col < 6; col += 1) {
+        line += glyphs[(row + col + frame) % glyphs.length];
+      }
+      ctx.fillText(line, 5, 8 + row * 5);
+    }
+  } else {
+    for (let i = 0; i < 6; i += 1) {
+      const y = 6 + i * 4;
+      const width = 8 + ((i + frame) % 5) * 3;
+      ctx.fillStyle = "#cecece";
+      ctx.fillRect(6, y, Math.min(width, 20), 2);
+    }
+  }
+
+  drawMonogram(ctx, 0, 0, "#fdfdfd", 2);
+  drawAccentBar(ctx, 12 + ((frame % 24) / 24) * 6, "#858585");
+}
+
 export function drawFavicon(
   ctx: CanvasRenderingContext2D,
   mode: FaviconMode,
   frame: number,
+  theme: "light" | "dark" = "dark",
 ) {
   switch (mode) {
     case "broken-ux":
@@ -139,6 +169,9 @@ export function drawFavicon(
       break;
     case "myspace":
       drawMyspace(ctx, frame);
+      break;
+    case "typo":
+      drawTypo(ctx, frame, theme === "dark");
       break;
     default:
       drawDefault(ctx, frame);

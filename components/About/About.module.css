@@ -44,3 +44,25 @@
   line-height: 1.55;
   color: var(--muted);
 }
+
+.typoHeading {
+  margin-bottom: var(--space-40);
+  padding-bottom: var(--space-40);
+  border-bottom: 1px solid var(--border);
+}
+
+.subtitle {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5em;
+  margin-top: var(--space-64);
+  font-family: var(--font-body);
+  font-size: clamp(1.5rem, 3vw, 2.5rem);
+  letter-spacing: -0.03em;
+  text-transform: capitalize;
+  color: var(--foreground);
+}
+
+.subtitle span {
+  opacity: 0.85;
+}

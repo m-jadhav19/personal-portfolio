@@ -3,12 +3,15 @@
 import { useEffect, useRef, useState } from "react";
 
 import { portfolio } from "@/content/portfolio";
+import { SectionTitle } from "@/components/SectionTitle";
+import { useTypoMode } from "@/hooks/useTypoMode";
 
 import { ServiceRow } from "./ServiceRow";
 import { getNextOpenService } from "./serviceAccordion";
 import styles from "./Services.module.css";
 
 export function Services() {
+  const isTypoMode = useTypoMode();
   const sectionRef = useRef<HTMLElement>(null);
   const [openId, setOpenId] = useState<string | null>(null);
   const [isInView, setIsInView] = useState(false);
@@ -30,7 +33,14 @@ export function Services() {
 
   return (
     <section id="services" ref={sectionRef} className={styles.services}>
-      <p className={styles.label}>(Services)</p>
+      {isTypoMode ? (
+        <SectionTitle
+          words={["What", "I", "Do"]}
+          className={styles.typoHeading}
+        />
+      ) : (
+        <p className={styles.label}>(Services)</p>
+      )}
 
       <div className={styles.list}>
         {portfolio.services.map((service, index) => {

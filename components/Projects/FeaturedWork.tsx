@@ -12,6 +12,8 @@ import {
   prefersReducedBarMotion,
 } from "@/animations/barOverlay";
 import { portfolio } from "@/content/portfolio";
+import { SectionTitle } from "@/components/SectionTitle";
+import { useTypoMode } from "@/hooks/useTypoMode";
 import {
   lockPageScroll,
   resetPageScrollLock,
@@ -27,6 +29,7 @@ import styles from "./FeaturedWork.module.css";
 gsap.registerPlugin(ScrollTrigger);
 
 export function FeaturedWork() {
+  const isTypoMode = useTypoMode();
   const sectionRef = useRef<HTMLElement>(null);
   const allProjects = portfolio.projects;
   const projects = selectFeaturedProjects(allProjects);
@@ -115,9 +118,16 @@ export function FeaturedWork() {
     <>
       <section id="projects" ref={sectionRef} className={styles.featuredWork}>
         <div className={styles.stickyHeading} data-featured-heading-wrap>
-          <h2 className={styles.headingTitle} data-featured-heading>
-            Featured Work
-          </h2>
+          {isTypoMode ? (
+            <SectionTitle
+              words={["Selected", "Projects"]}
+              className={styles.typoHeading}
+            />
+          ) : (
+            <h2 className={styles.headingTitle} data-featured-heading>
+              Featured Work
+            </h2>
+          )}
           <span className={styles.headingCue}>[Scroll to explore more]</span>
         </div>
 

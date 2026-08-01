@@ -16,6 +16,10 @@
   color: var(--muted);
 }
 
+.typoHeading {
+  margin: 0 0 clamp(2rem, 5vw, 4rem);
+}
+
 .list {
   display: flex;
   flex-direction: column;

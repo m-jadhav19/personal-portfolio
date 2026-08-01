@@ -22,8 +22,10 @@ export function setFaviconFromCanvas(canvas: HTMLCanvasElement) {
   link.href = canvas.toDataURL("image/png");
 }
 
-export function readFaviconMode(): "default" | "broken-ux" | "myspace" {
+import type { FaviconMode } from "./types";
+
+export function readFaviconMode(): FaviconMode {
   const egg = document.documentElement.dataset.easterEgg;
-  if (egg === "broken-ux" || egg === "myspace") return egg;
+  if (egg === "broken-ux" || egg === "myspace" || egg === "typo") return egg;
   return "default";
 }

@@ -1,0 +1,27 @@
+.char[data-variation="charInit"] {
+  color: inherit;
+}
+
+.char[data-variation="charFill"] {
+  color: var(--foreground);
+  background: transparent;
+}
+
+.char[data-variation="charInverse"] {
+  color: var(--background);
+  background: var(--foreground);
+}
+
+.char[data-variation="charBorder"] {
+  color: transparent;
+  -webkit-text-stroke: 1px var(--foreground);
+}
+
+[data-easter-egg="typo"] .char[data-variation="charInverse"] {
+  color: var(--typo-black);
+  background: var(--typo-white);
+}
+
+[data-easter-egg="typo"] .char[data-variation="charBorder"] {
+  -webkit-text-stroke: 1px var(--typo-white);
+}

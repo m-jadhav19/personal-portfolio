@@ -10,6 +10,7 @@ const INTERVAL_MS: Record<FaviconMode, number> = {
   default: 700,
   "broken-ux": 110,
   myspace: 160,
+  typo: 220,
 };
 
 export function DynamicFavicon() {
@@ -36,7 +37,9 @@ export function DynamicFavicon() {
 
     const render = () => {
       frame += 1;
-      drawFavicon(ctx, mode, frame);
+      const theme =
+        document.documentElement.dataset.theme === "light" ? "light" : "dark";
+      drawFavicon(ctx, mode, frame, theme);
       setFaviconFromCanvas(canvas);
     };
 
@@ -48,17 +51,19 @@ export function DynamicFavicon() {
 
     const syncMode = () => {
       const nextMode = readFaviconMode();
-      if (nextMode === mode && intervalMs > 0) return;
-      mode = nextMode;
-      intervalMs = getInterval(mode);
-      schedule();
+      const nextInterval = getInterval(nextMode);
+      if (nextMode !== mode || nextInterval !== intervalMs) {
+        mode = nextMode;
+        intervalMs = nextInterval;
+        schedule();
+      }
       render();
     };
 
     const observer = new MutationObserver(syncMode);
     observer.observe(document.documentElement, {
       attributes: true,
-      attributeFilter: ["data-easter-egg"],
+      attributeFilter: ["data-easter-egg", "data-theme", "data-art-style"],
     });
 
     const handleVisibility = () => {

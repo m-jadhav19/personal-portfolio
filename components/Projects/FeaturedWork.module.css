@@ -44,6 +44,10 @@
   opacity: 0.65;
 }
 
+.typoHeading {
+  margin: 0;
+}
+
 .projects {
   position: relative;
   z-index: 1;
@@ -52,7 +56,7 @@
 .projectRow {
   display: grid;
   min-height: min(80vh, 38rem);
-  grid-template-columns: minmax(0, 1.15fr) minmax(18rem, 0.85fr);
+  grid-template-columns: minmax(0, 1.25fr) minmax(18rem, 0.75fr);
   align-items: center;
   gap: clamp(2rem, 5vw, 5rem);
   padding: clamp(3rem, 7vh, 5rem) var(--grid-padding-inline);
@@ -60,7 +64,7 @@
 }
 
 .projectRowRight {
-  grid-template-columns: minmax(18rem, 0.85fr) minmax(0, 1.15fr);
+  grid-template-columns: minmax(18rem, 0.75fr) minmax(0, 1.25fr);
 }
 
 .projectRowRight .mediaColumn {
@@ -77,7 +81,7 @@
 .mediaColumn {
   position: relative;
   z-index: 2;
-  width: min(100%, 36rem);
+  width: min(100%, 48rem);
   will-change: transform;
 }
 
@@ -94,55 +98,64 @@
   will-change: transform;
 }
 
+.mediaFrame {
+  position: relative;
+  width: 100%;
+}
+
 .media {
   position: relative;
   display: block;
   width: 100%;
-  aspect-ratio: 16 / 10;
+  aspect-ratio: 2 / 1;
   overflow: hidden;
   background: var(--surface);
-  isolation: isolate;
 }
 
 .mediaImage {
-  object-fit: cover;
-  object-position: center;
-  transition: transform 0.7s var(--ease);
-}
-
-.media:hover .mediaImage,
-.media:focus-visible .mediaImage {
-  transform: scale(1.045);
-}
-
-.viewBtn {
   position: absolute;
-  top: 0;
+  inset: 0;
+  object-fit: cover;
+  object-position: center top;
+}
+
+.hoverLabelRow {
+  position: absolute;
   left: 0;
-  z-index: 2;
-  display: inline-flex;
+  right: 0;
+  z-index: 3;
+  display: flex;
   align-items: center;
-  justify-content: center;
-  min-width: 9rem;
-  padding: 0.9rem 1.25rem;
-  background: #fff;
-  color: #000;
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  font-weight: 700;
-  font-style: normal;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  justify-content: space-between;
+  padding-inline: clamp(1.25rem, 4vw, 2.5rem);
   pointer-events: none;
   opacity: 0;
-  transform: translate(-50%, -50%);
+  transform: translateY(-50%);
   transition: opacity 0.2s var(--ease);
+}
+
+.hoverLabelRowVisible {
+  opacity: 1;
+}
+
+.hoverWord {
+  font-family: var(--font-display-sans);
+  font-size: clamp(1.35rem, 2.2vw, 2rem);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: #fff;
   mix-blend-mode: difference;
 }
 
-.viewBtnVisible,
-.media:focus-visible .viewBtn {
-  opacity: 1;
+.hoverWordCenter {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.hoverTyper {
+  display: inline-flex;
 }
 
 .info {
@@ -254,12 +267,29 @@
 }
 
 @media (hover: none) {
-  .viewBtn {
-    top: auto;
-    left: var(--space-16);
-    bottom: var(--space-16);
+  .hoverLabelRow {
+    position: static;
+    transform: none;
     opacity: 1;
-    transform: none !important;
+    padding-block: var(--space-16);
+    padding-inline: 0;
+    justify-content: center;
+    gap: 0.35em;
+  }
+
+  .hoverWordCenter {
+    position: static;
+    transform: none;
+  }
+
+  .hoverWord {
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    mix-blend-mode: normal;
   }
 }
 

@@ -1,10 +1,60 @@
+"use client";
+
 import { ScrambleText } from "@/components/About/ScrambleText";
+import { PrinterText } from "@/components/Hero/PrinterText";
 import { portfolio } from "@/content/portfolio";
+import { useTypoMode } from "@/hooks/useTypoMode";
 
 import { BackToTopLink } from "./BackToTopLink";
 import styles from "./ContactFooter.module.css";
 
 export function ContactFooter() {
+  const typoMode = useTypoMode();
+
+  if (typoMode) {
+    return (
+      <footer id="contact" className={`${styles.footer} ${styles.typoFooter}`}>
+        <div className={styles.typoPrinter}>
+          <PrinterText />
+        </div>
+
+        <ul className={styles.typoLinks}>
+          {portfolio.socials.map((social) => (
+            <li key={social.id}>
+              <a
+                href={social.link}
+                className="typo-button"
+                target={social.link.startsWith("http") ? "_blank" : undefined}
+                rel={
+                  social.link.startsWith("http")
+                    ? "noopener noreferrer"
+                    : undefined
+                }
+              >
+                {social.title}
+              </a>
+            </li>
+          ))}
+          <li>
+            <a
+              href={`mailto:${portfolio.contact.email}`}
+              className="typo-button"
+            >
+              {portfolio.contact.email}
+            </a>
+          </li>
+        </ul>
+
+        <div className={styles.bottom}>
+          <p>© {new Date().getFullYear()} {portfolio.name} Jadhav</p>
+          <BackToTopLink>
+            Back to top <span aria-hidden="true">↑</span>
+          </BackToTopLink>
+        </div>
+      </footer>
+    );
+  }
+
   return (
     <footer id="contact" className={styles.footer}>
       <div className={styles.top}>

@@ -1,5 +1,9 @@
+"use client";
+
+import { useTypoMode } from "@/hooks/useTypoMode";
 import type { Project } from "@/lib/types";
 
+import { CharTyper } from "./CharTyper";
 import { ProjectMedia } from "./ProjectMedia";
 import { getProjectSide } from "./projectMotion";
 import styles from "./FeaturedWork.module.css";
@@ -11,6 +15,7 @@ type ProjectSlideProps = {
 
 export function ProjectSlide({ project, index }: ProjectSlideProps) {
   const side = getProjectSide(index);
+  const typoMode = useTypoMode();
 
   return (
     <article
@@ -35,7 +40,11 @@ export function ProjectSlide({ project, index }: ProjectSlideProps) {
           {project.year ? ` — ${project.year}` : ""}
         </p>
         <h3 className={styles.title} data-reveal>
-          {project.title}
+          {typoMode ? (
+            <CharTyper text={project.title} active={typoMode} />
+          ) : (
+            project.title
+          )}
         </h3>
         <p className={styles.description} data-reveal>
           {project.description}

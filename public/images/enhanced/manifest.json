@@ -1,0 +1,44 @@
+[
+  {
+    "slug": "retro-cassette",
+    "from": "/images/retro.png",
+    "to": "/images/enhanced/retro-cassette.webp",
+    "method": "sharp"
+  },
+  {
+    "slug": "brutalist-ui",
+    "from": "/images/brutualist.png",
+    "to": "/images/enhanced/brutalist-ui.webp",
+    "method": "sharp"
+  },
+  {
+    "slug": "ply-digital-workspace",
+    "from": "/images/ply-app.png",
+    "to": "/images/enhanced/ply-digital-workspace.webp",
+    "method": "sharp"
+  },
+  {
+    "slug": "epoch-world-timer",
+    "from": "/images/epoch.png",
+    "to": "/images/enhanced/epoch-world-timer.webp",
+    "method": "sharp"
+  },
+  {
+    "slug": "auratry-virtual-try-on",
+    "from": "/images/auratry.png",
+    "to": "/images/enhanced/auratry-virtual-try-on.webp",
+    "method": "sharp"
+  },
+  {
+    "slug": "ditherboy",
+    "from": "/images/ditherboy.png",
+    "to": "/images/enhanced/ditherboy.webp",
+    "method": "sharp"
+  },
+  {
+    "slug": "3d-portfolio-website",
+    "from": "/images/3dportfolio.png",
+    "to": "/images/enhanced/3d-portfolio-website.webp",
+    "method": "sharp"
+  }
+]
