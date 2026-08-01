@@ -27,35 +27,27 @@
 }
 
 .message {
-  font-family: var(--font-display-sans);
+  /* Normal site type — not Honk (easter egg) and not COLR Ink. */
+  font-family: var(--font-bitcount);
   font-size: clamp(3rem, 5vw, 4.375rem);
   font-weight: 700;
   line-height: 0.95;
   letter-spacing: -0.04em;
   text-transform: uppercase;
+  color: #fff;
 }
 
 .count {
-  font-family: var(--font-bitcount-ink);
+  /* Grid Single (non-Ink) so digits stay readable and CSS color works. */
+  font-family: var(--font-bitcount);
   font-size: clamp(6rem, 18vw, 12rem);
   font-weight: 700;
   line-height: 0.9;
-  /* Negative tracking + Bitcount ink paint axes create stray side dots. */
   letter-spacing: 0.04em;
   font-kerning: none;
   font-variant-ligatures: none;
   font-variant-numeric: normal;
   font-feature-settings: "liga" 0, "calt" 0;
-  /* Keep paint layers off; COLR color is driven by font-palette overrides. */
-  font-variation-settings:
-    "ELXP" 28,
-    "ELSH" 35,
-    "SZP1" 0,
-    "SZP2" 0,
-    "XPN1" 0,
-    "XPN2" 0,
-    "YPN1" 0,
-    "YPN2" 0;
   color: var(--muted);
   -webkit-text-fill-color: var(--muted);
   transition: color 0.18s linear, -webkit-text-fill-color 0.18s linear;

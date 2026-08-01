@@ -16,12 +16,7 @@ import {
   readLoaderSeen,
   writeLoaderSeen,
 } from "./loaderState";
-import {
-  buildLoaderCountPaletteCss,
-  LOADER_COUNT_PALETTE_NAME,
-  loaderCountColor,
-  resolveBitcountInkFamily,
-} from "./loaderCountColor";
+import { loaderCountColor } from "./loaderCountColor";
 import { loaderMessages, pickLoaderMessage } from "./loaderMessages";
 import styles from "./Loader.module.css";
 
@@ -32,24 +27,8 @@ type LoaderWindow = Window & {
   };
 };
 
-const PALETTE_STYLE_ID = "loader-count-palette";
-
 export function Loader() {
   return <ProductionLoader />;
-}
-
-function syncLoaderCountPalette(progress: number) {
-  const color = loaderCountColor(progress);
-  const family = resolveBitcountInkFamily();
-  let style = document.getElementById(PALETTE_STYLE_ID) as HTMLStyleElement | null;
-
-  if (!style) {
-    style = document.createElement("style");
-    style.id = PALETTE_STYLE_ID;
-    document.head.appendChild(style);
-  }
-
-  style.textContent = buildLoaderCountPaletteCss(family, color);
 }
 
 function lockLoaderScroll() {
@@ -99,7 +78,6 @@ function ProductionLoader() {
     document.documentElement.classList.add("intro-loading");
     lockLoaderScroll();
     setMessage(pickLoaderMessage(loaderMessages));
-    syncLoaderCountPalette(hasSeenLoader ? 65 : 0);
 
     if (prefersReducedMotion) {
       assetsReadyRef.current = true;
@@ -148,15 +126,10 @@ function ProductionLoader() {
   }, []);
 
   useEffect(() => {
-    syncLoaderCountPalette(count);
-  }, [count]);
-
-  useEffect(() => {
     return () => {
       if (!hasCompleted.current) {
         document.documentElement.classList.remove("intro-loading");
         unlockLoaderScroll();
-        document.getElementById(PALETTE_STYLE_ID)?.remove();
       }
     };
   }, []);
@@ -167,7 +140,6 @@ function ProductionLoader() {
     writeLoaderSeen();
     document.documentElement.classList.remove("intro-loading");
     unlockLoaderScroll();
-    document.getElementById(PALETTE_STYLE_ID)?.remove();
     signalIntroComplete();
     setIsHidden(true);
   };
@@ -240,7 +212,6 @@ function ProductionLoader() {
           style={{
             color: countColor,
             WebkitTextFillColor: countColor,
-            fontPalette: LOADER_COUNT_PALETTE_NAME,
           }}
         >
           {count}%
