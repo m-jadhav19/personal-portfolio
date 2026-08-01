@@ -57,6 +57,8 @@
 .marqueeRowFront .track {
   color: #fff;
   opacity: 0.96;
+  /* Opposite of the middle row (nth-child even → right). */
+  animation-name: marquee-left;
 }
 
 .track {
@@ -117,11 +119,11 @@
   pointer-events: auto;
 }
 
-/* ─── Pixel portrait backdrop (Bitcount-aligned, GSAP-driven) ────────────── */
+/* ─── ASCII / matrix portrait backdrop (GSAP-driven) ─────────────────────── */
 
 .portraitBackdrop {
   position: absolute;
-  inset: -10%;
+  inset: -12%;
   z-index: 0;
   pointer-events: none;
   transform: scale(1);
@@ -129,140 +131,162 @@
   will-change: transform, filter;
 }
 
-.portraitBloom {
+.asciiVeil {
   position: absolute;
-  inset: 2%;
-  border-radius: 0;
+  inset: 8%;
   background:
-    radial-gradient(circle at 50% 42%, rgba(14, 165, 233, 0.38) 0%, transparent 42%),
-    radial-gradient(circle at 30% 70%, rgba(56, 189, 248, 0.14) 0%, transparent 35%),
-    radial-gradient(circle at 72% 28%, rgba(14, 165, 233, 0.16) 0%, transparent 32%);
-  filter: blur(10px);
-  opacity: 0.45;
-  will-change: transform, opacity;
-}
-
-.portraitPlate {
-  position: absolute;
-  inset: 14%;
-  background:
-    linear-gradient(155deg, rgba(22, 28, 34, 0.97) 0%, rgba(10, 10, 10, 0.98) 55%, rgba(14, 20, 26, 0.96) 100%);
-  border: 1px solid rgba(245, 244, 240, 0.1);
+    radial-gradient(circle at 50% 45%, rgba(14, 165, 233, 0.2) 0%, transparent 46%),
+    linear-gradient(160deg, rgba(8, 14, 18, 0.92) 0%, rgba(4, 6, 8, 0.96) 55%, rgba(10, 18, 24, 0.9) 100%);
   box-shadow:
-    inset 0 0 0 1px rgba(14, 165, 233, 0.08),
-    0 0 0 1px rgba(0, 0, 0, 0.45);
-  will-change: border-color, box-shadow;
-}
-
-.portraitDotField {
-  position: absolute;
-  inset: 2%;
-  opacity: 0.3;
-  background-image:
-    radial-gradient(circle at center, rgba(245, 244, 240, 0.7) 0 1.1px, transparent 1.3px),
-    radial-gradient(circle at center, rgba(14, 165, 233, 0.35) 0 0.7px, transparent 0.9px);
-  background-size: 6.2% 6.2%, 12.4% 12.4%;
-  background-position: 0 0, 3.1% 3.1%;
-  mask-image: radial-gradient(circle at center, transparent 30%, #000 48%, #000 76%, transparent 94%);
-  -webkit-mask-image: radial-gradient(circle at center, transparent 30%, #000 48%, #000 76%, transparent 94%);
+    inset 0 0 0 1px rgba(56, 189, 248, 0.18),
+    0 0 40px rgba(14, 165, 233, 0.12);
   will-change: opacity;
 }
 
-.portraitGrain {
+.asciiGrain {
   position: absolute;
-  inset: 14%;
-  opacity: 0.12;
+  inset: 8%;
+  opacity: 0.16;
   mix-blend-mode: soft-light;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
-  background-size: 140px 140px;
-  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
+  background-size: 120px 120px;
 }
 
-.portraitScan {
+.asciiMatrix {
   position: absolute;
-  inset: 14%;
+  inset: 4%;
+  display: grid;
+  grid-template-columns: repeat(22, 1fr);
+  grid-template-rows: repeat(16, 1fr);
+  font-family: var(--font-mono);
+  font-size: clamp(0.55rem, 1.35vw, 0.85rem);
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  color: #7dd3fc;
+  mask-image: radial-gradient(circle at 50% 46%, transparent 26%, #000 40%, #000 78%, transparent 96%);
+  -webkit-mask-image: radial-gradient(circle at 50% 46%, transparent 26%, #000 40%, #000 78%, transparent 96%);
+  will-change: transform;
+}
+
+.asciiCell {
+  display: grid;
+  place-items: center;
+  opacity: 0.35;
+  text-shadow: 0 0 8px rgba(14, 165, 233, 0.35);
+  user-select: none;
+}
+
+.asciiCell[data-tone="mid"] {
+  color: #38bdf8;
+}
+
+.asciiCell[data-tone="edge"] {
+  color: rgba(186, 230, 253, 0.75);
+}
+
+.asciiCell[data-tone="core"] {
+  color: rgba(14, 165, 233, 0.35);
+}
+
+.asciiScan {
+  position: absolute;
+  inset: 8%;
   overflow: hidden;
   pointer-events: none;
 }
 
-.portraitScanBeam {
+.asciiScanBeam {
   position: absolute;
   left: 0;
   right: 0;
   top: 0;
-  height: 22%;
+  height: 18%;
   background: linear-gradient(
     180deg,
     transparent 0%,
-    rgba(14, 165, 233, 0.08) 30%,
-    rgba(56, 189, 248, 0.28) 50%,
-    rgba(14, 165, 233, 0.08) 70%,
+    rgba(14, 165, 233, 0.05) 35%,
+    rgba(125, 211, 252, 0.28) 50%,
+    rgba(14, 165, 233, 0.05) 65%,
     transparent 100%
   );
-  box-shadow: 0 0 18px rgba(14, 165, 233, 0.2);
+  mix-blend-mode: screen;
   will-change: transform, opacity;
 }
 
-.portraitPixelSvg {
+.asciiGlitchLayer {
   position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  overflow: visible;
+  inset: 8%;
+  overflow: hidden;
+  pointer-events: none;
 }
 
-.pixelFrame {
-  fill: rgba(245, 244, 240, 0.28);
-}
-
-.pixelInner {
-  fill: rgba(14, 165, 233, 0.28);
-}
-
-.pixelCorner {
-  fill: url(#pixel-corner-glow);
-  filter: drop-shadow(0 0 2px rgba(14, 165, 233, 0.8));
-}
-
-.pixelTraveler {
+.asciiGlitchBar {
   position: absolute;
-  width: 4.6%;
-  height: 4.6%;
-  background: #38bdf8;
-  box-shadow:
-    0 0 0 1px rgba(14, 165, 233, 0.35),
-    0 0 14px rgba(14, 165, 233, 0.75),
-    0 0 28px rgba(14, 165, 233, 0.35);
-  will-change: left, top, right, bottom, opacity;
-}
-
-.portraitSpark {
-  position: absolute;
-  width: 3.4%;
-  height: 3.4%;
-  background: var(--accent);
-  box-shadow: 0 0 12px rgba(14, 165, 233, 0.7);
+  left: -5%;
+  width: 110%;
+  height: 7%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(56, 189, 248, 0.12) 20%,
+    rgba(244, 244, 245, 0.18) 48%,
+    rgba(14, 165, 233, 0.22) 62%,
+    transparent 100%
+  );
+  mix-blend-mode: screen;
   will-change: transform, opacity;
 }
 
-.sparkA {
-  top: 3%;
-  left: 18%;
+.asciiHud {
+  position: absolute;
+  inset: 10%;
+  pointer-events: none;
 }
 
-.sparkB {
-  top: 16%;
-  right: 4%;
+.asciiBracket {
+  position: absolute;
+  font-family: var(--font-mono);
+  font-size: clamp(1.1rem, 2.4vw, 1.75rem);
+  line-height: 1;
+  color: #7dd3fc;
+  text-shadow: 0 0 10px rgba(14, 165, 233, 0.45);
 }
 
-.sparkC {
-  bottom: 8%;
-  left: 8%;
+.asciiBracket:nth-child(1) {
+  top: 0;
+  left: 0;
 }
 
-.sparkD {
-  bottom: 18%;
-  right: 14%;
+.asciiBracket:nth-child(2) {
+  top: 0;
+  right: 0;
+}
+
+.asciiBracket:nth-child(3) {
+  bottom: 0;
+  left: 0;
+}
+
+.asciiBracket:nth-child(4) {
+  bottom: 0;
+  right: 0;
+}
+
+.asciiStatus {
+  position: absolute;
+  left: 12%;
+  right: 12%;
+  bottom: 11%;
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: clamp(0.55rem, 1.1vw, 0.72rem);
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  text-align: center;
+  color: rgba(125, 211, 252, 0.85);
+  text-shadow: 0 0 8px rgba(14, 165, 233, 0.4);
 }
 
 .portrait {
@@ -290,11 +314,6 @@
 .portraitStage:hover .portraitCutout,
 .portraitStage:focus-visible .portraitCutout {
   transform: scale(1.03);
-}
-
-.portraitStage:hover .pixelCorner,
-.portraitStage:focus-visible .pixelCorner {
-  fill: #7dd3fc;
 }
 
 .footer {
