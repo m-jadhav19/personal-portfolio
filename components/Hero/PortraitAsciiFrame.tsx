@@ -2,11 +2,12 @@
 
 import { useGSAP } from "@gsap/react";
 import { gsap } from "gsap";
+import { ScrambleTextPlugin } from "gsap/ScrambleTextPlugin";
 import { useMemo, useRef } from "react";
 
 import styles from "./Hero.module.css";
 
-gsap.registerPlugin(useGSAP);
+gsap.registerPlugin(useGSAP, ScrambleTextPlugin);
 
 type PortraitAsciiFrameProps = {
   isHovered?: boolean;
@@ -38,6 +39,7 @@ function falloff(distance: number, radius: number) {
 
 export function PortraitAsciiFrame({ isHovered = false }: PortraitAsciiFrameProps) {
   const rootRef = useRef<HTMLDivElement>(null);
+  const scrambleScaleRef = useRef({ value: 1 });
 
   const cells = useMemo(
     () =>
@@ -49,7 +51,6 @@ export function PortraitAsciiFrame({ isHovered = false }: PortraitAsciiFrameProp
         const dx = nx - 0.5;
         const dy = ny - 0.48;
         const radius = Math.hypot(dx * 1.1, dy);
-        // Sparse ring only — leave face and far edges empty.
         const visible = radius > 0.28 && radius < 0.52 && (index * 7) % 5 !== 0;
         return {
           key: `${col}-${row}`,
@@ -71,6 +72,7 @@ export function PortraitAsciiFrame({ isHovered = false }: PortraitAsciiFrameProp
 
       const matrix = root.querySelector<HTMLElement>("[data-matrix]");
       const nodes = Array.from(root.querySelectorAll<HTMLElement>("[data-char]"));
+      const cellByKey = new Map(cells.map((cell) => [`${cell.col}-${cell.row}`, cell]));
 
       gsap.set(nodes, { opacity: 0, x: 0, y: 0 });
 
@@ -79,41 +81,48 @@ export function PortraitAsciiFrame({ isHovered = false }: PortraitAsciiFrameProp
         return;
       }
 
-      gsap.to(nodes, {
+      const intro = gsap.to(nodes, {
         opacity: () => 0.18 + Math.random() * 0.35,
-        duration: 0.6,
-        stagger: { each: 0.01, from: "random" },
+        duration: 0.55,
+        stagger: { each: 0.012, from: "random" },
         ease: "power1.out",
       });
 
-      // Random scramble — swap a few characters and flicker opacity.
-      const scramble = () => {
-        const count = 4 + Math.floor(Math.random() * 8);
-        for (let i = 0; i < count; i += 1) {
-          const node = gsap.utils.random(nodes);
-          if (Math.random() > 0.35) {
-            node.textContent = pickChar();
-          }
+      // GSAP-driven scramble loop (ScrambleTextPlugin + delayedCall).
+      let scrambleAlive = true;
+      const scrambleBurst = () => {
+        if (!scrambleAlive) return;
+
+        const batchSize = gsap.utils.random(3, 9, 1);
+        const batch = gsap.utils.shuffle(nodes.slice()).slice(0, batchSize);
+        const speed = scrambleScaleRef.current.value;
+
+        batch.forEach((node) => {
           gsap.to(node, {
-            opacity: 0.12 + Math.random() * 0.45,
-            duration: 0.08,
+            duration: gsap.utils.random(0.28, 0.55) / speed,
+            opacity: gsap.utils.random(0.14, 0.5),
+            scrambleText: {
+              text: pickChar(),
+              chars: CHARS,
+              speed: 1.1 * speed,
+              delimiter: "",
+            },
             ease: "none",
             overwrite: "auto",
           });
-        }
+        });
+
+        gsap.delayedCall(gsap.utils.random(0.14, 0.32) / speed, scrambleBurst);
       };
-      const scrambleInterval = window.setInterval(scramble, 220);
+
+      gsap.delayedCall(0.55, scrambleBurst);
 
       const target = { x: 0.5, y: 0.5, strength: 0 };
       const pointer = { x: 0.5, y: 0.5, strength: 0 };
       const setters = nodes.map((node) => ({
         x: gsap.quickSetter(node, "x", "px"),
         y: gsap.quickSetter(node, "y", "px"),
-        node,
       }));
-
-      // Map DOM order back to cell data via data-col/data-row.
-      const cellByKey = new Map(cells.map((cell) => [`${cell.col}-${cell.row}`, cell]));
 
       const onPointerMove = (event: PointerEvent) => {
         if (!matrix) return;
@@ -190,7 +199,9 @@ export function PortraitAsciiFrame({ isHovered = false }: PortraitAsciiFrameProp
       window.addEventListener("pointerleave", onPointerLeave);
 
       return () => {
-        window.clearInterval(scrambleInterval);
+        scrambleAlive = false;
+        intro.kill();
+        gsap.killTweensOf(nodes);
         gsap.ticker.remove(applyWrapField);
         window.removeEventListener("pointermove", onPointerMove);
         window.removeEventListener("pointerleave", onPointerLeave);
@@ -203,6 +214,13 @@ export function PortraitAsciiFrame({ isHovered = false }: PortraitAsciiFrameProp
     () => {
       const root = rootRef.current;
       if (!root || prefersReducedMotion()) return;
+
+      gsap.to(scrambleScaleRef.current, {
+        value: isHovered ? 1.8 : 1,
+        duration: 0.35,
+        ease: "power2.out",
+        overwrite: true,
+      });
 
       gsap.to(root, {
         opacity: isHovered ? 1 : 0.85,
