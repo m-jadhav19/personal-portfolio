@@ -55,6 +55,9 @@
     "XPN2" 0,
     "YPN1" 0,
     "YPN2" 0;
+  /* Progress color is set inline: grey → accent blue as count → 100. */
+  color: var(--muted);
+  transition: color 0.18s linear;
 }
 
 @media (max-width: 700px) {
@@ -69,7 +72,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .loader {
+  .loader,
+  .count {
     transition: none;
   }
 }

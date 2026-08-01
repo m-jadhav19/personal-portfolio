@@ -186,7 +186,14 @@ function ProductionLoader() {
     >
       <div className={styles.copy}>
         <p className={styles.message}>{message}</p>
-        <p className={styles.count}>{count}%</p>
+        <p
+          className={styles.count}
+          style={{
+            color: `color-mix(in srgb, var(--accent) ${count}%, var(--muted))`,
+          }}
+        >
+          {count}%
+        </p>
       </div>
     </div>
   );
