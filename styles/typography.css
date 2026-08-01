@@ -1,17 +1,17 @@
 /* ─── Font Families ──────────────────────────────────────────────────────── */
 
 :root {
-  /* Bitcount Grid Single — without ink (body / labels) */
+  /* Bitcount Grid Single — site UI / marquee (monotone, no COLR ink) */
   --font-bitcount: var(--font-bitcount-grid-single), "Bitcount Grid Single", sans-serif;
-  /* Bitcount Grid Single Ink — with ink (display / headlines) */
+  /* Bitcount Grid Single Ink — loader only (COLR; needs font-palette) */
   --font-bitcount-ink: var(--font-bitcount-grid-single-ink), "Bitcount Grid Single Ink",
     var(--font-bitcount);
   --font-open-sans-family: var(--font-open-sans), "Open Sans", sans-serif;
   /* Honk — PIMPMYRIDE / MySpace easter egg */
   --font-easter-myspace: var(--font-honk), "Honk", system-ui, sans-serif;
 
-  --font-display: var(--font-bitcount-ink);
-  --font-display-sans: var(--font-bitcount-ink);
+  --font-display: var(--font-bitcount);
+  --font-display-sans: var(--font-bitcount);
   --font-body: var(--font-bitcount);
   --font-mono: var(--font-bitcount);
   --font-description: var(--font-open-sans-family);

@@ -55,7 +55,7 @@
 }
 
 .marqueeRowFront .track {
-  color: #fff;
+  color: var(--foreground);
   opacity: 0.96;
   /* Opposite of the middle row (nth-child even → right). */
   animation-name: marquee-left;
@@ -65,13 +65,16 @@
   display: inline-flex;
   width: max-content;
   white-space: nowrap;
-  font-family: var(--font-display-sans);
-  font-weight: 700;
+  /* Non-ink Grid Single — same monotone look as mobile. */
+  font-family: var(--font-bitcount);
+  font-weight: 500;
   font-size: clamp(3.25rem, 12vw, 9rem);
   line-height: 0.82;
   letter-spacing: -0.03em;
   color: var(--foreground);
+  -webkit-text-fill-color: var(--foreground);
   text-transform: uppercase;
+  font-palette: normal;
   animation: marquee-left 24s linear infinite;
   animation-play-state: running;
   will-change: transform;
@@ -204,9 +207,9 @@
   left: 50%;
   z-index: 2;
   transform: translateX(-50%);
-  font-family: var(--font-display-sans);
+  font-family: var(--font-bitcount);
   font-size: 0.7rem;
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--muted);
