@@ -154,19 +154,20 @@
 
 .asciiMatrix {
   position: absolute;
-  inset: 4%;
+  inset: -2%;
   display: grid;
-  grid-template-columns: repeat(22, 1fr);
-  grid-template-rows: repeat(16, 1fr);
+  grid-template-columns: repeat(26, 1fr);
+  grid-template-rows: repeat(20, 1fr);
   font-family: var(--font-mono);
-  font-size: clamp(0.55rem, 1.35vw, 0.85rem);
+  font-size: clamp(0.5rem, 1.2vw, 0.78rem);
   font-weight: 500;
   line-height: 1;
   letter-spacing: 0.08em;
   color: #7dd3fc;
-  mask-image: radial-gradient(circle at 50% 46%, transparent 26%, #000 40%, #000 78%, transparent 96%);
-  -webkit-mask-image: radial-gradient(circle at 50% 46%, transparent 26%, #000 40%, #000 78%, transparent 96%);
-  will-change: transform;
+  /* Soft falloff only — face clearance comes from the wrap field. */
+  mask-image: radial-gradient(circle at 50% 46%, transparent 18%, #000 34%, #000 82%, transparent 98%);
+  -webkit-mask-image: radial-gradient(circle at 50% 46%, transparent 18%, #000 34%, #000 82%, transparent 98%);
+  overflow: visible;
 }
 
 .asciiCell {
@@ -175,6 +176,9 @@
   opacity: 0.35;
   text-shadow: 0 0 8px rgba(14, 165, 233, 0.35);
   user-select: none;
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+  transition: color 0.12s linear, text-shadow 0.12s linear;
 }
 
 .asciiCell[data-tone="mid"] {
@@ -187,6 +191,13 @@
 
 .asciiCell[data-tone="core"] {
   color: rgba(14, 165, 233, 0.35);
+}
+
+.asciiCell[data-hot="1"] {
+  color: #e0f2fe;
+  text-shadow:
+    0 0 10px rgba(125, 211, 252, 0.85),
+    0 0 18px rgba(14, 165, 233, 0.45);
 }
 
 .asciiScan {

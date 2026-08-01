@@ -13,9 +13,17 @@ type PortraitAsciiFrameProps = {
 };
 
 const GLYPHS = "01アイウエオラリルレロ$#@%&*+=<>|/\\░▒▓█▄▀▌▐¦∴";
-const COLS = 22;
-const ROWS = 16;
+const COLS = 26;
+const ROWS = 20;
 const GLITCH_BARS = 5;
+
+/** Permanent wrap radius around the portrait face (normalized 0–1). */
+const PORTRAIT_RADIUS = 0.3;
+const PORTRAIT_PUSH = 42;
+/** Moving wrap radius around the cursor. */
+const CURSOR_RADIUS = 0.34;
+const CURSOR_PUSH = 56;
+const CURSOR_SWIRL = 18;
 
 function prefersReducedMotion() {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -23,6 +31,12 @@ function prefersReducedMotion() {
 
 function pickGlyph(seed: number) {
   return GLYPHS[(seed * 17 + 3) % GLYPHS.length] ?? "0";
+}
+
+function falloff(distance: number, radius: number) {
+  if (distance >= radius || distance < 0.0001) return 0;
+  const t = 1 - distance / radius;
+  return t * t * (3 - 2 * t);
 }
 
 export function PortraitAsciiFrame({ isHovered = false }: PortraitAsciiFrameProps) {
@@ -34,16 +48,19 @@ export function PortraitAsciiFrame({ isHovered = false }: PortraitAsciiFrameProp
       Array.from({ length: COLS * ROWS }, (_, index) => {
         const col = index % COLS;
         const row = Math.floor(index / COLS);
-        const nx = (col + 0.5) / COLS - 0.5;
-        const ny = (row + 0.5) / ROWS - 0.5;
-        const radius = Math.hypot(nx * 1.15, ny * 1.05);
-        // Keep the portrait face readable — denser at the rim.
-        const ring = radius > 0.28 && radius < 0.52;
-        const edge = radius >= 0.52;
+        const nx = (col + 0.5) / COLS;
+        const ny = (row + 0.5) / ROWS;
+        const dx = nx - 0.5;
+        const dy = ny - 0.48;
+        const radius = Math.hypot(dx * 1.12, dy * 1.05);
+        const ring = radius > 0.26 && radius < 0.5;
+        const edge = radius >= 0.5;
         return {
           key: `${col}-${row}`,
           col,
           row,
+          nx,
+          ny,
           glyph: pickGlyph(index + col * 3),
           tone: ring ? "mid" : edge ? "edge" : "core",
           delay: (col * 0.04 + row * 0.02) % 1.4,
@@ -57,14 +74,16 @@ export function PortraitAsciiFrame({ isHovered = false }: PortraitAsciiFrameProp
       const root = rootRef.current;
       if (!root) return;
 
+      const matrix = root.querySelector<HTMLElement>("[data-matrix]");
       const glyphs = root.querySelectorAll<HTMLElement>("[data-glyph]");
       const bars = root.querySelectorAll<HTMLElement>("[data-glitch]");
       const scan = root.querySelector<HTMLElement>("[data-scan]");
       const veil = root.querySelector<HTMLElement>("[data-veil]");
       const hud = root.querySelectorAll<HTMLElement>("[data-hud]");
       const status = root.querySelector<HTMLElement>("[data-status]");
+      const glyphNodes = Array.from(glyphs);
 
-      gsap.set(glyphs, { opacity: 0 });
+      gsap.set(glyphs, { opacity: 0, x: 0, y: 0, scale: 1 });
       gsap.set(bars, { opacity: 0, xPercent: 0 });
       gsap.set(veil, { opacity: 0.35 });
       gsap.set(hud, { opacity: 0 });
@@ -72,7 +91,7 @@ export function PortraitAsciiFrame({ isHovered = false }: PortraitAsciiFrameProp
 
       if (prefersReducedMotion()) {
         gsap.set(glyphs, {
-          opacity: (index, el) => {
+          opacity: (_index, el) => {
             const tone = el.getAttribute("data-tone");
             if (tone === "core") return 0.08;
             if (tone === "mid") return 0.45;
@@ -92,14 +111,14 @@ export function PortraitAsciiFrame({ isHovered = false }: PortraitAsciiFrameProp
         .to(
           glyphs,
           {
-            opacity: (index, el) => {
+            opacity: (_index, el) => {
               const tone = el.getAttribute("data-tone");
-              if (tone === "core") return 0.1;
-              if (tone === "mid") return 0.7;
-              return 0.35;
+              if (tone === "core") return 0.12;
+              if (tone === "mid") return 0.72;
+              return 0.38;
             },
             duration: 0.55,
-            stagger: { each: 0.008, from: "edges" },
+            stagger: { each: 0.006, from: "edges" },
           },
           0.05,
         )
@@ -107,45 +126,30 @@ export function PortraitAsciiFrame({ isHovered = false }: PortraitAsciiFrameProp
         .to(status, { opacity: 0.8, duration: 0.35 }, 0.4);
 
       const loop = gsap.timeline({ repeat: -1 });
-
       loop.to(
         glyphs,
         {
-          opacity: (index, el) => {
+          opacity: (_index, el) => {
             const tone = el.getAttribute("data-tone");
-            const pulse = 0.15 + Math.random() * 0.55;
-            if (tone === "core") return 0.05 + pulse * 0.12;
-            if (tone === "mid") return 0.35 + pulse * 0.55;
-            return 0.18 + pulse * 0.35;
+            const pulse = 0.15 + Math.random() * 0.45;
+            if (tone === "core") return 0.06 + pulse * 0.1;
+            if (tone === "mid") return 0.4 + pulse * 0.45;
+            return 0.2 + pulse * 0.3;
           },
-          duration: 0.35,
-          stagger: { each: 0.01, from: "random" },
+          duration: 0.4,
+          stagger: { each: 0.012, from: "random" },
           ease: "steps(2)",
         },
         0,
       );
 
-      // Matrix rain: cascade opacity down columns.
-      for (let col = 0; col < COLS; col += 1) {
-        const column = root.querySelectorAll<HTMLElement>(`[data-col='${col}']`);
-        gsap.to(column, {
-          opacity: (index) => 0.15 + ((index + col) % 5) * 0.14,
-          duration: 1.1 + (col % 5) * 0.15,
-          stagger: { each: 0.08, from: "start", yoyo: true, repeat: -1 },
-          ease: "sine.inOut",
-          delay: (col % 7) * 0.12,
-        });
-      }
-
-      // Occasional glyph swaps to sell the “live stream” feel.
-      const glyphNodes = Array.from(glyphs);
       const swap = () => {
-        for (let i = 0; i < 18; i += 1) {
+        for (let i = 0; i < 22; i += 1) {
           const node = gsap.utils.random(glyphNodes);
           node.textContent = pickGlyph(Math.floor(Math.random() * 200));
         }
       };
-      const swapInterval = window.setInterval(swap, 140);
+      const swapInterval = window.setInterval(swap, 150);
 
       bars.forEach((bar, index) => {
         gsap.fromTo(
@@ -188,13 +192,120 @@ export function PortraitAsciiFrame({ isHovered = false }: PortraitAsciiFrameProp
         repeatDelay: 2.6,
       });
 
+      // Cursor + portrait wrap field (screen-relative, lerped).
+      const target = { x: 0.5, y: 0.5, strength: 0 };
+      const pointer = { x: 0.5, y: 0.5, strength: 0 };
+      const setters = glyphNodes.map((node) => ({
+        x: gsap.quickSetter(node, "x", "px"),
+        y: gsap.quickSetter(node, "y", "px"),
+        scale: gsap.quickSetter(node, "scale"),
+        node,
+      }));
+
+      const syncPointerFromEvent = (event: PointerEvent | MouseEvent) => {
+        if (!matrix) return;
+        const rect = matrix.getBoundingClientRect();
+        if (rect.width < 1 || rect.height < 1) return;
+
+        const nx = (event.clientX - rect.left) / rect.width;
+        const ny = (event.clientY - rect.top) / rect.height;
+        // Stay responsive across the hero — fall off outside the matrix.
+        const outside =
+          nx < -0.2 || nx > 1.2 || ny < -0.25 || ny > 1.25
+            ? 0
+            : 1 - Math.max(0, Math.max(-nx, nx - 1, -ny, ny - 1) * 1.6);
+
+        target.x = gsap.utils.clamp(-0.15, 1.15, nx);
+        target.y = gsap.utils.clamp(-0.15, 1.15, ny);
+        target.strength = gsap.utils.clamp(0, 1, outside);
+      };
+
+      const onPointerMove = (event: PointerEvent) => {
+        syncPointerFromEvent(event);
+      };
+
+      const onPointerLeave = () => {
+        target.strength = 0;
+      };
+
+      const applyWrapField = () => {
+        pointer.x += (target.x - pointer.x) * 0.14;
+        pointer.y += (target.y - pointer.y) * 0.14;
+        pointer.strength += (target.strength - pointer.strength) * 0.12;
+
+        const matrixWidth = matrix?.clientWidth ?? 1;
+        const matrixHeight = matrix?.clientHeight ?? 1;
+        const pushScale = Math.min(matrixWidth, matrixHeight) / 320;
+
+        for (let i = 0; i < cells.length; i += 1) {
+          const cell = cells[i];
+          const setter = setters[i];
+          if (!cell || !setter) continue;
+
+          let ox = 0;
+          let oy = 0;
+          let scale = 1;
+
+          // Wrap around the portrait face (always on).
+          const pdx = cell.nx - 0.5;
+          const pdy = cell.ny - 0.48;
+          const pDist = Math.hypot(pdx, pdy);
+          const pForce = falloff(pDist, PORTRAIT_RADIUS);
+          if (pForce > 0) {
+            const inv = 1 / pDist;
+            ox += pdx * inv * pForce * PORTRAIT_PUSH * pushScale;
+            oy += pdy * inv * pForce * PORTRAIT_PUSH * pushScale;
+            // Tangential swirl so glyphs flow around the cutout.
+            ox += -pdy * inv * pForce * 10 * pushScale;
+            oy += pdx * inv * pForce * 10 * pushScale;
+            scale += pForce * 0.15;
+          }
+
+          // Moving wrap field around the cursor.
+          if (pointer.strength > 0.01) {
+            const cdx = cell.nx - pointer.x;
+            const cdy = cell.ny - pointer.y;
+            const cDist = Math.hypot(cdx, cdy);
+            const cForce = falloff(cDist, CURSOR_RADIUS) * pointer.strength;
+            if (cForce > 0) {
+              const inv = 1 / cDist;
+              ox += cdx * inv * cForce * CURSOR_PUSH * pushScale;
+              oy += cdy * inv * cForce * CURSOR_PUSH * pushScale;
+              ox += -cdy * inv * cForce * CURSOR_SWIRL * pushScale;
+              oy += cdx * inv * cForce * CURSOR_SWIRL * pushScale;
+              scale += cForce * 0.35;
+              if (cForce > 0.55) {
+                setter.node.dataset.hot = "1";
+              } else {
+                delete setter.node.dataset.hot;
+              }
+            } else {
+              delete setter.node.dataset.hot;
+            }
+          } else {
+            delete setter.node.dataset.hot;
+          }
+
+          setter.x(ox);
+          setter.y(oy);
+          setter.scale(scale);
+        }
+      };
+
+      gsap.ticker.add(applyWrapField);
+      window.addEventListener("pointermove", onPointerMove, { passive: true });
+      window.addEventListener("pointerleave", onPointerLeave);
+
       timelineRef.current = loop;
 
       return () => {
         window.clearInterval(swapInterval);
+        gsap.ticker.remove(applyWrapField);
+        window.removeEventListener("pointermove", onPointerMove);
+        window.removeEventListener("pointerleave", onPointerLeave);
       };
     },
-    { scope: rootRef },
+    { scope: rootRef, dependencies: [cells] },
   );
 
   useGSAP(
@@ -204,7 +315,6 @@ export function PortraitAsciiFrame({ isHovered = false }: PortraitAsciiFrameProp
       if (!root || prefersReducedMotion()) return;
 
       gsap.to(root, {
-        scale: isHovered ? 1.04 : 1,
         filter: isHovered
           ? "drop-shadow(0 0 22px rgba(14,165,233,0.35))"
           : "drop-shadow(0 0 0 rgba(14,165,233,0))",
@@ -218,18 +328,6 @@ export function PortraitAsciiFrame({ isHovered = false }: PortraitAsciiFrameProp
           timeScale: isHovered ? 2.2 : 1,
           duration: 0.35,
           ease: "power2.out",
-          overwrite: true,
-        });
-      }
-
-      const matrix = root.querySelector<HTMLElement>("[data-matrix]");
-      if (matrix) {
-        gsap.to(matrix, {
-          x: isHovered ? 2 : 0,
-          duration: 0.08,
-          ease: "steps(1)",
-          yoyo: true,
-          repeat: isHovered ? 3 : 0,
           overwrite: true,
         });
       }
