@@ -1,4 +1,6 @@
-export type AdVariant = "popup" | "banner" | "alert";
+import { PREMIUM_QR, pickPremiumScrollMessage } from "@/lib/easterEggs/premiumQr";
+
+export type AdVariant = "popup" | "banner" | "alert" | "qr";
 
 export type AdPopup = {
   id: number;
@@ -12,6 +14,10 @@ export type AdPopup = {
   rotation: number;
   progress?: number;
   urgent?: boolean;
+  qrImageSrc?: string;
+  qrLinkUrl?: string;
+  qrScanLabel?: string;
+  secondaryCta?: string;
 };
 
 export const AD_TEMPLATES: Omit<
@@ -104,5 +110,22 @@ export function createAdPosition(index: number) {
     x: 4 + col * 30 + Math.random() * 8,
     y: 14 + row * 22 + Math.random() * 6,
     rotation: (Math.random() - 0.5) * 8,
+  };
+}
+
+export function createPremiumQrAd(id: number, index: number): AdPopup {
+  return {
+    id,
+    title: "PREMIUM SCROLL™",
+    body: pickPremiumScrollMessage(),
+    cta: PREMIUM_QR.continueLabel,
+    secondaryCta: PREMIUM_QR.dismissLabel,
+    accent: "#ffea00",
+    variant: "qr",
+    urgent: true,
+    qrImageSrc: PREMIUM_QR.imageSrc,
+    qrLinkUrl: PREMIUM_QR.youtubeUrl,
+    qrScanLabel: PREMIUM_QR.scanLabel,
+    ...createAdPosition(index),
   };
 }
