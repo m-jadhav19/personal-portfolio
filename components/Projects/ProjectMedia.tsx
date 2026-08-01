@@ -1,11 +1,14 @@
 "use client";
 
-import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 
 import type { Project } from "@/lib/types";
 
 import { clampCtaPosition } from "./projectMotion";
+import {
+  ProjectMediaShader,
+  type MediaPointer,
+} from "./ProjectMediaShader";
 import styles from "./FeaturedWork.module.css";
 
 type ProjectMediaProps = {
@@ -15,6 +18,7 @@ type ProjectMediaProps = {
 export function ProjectMedia({ project }: ProjectMediaProps) {
   const mediaRef = useRef<HTMLAnchorElement>(null);
   const buttonRef = useRef<HTMLSpanElement>(null);
+  const pointerRef = useRef<MediaPointer>({ x: 0.5, y: 0.5, hovered: false });
   const [isHovering, setIsHovering] = useState(false);
 
   useEffect(() => {
@@ -24,6 +28,17 @@ export function ProjectMedia({ project }: ProjectMediaProps) {
 
     const onMove = (event: MouseEvent) => {
       const rect = media.getBoundingClientRect();
+      if (rect.width < 1 || rect.height < 1) return;
+
+      pointerRef.current.x = Math.min(
+        1,
+        Math.max(0, (event.clientX - rect.left) / rect.width),
+      );
+      pointerRef.current.y = Math.min(
+        1,
+        Math.max(0, (event.clientY - rect.top) / rect.height),
+      );
+
       const { x, y } = clampCtaPosition({
         pointerX: event.clientX - rect.left,
         pointerY: event.clientY - rect.top,
@@ -47,16 +62,22 @@ export function ProjectMedia({ project }: ProjectMediaProps) {
       rel="noopener noreferrer"
       className={styles.media}
       data-cursor="hide"
-      onMouseEnter={() => setIsHovering(true)}
-      onMouseLeave={() => setIsHovering(false)}
+      onMouseEnter={() => {
+        pointerRef.current.hovered = true;
+        setIsHovering(true);
+      }}
+      onMouseLeave={() => {
+        pointerRef.current.hovered = false;
+        pointerRef.current.x = 0.5;
+        pointerRef.current.y = 0.5;
+        setIsHovering(false);
+      }}
       aria-label={`View ${project.title}`}
     >
-      <Image
+      <ProjectMediaShader
         src={project.imageSrc}
         alt={project.title}
-        fill
-        sizes="(max-width: 900px) 100vw, 55vw"
-        className={styles.mediaImage}
+        pointerRef={pointerRef}
       />
       <span
         ref={buttonRef}
