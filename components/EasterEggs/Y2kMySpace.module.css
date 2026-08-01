@@ -100,7 +100,7 @@
   background-size: 200% 100%;
   animation: marqueeBg 4s linear infinite;
   color: #000;
-  font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+  font-family: var(--font-body);
   font-size: 0.95rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -142,7 +142,7 @@
   border: 3px ridge #ff66cc;
   background: rgba(255, 240, 255, 0.94);
   color: #330033;
-  font-family: "Comic Sans MS", "Comic Sans", cursive;
+  font-family: var(--font-body);
   box-shadow:
     0 0 0 2px #00ffff,
     4px 4px 0 #000;
@@ -487,7 +487,7 @@
 
 .visitorCount {
   margin: 0;
-  font-family: "Courier New", Courier, monospace;
+  font-family: var(--font-body);
   font-size: 1.2rem;
   font-weight: 700;
   color: #ff0099;
@@ -542,7 +542,7 @@
   border: 3px outset #ccc;
   background: #c0c0c0;
   color: #000;
-  font-family: Tahoma, Verdana, sans-serif;
+  font-family: var(--font-body);
   font-size: 0.75rem;
   cursor: pointer;
   pointer-events: auto;
@@ -589,7 +589,7 @@
   border: 4px ridge #ff66cc;
   background: #fff0ff;
   color: #330033;
-  font-family: "Comic Sans MS", "Comic Sans", cursive;
+  font-family: var(--font-body);
 }
 
 .guestbookCard h3 {
@@ -633,7 +633,7 @@
   border: 2px solid #000;
   background: #000;
   color: #00ff00;
-  font-family: "Courier New", Courier, monospace;
+  font-family: var(--font-body);
   font-size: 0.7rem;
   pointer-events: none;
   animation: cheatFlash 2.5s ease-out forwards;
@@ -648,7 +648,7 @@
   border: 2px solid #ff0099;
   background: #ffff99;
   color: #330033;
-  font-family: "Comic Sans MS", "Comic Sans", cursive;
+  font-family: var(--font-body);
   font-size: 0.72rem;
   pointer-events: none;
   animation: viewerPop 3.2s ease-out forwards;
