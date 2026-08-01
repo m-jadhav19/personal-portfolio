@@ -30,16 +30,17 @@
 
 .message {
   margin: 0;
-  font-family: var(--font-bitcount-ink);
+  /* Non-ink Grid Single — square filled pixels, matches mobile. */
+  font-family: var(--font-bitcount);
   font-size: clamp(3rem, 5vw, 4.375rem);
-  font-weight: 300;
+  font-weight: 500;
   line-height: 0.95;
   letter-spacing: 0.02em;
   text-transform: uppercase;
   color: #fff;
   -webkit-text-fill-color: #fff;
   overflow: hidden;
-  font-variation-settings: "wght" 300, "ELXP" 12, "ELSH" 10, "SZP1" 0, "SZP2" 0, "CRSV" 0;
+  font-palette: normal;
 }
 
 .countClip {
@@ -47,7 +48,6 @@
   width: fit-content;
   max-width: 100%;
   overflow: hidden;
-  /* Clip Bitcount side-bearing / stray ink dots on large numerals. */
   padding-block: 0.06em;
   padding-inline: 0.14em;
   margin-block: -0.06em;
@@ -57,16 +57,16 @@
 
 .count {
   margin: 0;
-  font-family: var(--font-bitcount-ink);
+  font-family: var(--font-bitcount);
   font-size: clamp(6rem, 18vw, 12rem);
-  font-weight: 300;
+  font-weight: 500;
   line-height: 0.95;
   letter-spacing: 0.1em;
   font-kerning: none;
   font-variant-ligatures: none;
   font-variant-numeric: normal;
   font-feature-settings: "liga" 0, "calt" 0, "dlig" 0;
-  font-variation-settings: "wght" 300, "ELXP" 12, "ELSH" 10, "SZP1" 0, "SZP2" 0, "CRSV" 0;
+  font-palette: normal;
   color: var(--muted);
   -webkit-text-fill-color: var(--muted);
   text-shadow: none;
