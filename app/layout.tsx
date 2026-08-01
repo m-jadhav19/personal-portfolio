@@ -11,6 +11,7 @@ const bitcountPropSingle = Bitcount_Prop_Single({
   weight: "variable",
   variable: "--font-bitcount-prop-single",
   display: "swap",
+  adjustFontFallback: false,
 });
 
 export const viewport: Viewport = {
