@@ -160,6 +160,17 @@
   z-index: 1;
   overflow: visible;
   background: transparent;
+  transition: transform 0.5s var(--ease);
+}
+
+.portraitCanvas {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
 }
 
 .portraitCutout {
@@ -173,11 +184,10 @@
   pointer-events: none;
   user-select: none;
   -webkit-user-select: none;
-  transition: transform 0.5s var(--ease);
 }
 
-.portraitStage:hover .portraitCutout,
-.portraitStage:focus-visible .portraitCutout {
+.portraitStage:hover .portrait,
+.portraitStage:focus-visible .portrait {
   transform: scale(1.03);
 }
 
@@ -232,12 +242,12 @@ html.intro-loading [data-intro="portrait"] {
     animation: none;
   }
 
-  .portraitCutout {
+  .portrait {
     transition: none;
   }
 
-  .portraitStage:hover .portraitCutout,
-  .portraitStage:focus-visible .portraitCutout {
+  .portraitStage:hover .portrait,
+  .portraitStage:focus-visible .portrait {
     transform: none;
   }
 }
