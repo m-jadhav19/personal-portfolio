@@ -207,15 +207,17 @@ function ProductionLoader() {
     >
       <div className={styles.copy}>
         <p className={styles.message}>{message}</p>
-        <p
-          className={styles.count}
-          style={{
-            color: countColor,
-            WebkitTextFillColor: countColor,
-          }}
-        >
-          {count}%
-        </p>
+        <div className={styles.countClip}>
+          <p
+            className={styles.count}
+            style={{
+              color: countColor,
+              WebkitTextFillColor: countColor,
+            }}
+          >
+            {count}%
+          </p>
+        </div>
       </div>
     </div>
   );
