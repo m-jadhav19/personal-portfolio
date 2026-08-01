@@ -4,8 +4,10 @@ import { useEffect, useRef } from "react";
 
 import { gsap } from "gsap";
 
-const BASE_SIZE = 10;
-const HOVER_SIZE = 48;
+const BASE_SIZE = 12;
+const HOVER_SIZE = 28;
+/** Snappy enough to feel attached; soft enough to avoid jitter. */
+const FOLLOW = 0.42;
 
 const INTERACTIVE_SELECTOR =
   'a, button, [data-cursor="nav"], [data-cursor="interactive"]';
@@ -32,16 +34,30 @@ export function Cursor() {
     let mouseY = window.innerHeight / 2;
     let curX = mouseX;
     let curY = mouseY;
+    let hasMoved = false;
+    let visible = true;
     let frame = 0;
 
     const moveCursor = (event: MouseEvent) => {
       mouseX = event.clientX;
       mouseY = event.clientY;
+
+      if (!hasMoved) {
+        hasMoved = true;
+        curX = mouseX;
+        curY = mouseY;
+        gsap.set(dot, { x: curX, y: curY, opacity: 1 });
+      }
+
+      if (!visible) {
+        visible = true;
+        gsap.to(dot, { opacity: 1, duration: 0.12, overwrite: "auto" });
+      }
     };
 
     const animateCursor = () => {
-      curX += (mouseX - curX) * 0.2;
-      curY += (mouseY - curY) * 0.2;
+      curX += (mouseX - curX) * FOLLOW;
+      curY += (mouseY - curY) * FOLLOW;
       gsap.set(dot, { x: curX, y: curY });
       frame = requestAnimationFrame(animateCursor);
     };
@@ -52,8 +68,9 @@ export function Cursor() {
       gsap.to(dot, {
         width: size,
         height: size,
-        duration: 0.25,
-        ease: "power3.out",
+        duration: 0.16,
+        ease: "power2.out",
+        overwrite: "auto",
       });
     };
 
@@ -62,12 +79,14 @@ export function Cursor() {
       if (!(target instanceof Element)) return;
 
       if (target.closest(HIDE_CURSOR_SELECTOR)) {
-        gsap.to(dot, { opacity: 0, duration: 0.15 });
+        gsap.to(dot, { opacity: 0, duration: 0.1, overwrite: "auto" });
         scaleTo(BASE_SIZE);
         return;
       }
 
-      gsap.to(dot, { opacity: 1, duration: 0.15 });
+      if (hasMoved) {
+        gsap.to(dot, { opacity: 1, duration: 0.1, overwrite: "auto" });
+      }
 
       if (
         target.closest(INTERACTIVE_SELECTOR) &&
@@ -89,7 +108,9 @@ export function Cursor() {
         ) {
           return;
         }
-        gsap.to(dot, { opacity: 1, duration: 0.15 });
+        if (hasMoved) {
+          gsap.to(dot, { opacity: 1, duration: 0.1, overwrite: "auto" });
+        }
         return;
       }
 
@@ -100,6 +121,11 @@ export function Cursor() {
       scaleTo(BASE_SIZE);
     };
 
+    const onLeaveWindow = () => {
+      visible = false;
+      gsap.to(dot, { opacity: 0, duration: 0.15, overwrite: "auto" });
+    };
+
     gsap.set(dot, {
       x: mouseX,
       y: mouseY,
@@ -107,13 +133,14 @@ export function Cursor() {
       yPercent: -50,
       width: BASE_SIZE,
       height: BASE_SIZE,
-      opacity: 1,
+      opacity: 0,
     });
 
     frame = requestAnimationFrame(animateCursor);
-    window.addEventListener("mousemove", moveCursor);
+    window.addEventListener("mousemove", moveCursor, { passive: true });
     document.addEventListener("mouseover", onMouseOver);
     document.addEventListener("mouseout", onMouseOut);
+    document.documentElement.addEventListener("mouseleave", onLeaveWindow);
 
     return () => {
       cancelAnimationFrame(frame);
@@ -121,6 +148,7 @@ export function Cursor() {
       window.removeEventListener("mousemove", moveCursor);
       document.removeEventListener("mouseover", onMouseOver);
       document.removeEventListener("mouseout", onMouseOut);
+      document.documentElement.removeEventListener("mouseleave", onLeaveWindow);
     };
   }, []);
 
@@ -129,6 +157,7 @@ export function Cursor() {
       ref={dotRef}
       aria-hidden="true"
       className="pointer-events-none fixed top-0 left-0 z-[2000] rounded-full bg-white mix-blend-difference"
+      style={{ willChange: "transform, width, height, opacity" }}
     />
   );
 }
