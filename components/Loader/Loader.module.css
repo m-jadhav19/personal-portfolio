@@ -29,17 +29,17 @@
 }
 
 .message {
-  /* Inherit body Grid Single — never Ink / Honk. */
   margin: 0;
-  font-family: inherit;
+  font-family: var(--font-bitcount-ink);
   font-size: clamp(3rem, 5vw, 4.375rem);
-  font-weight: 700;
+  font-weight: 300;
   line-height: 0.95;
   letter-spacing: 0.02em;
   text-transform: uppercase;
   color: #fff;
+  -webkit-text-fill-color: #fff;
   overflow: hidden;
-  font-variation-settings: "ELXP" 0, "ELSH" 0, "CRSV" 0;
+  font-variation-settings: "ELXP" 12, "ELSH" 10, "SZP1" 0, "SZP2" 0, "CRSV" 0;
 }
 
 .countClip {
@@ -49,24 +49,24 @@
   overflow: hidden;
   /* Clip Bitcount side-bearing / stray ink dots on large numerals. */
   padding-block: 0.06em;
-  padding-inline: 0.12em;
+  padding-inline: 0.14em;
   margin-block: -0.06em;
-  margin-inline: -0.12em;
-  clip-path: inset(0.02em 0.04em);
+  margin-inline: -0.14em;
+  clip-path: inset(0.02em 0.05em);
 }
 
 .count {
   margin: 0;
-  font-family: inherit;
+  font-family: var(--font-bitcount-ink);
   font-size: clamp(6rem, 18vw, 12rem);
-  font-weight: 600;
+  font-weight: 300;
   line-height: 0.95;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   font-kerning: none;
   font-variant-ligatures: none;
   font-variant-numeric: normal;
   font-feature-settings: "liga" 0, "calt" 0, "dlig" 0;
-  font-variation-settings: "ELXP" 0, "ELSH" 0, "CRSV" 0;
+  font-variation-settings: "ELXP" 12, "ELSH" 10, "SZP1" 0, "SZP2" 0, "CRSV" 0;
   color: var(--muted);
   -webkit-text-fill-color: var(--muted);
   text-shadow: none;
@@ -81,7 +81,7 @@
 
   .count {
     font-size: clamp(4.5rem, 20vw, 7rem);
-    letter-spacing: 0.1em;
+    letter-spacing: 0.12em;
   }
 }
 

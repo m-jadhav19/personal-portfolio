@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import { signalIntroComplete } from "@/animations/loader";
 import { playLoaderReveal, prefersReducedShapeMotion } from "@/animations/shapeOverlay";
@@ -16,7 +16,13 @@ import {
   readLoaderSeen,
   writeLoaderSeen,
 } from "./loaderState";
-import { loaderCountColor } from "./loaderCountColor";
+import {
+  buildInkPaletteCss,
+  LOADER_COUNT_PALETTE_NAME,
+  LOADER_MESSAGE_PALETTE_NAME,
+  loaderCountColor,
+  resolveBitcountInkFamily,
+} from "./loaderCountColor";
 import { loaderMessages, pickLoaderMessage } from "./loaderMessages";
 import styles from "./Loader.module.css";
 
@@ -27,8 +33,27 @@ type LoaderWindow = Window & {
   };
 };
 
+const PALETTE_STYLE_ID = "loader-ink-palettes";
+
 export function Loader() {
   return <ProductionLoader />;
+}
+
+function syncLoaderInkPalettes(progress: number) {
+  const family = resolveBitcountInkFamily();
+  const countColor = loaderCountColor(progress);
+  let style = document.getElementById(PALETTE_STYLE_ID) as HTMLStyleElement | null;
+
+  if (!style) {
+    style = document.createElement("style");
+    style.id = PALETTE_STYLE_ID;
+    document.head.appendChild(style);
+  }
+
+  style.textContent = [
+    buildInkPaletteCss(LOADER_MESSAGE_PALETTE_NAME, family, "#ffffff"),
+    buildInkPaletteCss(LOADER_COUNT_PALETTE_NAME, family, countColor),
+  ].join("\n\n");
 }
 
 function lockLoaderScroll() {
@@ -78,6 +103,7 @@ function ProductionLoader() {
     document.documentElement.classList.add("intro-loading");
     lockLoaderScroll();
     setMessage(pickLoaderMessage(loaderMessages));
+    syncLoaderInkPalettes(hasSeenLoader ? 65 : 0);
 
     if (prefersReducedMotion) {
       assetsReadyRef.current = true;
@@ -125,11 +151,16 @@ function ProductionLoader() {
     };
   }, []);
 
+  useLayoutEffect(() => {
+    syncLoaderInkPalettes(count);
+  }, [count]);
+
   useEffect(() => {
     return () => {
       if (!hasCompleted.current) {
         document.documentElement.classList.remove("intro-loading");
         unlockLoaderScroll();
+        document.getElementById(PALETTE_STYLE_ID)?.remove();
       }
     };
   }, []);
@@ -140,6 +171,7 @@ function ProductionLoader() {
     writeLoaderSeen();
     document.documentElement.classList.remove("intro-loading");
     unlockLoaderScroll();
+    document.getElementById(PALETTE_STYLE_ID)?.remove();
     signalIntroComplete();
     setIsHidden(true);
   };
@@ -206,13 +238,19 @@ function ProductionLoader() {
       aria-label={`Loading ${count}%`}
     >
       <div className={styles.copy}>
-        <p className={styles.message}>{message}</p>
+        <p
+          className={styles.message}
+          style={{ fontPalette: LOADER_MESSAGE_PALETTE_NAME }}
+        >
+          {message}
+        </p>
         <div className={styles.countClip}>
           <p
             className={styles.count}
             style={{
               color: countColor,
               WebkitTextFillColor: countColor,
+              fontPalette: LOADER_COUNT_PALETTE_NAME,
             }}
           >
             {count}%
