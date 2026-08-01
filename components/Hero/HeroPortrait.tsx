@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 
 import { portfolio } from "@/content/portfolio";
 
-import { PortraitMorphFrame } from "./PortraitMorphFrame";
+import { PortraitPixelFrame } from "./PortraitPixelFrame";
 import styles from "./Hero.module.css";
 
 type HeroPortraitProps = {
@@ -40,7 +40,7 @@ export function HeroPortrait({ portraitRef }: HeroPortraitProps) {
       onFocus={() => setIsHovered(true)}
       onBlur={() => setIsHovered(false)}
     >
-      <PortraitMorphFrame isHovered={isHovered} />
+      <PortraitPixelFrame isHovered={isHovered} />
       <div className={styles.portrait}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img

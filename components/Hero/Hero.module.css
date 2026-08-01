@@ -117,31 +117,121 @@
   pointer-events: auto;
 }
 
-.portraitMorphSvg {
+/* ─── Pixel portrait backdrop (Bitcount-aligned) ─────────────────────────── */
+
+.portraitBackdrop {
   position: absolute;
-  inset: -6%;
+  inset: -8%;
   z-index: 0;
-  width: 112%;
-  height: 112%;
   pointer-events: none;
-  opacity: 0.82;
   transform: scale(1);
   transform-origin: center;
-  filter: drop-shadow(0 0 0 transparent);
   transition:
     transform 0.5s var(--ease),
-    opacity 0.5s var(--ease),
     filter 0.5s var(--ease);
-  will-change: transform, opacity, filter;
+  will-change: transform, filter;
 }
 
-.portraitMorphPathAccent {
-  transition: fill 0.5s var(--ease);
+.portraitPlate {
+  position: absolute;
+  inset: 12%;
+  background:
+    linear-gradient(160deg, rgba(26, 26, 26, 0.96) 0%, rgba(14, 14, 14, 0.98) 100%);
+  border: 1px solid rgba(245, 244, 240, 0.1);
+  box-shadow:
+    inset 0 0 0 1px rgba(14, 165, 233, 0.08),
+    0 0 0 1px rgba(0, 0, 0, 0.4);
+  transition:
+    border-color 0.5s var(--ease),
+    box-shadow 0.5s var(--ease),
+    background 0.5s var(--ease);
 }
 
-.portraitStage:hover .portraitMorphPathAccent,
-.portraitStage:focus-visible .portraitMorphPathAccent {
-  fill: url(#portrait-frame-gradient-1-hover);
+.portraitDotField {
+  position: absolute;
+  inset: 4%;
+  opacity: 0.35;
+  background-image: radial-gradient(
+    circle at center,
+    rgba(245, 244, 240, 0.55) 0 1px,
+    transparent 1.2px
+  );
+  background-size: 7% 7%;
+  mask-image: radial-gradient(circle at center, transparent 34%, #000 52%, #000 78%, transparent 92%);
+  -webkit-mask-image: radial-gradient(circle at center, transparent 34%, #000 52%, #000 78%, transparent 92%);
+  transition: opacity 0.5s var(--ease);
+}
+
+.portraitScan {
+  position: absolute;
+  inset: 12%;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.portraitScan::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 18%;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(14, 165, 233, 0.12) 45%,
+    transparent 100%
+  );
+  animation: portraitScanSweep 4.8s var(--ease) infinite;
+}
+
+.portraitPixelSvg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.pixelFrame {
+  fill: rgba(245, 244, 240, 0.22);
+  animation: pixelPulse 3.6s ease-in-out infinite;
+}
+
+.pixelCorner {
+  fill: var(--accent);
+  animation: pixelCornerPulse 2.4s ease-in-out infinite;
+}
+
+.pixelTraveler {
+  position: absolute;
+  width: 4.2%;
+  height: 4.2%;
+  background: var(--accent);
+  box-shadow: 0 0 10px rgba(14, 165, 233, 0.55);
+  opacity: 0.85;
+}
+
+.pixelTravelerTop {
+  top: 7.2%;
+  animation: travelTop 5.5s linear infinite;
+}
+
+.pixelTravelerRight {
+  right: 7.2%;
+  animation: travelRight 5.5s linear infinite;
+  animation-delay: -1.35s;
+}
+
+.pixelTravelerBottom {
+  bottom: 7.2%;
+  animation: travelBottom 5.5s linear infinite;
+  animation-delay: -2.7s;
+}
+
+.pixelTravelerLeft {
+  left: 7.2%;
+  animation: travelLeft 5.5s linear infinite;
+  animation-delay: -4.05s;
 }
 
 .portrait {
@@ -166,19 +256,135 @@
   transition: transform 0.5s var(--ease);
 }
 
-.portraitStage:hover .portraitMorphSvg,
-.portraitStage:focus-visible .portraitMorphSvg {
-  opacity: 1;
-  transform: scale(1.1);
-  filter:
-    drop-shadow(0 0 22px rgba(14, 165, 233, 0.55))
-    drop-shadow(0 0 48px rgba(14, 165, 233, 0.25))
-    brightness(1.15);
+.portraitStage:hover .portraitBackdrop,
+.portraitStage:focus-visible .portraitBackdrop,
+.portraitBackdropHover {
+  transform: scale(1.08);
+  filter: drop-shadow(0 0 18px rgba(14, 165, 233, 0.28));
+}
+
+.portraitStage:hover .portraitPlate,
+.portraitStage:focus-visible .portraitPlate {
+  border-color: rgba(14, 165, 233, 0.45);
+  box-shadow:
+    inset 0 0 0 1px rgba(14, 165, 233, 0.2),
+    0 0 24px rgba(14, 165, 233, 0.18);
+  background:
+    linear-gradient(160deg, rgba(20, 32, 40, 0.96) 0%, rgba(14, 14, 14, 0.98) 100%);
+}
+
+.portraitStage:hover .portraitDotField,
+.portraitStage:focus-visible .portraitDotField {
+  opacity: 0.55;
+}
+
+.portraitStage:hover .pixelCorner,
+.portraitStage:focus-visible .pixelCorner {
+  fill: #38bdf8;
 }
 
 .portraitStage:hover .portraitCutout,
 .portraitStage:focus-visible .portraitCutout {
   transform: scale(1.03);
+}
+
+.portraitStage:hover .portraitScan::after,
+.portraitStage:focus-visible .portraitScan::after {
+  animation-duration: 2.4s;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(14, 165, 233, 0.22) 45%,
+    transparent 100%
+  );
+}
+
+.portraitStage:hover .pixelTraveler,
+.portraitStage:focus-visible .pixelTraveler {
+  animation-duration: 2.8s;
+  opacity: 1;
+}
+
+@keyframes portraitScanSweep {
+  0% {
+    transform: translateY(-30%);
+    opacity: 0;
+  }
+
+  15% {
+    opacity: 1;
+  }
+
+  85% {
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateY(520%);
+    opacity: 0;
+  }
+}
+
+@keyframes pixelPulse {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+
+  50% {
+    opacity: 0.75;
+  }
+}
+
+@keyframes pixelCornerPulse {
+  0%,
+  100% {
+    opacity: 0.7;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes travelTop {
+  from {
+    left: 7%;
+  }
+
+  to {
+    left: 88%;
+  }
+}
+
+@keyframes travelRight {
+  from {
+    top: 7%;
+  }
+
+  to {
+    top: 88%;
+  }
+}
+
+@keyframes travelBottom {
+  from {
+    left: 88%;
+  }
+
+  to {
+    left: 7%;
+  }
+}
+
+@keyframes travelLeft {
+  from {
+    top: 88%;
+  }
+
+  to {
+    top: 7%;
+  }
 }
 
 .footer {
@@ -232,16 +438,25 @@ html.intro-loading [data-intro="portrait"] {
     animation: none;
   }
 
-  .portraitMorphSvg,
-  .portraitCutout {
+  .portraitBackdrop,
+  .portraitCutout,
+  .portraitPlate,
+  .portraitDotField {
     transition: none;
   }
 
-  .portraitStage:hover .portraitMorphSvg,
-  .portraitStage:focus-visible .portraitMorphSvg {
+  .portraitScan::after,
+  .pixelFrame,
+  .pixelCorner,
+  .pixelTraveler {
+    animation: none !important;
+  }
+
+  .portraitStage:hover .portraitBackdrop,
+  .portraitStage:focus-visible .portraitBackdrop,
+  .portraitBackdropHover {
     transform: none;
     filter: none;
-    opacity: 0.95;
   }
 
   .portraitStage:hover .portraitCutout,
