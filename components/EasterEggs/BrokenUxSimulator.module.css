@@ -301,6 +301,80 @@
   width: min(260px, calc(100vw - 2rem));
 }
 
+.adQr {
+  width: min(280px, calc(100vw - 2rem));
+  background: #fff8c4;
+  border-width: 3px;
+  box-shadow:
+    0 0 0 3px #ffea00,
+    6px 6px 0 rgba(0, 0, 0, 0.45);
+}
+
+.adQrBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0.55rem 0 0.7rem;
+}
+
+.adQrScan {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #000;
+  animation: adQrPulse 1.2s ease-in-out infinite;
+}
+
+@keyframes adQrPulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.45;
+  }
+}
+
+.adQrLink {
+  display: block;
+  padding: 0.35rem;
+  border: 2px solid #000;
+  background: #fff;
+  line-height: 0;
+}
+
+.adQrImage {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.adQrActions {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.adSecondaryCta {
+  flex: 1;
+  padding: 0.45rem 0.5rem;
+  border: 2px solid #000;
+  background: #e8e8e8;
+  color: #111;
+  font-size: 0.68rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.adQrActions .adCta {
+  flex: 1;
+  width: auto;
+  animation: none;
+}
+
 .adBanner {
   width: min(340px, calc(100vw - 1.5rem));
   border-width: 3px;

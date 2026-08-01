@@ -4,7 +4,8 @@ import { useRef, useState } from "react";
 
 import { portfolio } from "@/content/portfolio";
 
-import { PortraitMorphFrame } from "./PortraitMorphFrame";
+import { PortraitAsciiFrame } from "./PortraitAsciiFrame";
+import { PortraitRgbCanvas, type PortraitPointer } from "./PortraitRgbCanvas";
 import styles from "./Hero.module.css";
 
 type HeroPortraitProps = {
@@ -13,6 +14,7 @@ type HeroPortraitProps = {
 
 export function HeroPortrait({ portraitRef }: HeroPortraitProps) {
   const localRef = useRef<HTMLDivElement>(null);
+  const pointerRef = useRef<PortraitPointer>({ x: 0.5, y: 0.5, hovered: false });
   const [isHovered, setIsHovered] = useState(false);
 
   const setRef = (node: HTMLDivElement | null) => {
@@ -22,6 +24,15 @@ export function HeroPortrait({ portraitRef }: HeroPortraitProps) {
     } else if (portraitRef) {
       portraitRef.current = node;
     }
+  };
+
+  const syncPointer = (clientX: number, clientY: number) => {
+    const node = localRef.current;
+    if (!node) return;
+    const rect = node.getBoundingClientRect();
+    if (rect.width < 1 || rect.height < 1) return;
+    pointerRef.current.x = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
+    pointerRef.current.y = Math.min(1, Math.max(0, (clientY - rect.top) / rect.height));
   };
 
   const portraitSrc = portfolio.hero.portrait.src;
@@ -35,21 +46,28 @@ export function HeroPortrait({ portraitRef }: HeroPortraitProps) {
       tabIndex={0}
       role="img"
       aria-label={`Portrait of ${portfolio.headerTaglineTwo}`}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      onFocus={() => setIsHovered(true)}
-      onBlur={() => setIsHovered(false)}
+      onMouseEnter={() => {
+        pointerRef.current.hovered = true;
+        setIsHovered(true);
+      }}
+      onMouseLeave={() => {
+        pointerRef.current.hovered = false;
+        pointerRef.current.x = 0.5;
+        pointerRef.current.y = 0.5;
+        setIsHovered(false);
+      }}
+      onFocus={() => {
+        pointerRef.current.hovered = true;
+        setIsHovered(true);
+      }}
+      onBlur={() => {
+        pointerRef.current.hovered = false;
+        setIsHovered(false);
+      }}
+      onPointerMove={(event) => syncPointer(event.clientX, event.clientY)}
     >
-      <PortraitMorphFrame isHovered={isHovered} />
-      <div className={styles.portrait}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={portraitSrc}
-          alt=""
-          className={styles.portraitCutout}
-          draggable={false}
-        />
-      </div>
+      <PortraitAsciiFrame isHovered={isHovered} />
+      <PortraitRgbCanvas src={portraitSrc} pointerRef={pointerRef} />
     </div>
   );
 }

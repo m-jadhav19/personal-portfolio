@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
-  buildLoaderCountPaletteCss,
+  buildInkPaletteCss,
   LOADER_COUNT_PALETTE_NAME,
   LOADER_INK_PALETTE_SIZE,
   loaderCountColor,
@@ -17,8 +17,12 @@ test("loader count color interpolates mid progress", () => {
   assert.equal(loaderCountColor(50), "rgb(76 152 186)");
 });
 
-test("palette css overrides every ink CPAL entry", () => {
-  const css = buildLoaderCountPaletteCss('"Bitcount Grid Single Ink"', "rgb(14 165 233)");
+test("ink palette css overrides every CPAL entry", () => {
+  const css = buildInkPaletteCss(
+    LOADER_COUNT_PALETTE_NAME,
+    '"Bitcount Grid Single Ink"',
+    "rgb(14 165 233)",
+  );
   assert.match(css, new RegExp(LOADER_COUNT_PALETTE_NAME));
   assert.match(css, /font-family: "Bitcount Grid Single Ink"/);
   assert.equal(

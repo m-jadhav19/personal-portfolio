@@ -5,7 +5,8 @@ const TO = { r: 14, g: 165, b: 233 }; // --accent #0ea5e9
 /** Bitcount Grid Single Ink ships with 29 CPAL entries. */
 export const LOADER_INK_PALETTE_SIZE = 29;
 
-export const LOADER_COUNT_PALETTE_NAME = "--LoaderCountPalette";
+export const LOADER_COUNT_PALETTE_NAME = "--LoaderCountInkPalette";
+export const LOADER_MESSAGE_PALETTE_NAME = "--LoaderMessageInkPalette";
 
 export function loaderCountColor(progress: number): string {
   const t = Math.min(1, Math.max(0, progress / 100));
@@ -15,13 +16,17 @@ export function loaderCountColor(progress: number): string {
   return `rgb(${r} ${g} ${b})`;
 }
 
-export function buildLoaderCountPaletteCss(fontFamily: string, color: string) {
+export function buildInkPaletteCss(
+  paletteName: string,
+  fontFamily: string,
+  color: string,
+) {
   const overrides = Array.from(
     { length: LOADER_INK_PALETTE_SIZE },
     (_, index) => `${index} ${color}`,
   ).join(",\n    ");
 
-  return `@font-palette-values ${LOADER_COUNT_PALETTE_NAME} {
+  return `@font-palette-values ${paletteName} {
   font-family: ${fontFamily};
   override-colors:
     ${overrides};

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import { signalIntroComplete } from "@/animations/loader";
 import { playLoaderReveal, prefersReducedShapeMotion } from "@/animations/shapeOverlay";
@@ -17,8 +17,9 @@ import {
   writeLoaderSeen,
 } from "./loaderState";
 import {
-  buildLoaderCountPaletteCss,
+  buildInkPaletteCss,
   LOADER_COUNT_PALETTE_NAME,
+  LOADER_MESSAGE_PALETTE_NAME,
   loaderCountColor,
   resolveBitcountInkFamily,
 } from "./loaderCountColor";
@@ -32,15 +33,15 @@ type LoaderWindow = Window & {
   };
 };
 
-const PALETTE_STYLE_ID = "loader-count-palette";
+const PALETTE_STYLE_ID = "loader-ink-palettes";
 
 export function Loader() {
   return <ProductionLoader />;
 }
 
-function syncLoaderCountPalette(progress: number) {
-  const color = loaderCountColor(progress);
+function syncLoaderInkPalettes(progress: number) {
   const family = resolveBitcountInkFamily();
+  const countColor = loaderCountColor(progress);
   let style = document.getElementById(PALETTE_STYLE_ID) as HTMLStyleElement | null;
 
   if (!style) {
@@ -49,7 +50,10 @@ function syncLoaderCountPalette(progress: number) {
     document.head.appendChild(style);
   }
 
-  style.textContent = buildLoaderCountPaletteCss(family, color);
+  style.textContent = [
+    buildInkPaletteCss(LOADER_MESSAGE_PALETTE_NAME, family, "#ffffff"),
+    buildInkPaletteCss(LOADER_COUNT_PALETTE_NAME, family, countColor),
+  ].join("\n\n");
 }
 
 function lockLoaderScroll() {
@@ -99,7 +103,7 @@ function ProductionLoader() {
     document.documentElement.classList.add("intro-loading");
     lockLoaderScroll();
     setMessage(pickLoaderMessage(loaderMessages));
-    syncLoaderCountPalette(hasSeenLoader ? 65 : 0);
+    syncLoaderInkPalettes(hasSeenLoader ? 65 : 0);
 
     if (prefersReducedMotion) {
       assetsReadyRef.current = true;
@@ -147,8 +151,8 @@ function ProductionLoader() {
     };
   }, []);
 
-  useEffect(() => {
-    syncLoaderCountPalette(count);
+  useLayoutEffect(() => {
+    syncLoaderInkPalettes(count);
   }, [count]);
 
   useEffect(() => {
@@ -234,17 +238,24 @@ function ProductionLoader() {
       aria-label={`Loading ${count}%`}
     >
       <div className={styles.copy}>
-        <p className={styles.message}>{message}</p>
         <p
-          className={styles.count}
-          style={{
-            color: countColor,
-            WebkitTextFillColor: countColor,
-            fontPalette: LOADER_COUNT_PALETTE_NAME,
-          }}
+          className={styles.message}
+          style={{ fontPalette: LOADER_MESSAGE_PALETTE_NAME }}
         >
-          {count}%
+          {message}
         </p>
+        <div className={styles.countClip}>
+          <p
+            className={styles.count}
+            style={{
+              color: countColor,
+              WebkitTextFillColor: countColor,
+              fontPalette: LOADER_COUNT_PALETTE_NAME,
+            }}
+          >
+            {count}%
+          </p>
+        </div>
       </div>
     </div>
   );

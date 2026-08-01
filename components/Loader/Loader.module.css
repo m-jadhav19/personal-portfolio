@@ -10,6 +10,8 @@
   color: #fff;
   pointer-events: all;
   opacity: 1;
+  overflow: hidden;
+  isolation: isolate;
   transition: opacity 0.5s cubic-bezier(0.76, 0, 0.24, 1);
 }
 
@@ -27,37 +29,48 @@
 }
 
 .message {
-  font-family: var(--font-display-sans);
+  margin: 0;
+  font-family: var(--font-bitcount-ink);
   font-size: clamp(3rem, 5vw, 4.375rem);
-  font-weight: 700;
+  font-weight: 300;
   line-height: 0.95;
-  letter-spacing: -0.04em;
+  letter-spacing: 0.02em;
   text-transform: uppercase;
+  color: #fff;
+  -webkit-text-fill-color: #fff;
+  overflow: hidden;
+  font-variation-settings: "wght" 300, "ELXP" 12, "ELSH" 10, "SZP1" 0, "SZP2" 0, "CRSV" 0;
+}
+
+.countClip {
+  display: block;
+  width: fit-content;
+  max-width: 100%;
+  overflow: hidden;
+  /* Clip Bitcount side-bearing / stray ink dots on large numerals. */
+  padding-block: 0.06em;
+  padding-inline: 0.14em;
+  margin-block: -0.06em;
+  margin-inline: -0.14em;
+  clip-path: inset(0.02em 0.05em);
 }
 
 .count {
+  margin: 0;
   font-family: var(--font-bitcount-ink);
   font-size: clamp(6rem, 18vw, 12rem);
-  font-weight: 700;
-  line-height: 0.9;
-  /* Negative tracking + Bitcount ink paint axes create stray side dots. */
-  letter-spacing: 0.04em;
+  font-weight: 300;
+  line-height: 0.95;
+  letter-spacing: 0.1em;
   font-kerning: none;
   font-variant-ligatures: none;
   font-variant-numeric: normal;
-  font-feature-settings: "liga" 0, "calt" 0;
-  /* Keep paint layers off; COLR color is driven by font-palette overrides. */
-  font-variation-settings:
-    "ELXP" 28,
-    "ELSH" 35,
-    "SZP1" 0,
-    "SZP2" 0,
-    "XPN1" 0,
-    "XPN2" 0,
-    "YPN1" 0,
-    "YPN2" 0;
+  font-feature-settings: "liga" 0, "calt" 0, "dlig" 0;
+  font-variation-settings: "wght" 300, "ELXP" 12, "ELSH" 10, "SZP1" 0, "SZP2" 0, "CRSV" 0;
   color: var(--muted);
   -webkit-text-fill-color: var(--muted);
+  text-shadow: none;
+  -webkit-text-stroke: 0;
   transition: color 0.18s linear, -webkit-text-fill-color 0.18s linear;
 }
 
@@ -67,8 +80,8 @@
   }
 
   .count {
-    font-size: clamp(4.5rem, 22vw, 7rem);
-    letter-spacing: 0.06em;
+    font-size: clamp(4.5rem, 20vw, 7rem);
+    letter-spacing: 0.12em;
   }
 }
 

@@ -57,6 +57,8 @@
 .marqueeRowFront .track {
   color: #fff;
   opacity: 0.96;
+  /* Opposite of the middle row (nth-child even → right). */
+  animation-name: marquee-left;
 }
 
 .track {
@@ -117,31 +119,39 @@
   pointer-events: auto;
 }
 
-.portraitMorphSvg {
+/* ─── Minimal scrambled character field around portrait ─────────────────── */
+
+.portraitBackdrop {
   position: absolute;
-  inset: -6%;
+  inset: -8%;
   z-index: 0;
-  width: 112%;
-  height: 112%;
   pointer-events: none;
-  opacity: 0.82;
-  transform: scale(1);
+  opacity: 0.85;
   transform-origin: center;
-  filter: drop-shadow(0 0 0 transparent);
-  transition:
-    transform 0.5s var(--ease),
-    opacity 0.5s var(--ease),
-    filter 0.5s var(--ease);
-  will-change: transform, opacity, filter;
 }
 
-.portraitMorphPathAccent {
-  transition: fill 0.5s var(--ease);
+.asciiMatrix {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(20, 1fr);
+  grid-template-rows: repeat(16, 1fr);
+  font-family: var(--font-mono);
+  font-size: clamp(0.55rem, 1.15vw, 0.8rem);
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  color: rgba(245, 244, 240, 0.42);
+  overflow: visible;
 }
 
-.portraitStage:hover .portraitMorphPathAccent,
-.portraitStage:focus-visible .portraitMorphPathAccent {
-  fill: url(#portrait-frame-gradient-1-hover);
+.asciiCell {
+  display: grid;
+  place-items: center;
+  opacity: 0.3;
+  user-select: none;
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
 }
 
 .portrait {
@@ -150,6 +160,17 @@
   z-index: 1;
   overflow: visible;
   background: transparent;
+  transition: transform 0.5s var(--ease);
+}
+
+.portraitCanvas {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
 }
 
 .portraitCutout {
@@ -163,21 +184,10 @@
   pointer-events: none;
   user-select: none;
   -webkit-user-select: none;
-  transition: transform 0.5s var(--ease);
 }
 
-.portraitStage:hover .portraitMorphSvg,
-.portraitStage:focus-visible .portraitMorphSvg {
-  opacity: 1;
-  transform: scale(1.1);
-  filter:
-    drop-shadow(0 0 22px rgba(14, 165, 233, 0.55))
-    drop-shadow(0 0 48px rgba(14, 165, 233, 0.25))
-    brightness(1.15);
-}
-
-.portraitStage:hover .portraitCutout,
-.portraitStage:focus-visible .portraitCutout {
+.portraitStage:hover .portrait,
+.portraitStage:focus-visible .portrait {
   transform: scale(1.03);
 }
 
@@ -232,20 +242,12 @@ html.intro-loading [data-intro="portrait"] {
     animation: none;
   }
 
-  .portraitMorphSvg,
-  .portraitCutout {
+  .portrait {
     transition: none;
   }
 
-  .portraitStage:hover .portraitMorphSvg,
-  .portraitStage:focus-visible .portraitMorphSvg {
-    transform: none;
-    filter: none;
-    opacity: 0.95;
-  }
-
-  .portraitStage:hover .portraitCutout,
-  .portraitStage:focus-visible .portraitCutout {
+  .portraitStage:hover .portrait,
+  .portraitStage:focus-visible .portrait {
     transform: none;
   }
 }

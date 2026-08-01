@@ -1,11 +1,13 @@
 "use client";
 
+import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { getLenis } from "@/lib/lenis";
 import {
   AD_TEMPLATES,
   createAdPosition,
+  createPremiumQrAd,
   MAX_ADS,
   type AdPopup,
 } from "@/lib/easterEggs/brokenAds";
@@ -113,26 +115,37 @@ export function BrokenUxSimulator({ onExit }: BrokenUxSimulatorProps) {
     window.setTimeout(() => setSpinnerMessage(null), duration);
   }, []);
 
-  const spawnAd = useCallback((withProgress = false) => {
-    const template =
-      AD_TEMPLATES[Math.floor(Math.random() * AD_TEMPLATES.length)];
-    const position = createAdPosition(ads.length);
+  const spawnPremiumQrAd = useCallback(() => {
+    setAds((current) => {
+      const ad = createPremiumQrAd(++adIdRef.current, current.length);
+      setTopAdId(ad.id);
+      const next = [...current, ad];
+      return next.length > MAX_ADS ? next.slice(-MAX_ADS) : next;
+    });
+  }, []);
 
-    const ad: AdPopup = {
-      ...template,
-      id: ++adIdRef.current,
-      ...position,
-      progress: withProgress ? 0 : undefined,
-    };
+  const spawnAd = useCallback((withProgress = false) => {
+    // Occasionally spawn the premium QR as a chaotic ad window.
+    if (Math.random() < 0.18) {
+      spawnPremiumQrAd();
+      return;
+    }
+
+    const template =
+      AD_TEMPLATES[Math.floor(Math.random() * AD_TEMPLATES.length)]!;
+    const id = ++adIdRef.current;
 
     setAds((current) => {
+      const ad: AdPopup = {
+        ...template,
+        id,
+        ...createAdPosition(current.length),
+        progress: withProgress ? 0 : undefined,
+      };
+      setTopAdId(ad.id);
       const next = [...current, ad];
-      if (next.length > MAX_ADS) {
-        return next.slice(-MAX_ADS);
-      }
-      return next;
+      return next.length > MAX_ADS ? next.slice(-MAX_ADS) : next;
     });
-    setTopAdId(ad.id);
 
     if (withProgress) {
       let progress = 0;
@@ -140,7 +153,7 @@ export function BrokenUxSimulator({ onExit }: BrokenUxSimulatorProps) {
         progress += 6 + Math.random() * 14;
         setAds((current) =>
           current.map((item) =>
-            item.id === ad.id
+            item.id === id
               ? { ...item, progress: Math.min(progress, 100) }
               : item,
           ),
@@ -148,7 +161,7 @@ export function BrokenUxSimulator({ onExit }: BrokenUxSimulatorProps) {
         if (progress >= 100) window.clearInterval(tick);
       }, 180);
     }
-  }, [ads.length]);
+  }, [spawnPremiumQrAd]);
 
   const dismissAd = useCallback(
     (id: number) => {
@@ -364,8 +377,9 @@ export function BrokenUxSimulator({ onExit }: BrokenUxSimulatorProps) {
     window.addEventListener("mousemove", handleMouseMove);
 
     pushToast("Broken UX Simulator activated. Scroll is inverted.");
-    spawnAd(true);
-    window.setTimeout(() => spawnAd(), 500);
+    spawnPremiumQrAd();
+    window.setTimeout(() => spawnAd(true), 400);
+    window.setTimeout(() => spawnAd(), 900);
 
     return () => {
       document.body.classList.remove("easter-egg-broken-ux-active");
@@ -386,7 +400,7 @@ export function BrokenUxSimulator({ onExit }: BrokenUxSimulatorProps) {
       window.clearInterval(scrollModeInterval);
       window.clearInterval(downloadInterval);
     };
-  }, [flashMode, pushToast, showSpinner, spawnAd]);
+  }, [flashMode, pushToast, showSpinner, spawnAd, spawnPremiumQrAd]);
 
   const modeMeta = SCROLL_MODE_META[scrollMode];
 
@@ -450,7 +464,9 @@ export function BrokenUxSimulator({ onExit }: BrokenUxSimulatorProps) {
             ? styles.adBanner
             : ad.variant === "alert"
               ? styles.adAlert
-              : styles.adPopup;
+              : ad.variant === "qr"
+                ? styles.adQr
+                : styles.adPopup;
 
         return (
           <div
@@ -501,6 +517,27 @@ export function BrokenUxSimulator({ onExit }: BrokenUxSimulatorProps) {
             <div className={styles.adContent}>
               <p className={styles.adBody}>{ad.body}</p>
 
+              {ad.variant === "qr" && ad.qrImageSrc && ad.qrLinkUrl ? (
+                <div className={styles.adQrBlock}>
+                  <p className={styles.adQrScan}>{ad.qrScanLabel ?? "SCAN ME"}</p>
+                  <a
+                    href={ad.qrLinkUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={styles.adQrLink}
+                    onClick={(event) => event.stopPropagation()}
+                  >
+                    <Image
+                      src={ad.qrImageSrc}
+                      alt="QR code for premium scroll unlock"
+                      width={148}
+                      height={148}
+                      className={styles.adQrImage}
+                    />
+                  </a>
+                </div>
+              ) : null}
+
               {ad.progress !== undefined ? (
                 <div className={styles.adProgressTrack}>
                   <div
@@ -510,18 +547,46 @@ export function BrokenUxSimulator({ onExit }: BrokenUxSimulatorProps) {
                 </div>
               ) : null}
 
-              <button
-                type="button"
-                className={styles.adCta}
-                style={{ background: ad.accent }}
-                onClick={() => {
-                  pushToast("Ad clicked. Installing toolbar…");
-                  spawnAd(true);
-                  spawnAd();
-                }}
-              >
-                {ad.cta}
-              </button>
+              {ad.variant === "qr" ? (
+                <div className={styles.adQrActions}>
+                  <button
+                    type="button"
+                    className={styles.adSecondaryCta}
+                    onClick={() => {
+                      pushToast("Premium declined. Enjoy more ads.");
+                      dismissAd(ad.id);
+                      spawnAd();
+                    }}
+                  >
+                    {ad.secondaryCta ?? "No thanks"}
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.adCta}
+                    style={{ background: ad.accent, color: "#000" }}
+                    onClick={() => {
+                      pushToast("Premium unlocked… kind of. Here's another ad.");
+                      spawnAd(true);
+                      spawnAd();
+                    }}
+                  >
+                    {ad.cta}
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  className={styles.adCta}
+                  style={{ background: ad.accent }}
+                  onClick={() => {
+                    pushToast("Ad clicked. Installing toolbar…");
+                    spawnAd(true);
+                    spawnAd();
+                  }}
+                >
+                  {ad.cta}
+                </button>
+              )}
             </div>
           </div>
         );
