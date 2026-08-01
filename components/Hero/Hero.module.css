@@ -22,7 +22,7 @@
   position: relative;
   display: grid;
   grid-template-rows: repeat(3, auto);
-  gap: 0.32em;
+  gap: 0.72em;
   align-content: center;
   width: 100%;
   cursor: default;
@@ -48,7 +48,7 @@
 .marqueeRowFront {
   z-index: 3;
   overflow: visible;
-  margin-top: -0.12em;
+  margin-top: 0;
   pointer-events: none;
   mix-blend-mode: difference;
   will-change: auto;
@@ -81,7 +81,7 @@
 
 .track span {
   flex-shrink: 0;
-  padding-right: 2.5em;
+  padding-right: 4.5em;
 }
 
 @keyframes marquee-left {
