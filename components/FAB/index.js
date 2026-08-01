@@ -414,7 +414,7 @@ const FAB = () => {
 							width: '100%',
 							padding: '5px 10px',
 							fontSize: 13,
-							fontFamily: 'monospace',
+							fontFamily: 'var(--font-body)',
 							background: inputBg,
 							border: `1px solid ${isValidHex(hexInput) ? selectedColor + '66' : '#e03131'}`,
 							borderRadius: 8,
@@ -541,7 +541,7 @@ const FAB = () => {
 										paddingTop: 10,
 										borderTop: `1px solid ${borderCol}`,
 									}}>
-										<span style={{fontFamily: 'monospace', fontSize: 13, color: textCol, letterSpacing: '0.04em'}}>{selectedColor.toUpperCase()}</span>
+										<span style={{fontFamily: 'var(--font-body)', fontSize: 13, color: textCol, letterSpacing: '0.04em'}}>{selectedColor.toUpperCase()}</span>
 										<div style={{
 											width: 28,
 											height: 28,

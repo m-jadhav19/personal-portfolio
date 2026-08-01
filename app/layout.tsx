@@ -1,35 +1,15 @@
 import type { Metadata, Viewport } from "next";
-import { Instrument_Serif, Inter, JetBrains_Mono, Space_Grotesk } from "next/font/google";
+import { Bitcount_Prop_Single } from "next/font/google";
 
 import "@/styles/globals.css";
 
 import { portfolio } from "@/content/portfolio";
 import { Providers } from "@/components/Providers";
 
-const spaceGrotesk = Space_Grotesk({
+const bitcountPropSingle = Bitcount_Prop_Single({
   subsets: ["latin"],
-  weight: ["500", "600", "700"],
-  variable: "--font-space-grotesk",
-  display: "swap",
-});
-
-const instrumentSerif = Instrument_Serif({
-  subsets: ["latin"],
-  weight: "400",
-  style: ["normal", "italic"],
-  variable: "--font-instrument-serif",
-  display: "swap",
-});
-
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-  display: "swap",
-});
-
-const jetbrainsMono = JetBrains_Mono({
-  subsets: ["latin"],
-  variable: "--font-geist-mono",
+  weight: "variable",
+  variable: "--font-bitcount-prop-single",
   display: "swap",
 });
 
@@ -50,10 +30,10 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`theme-dark ${spaceGrotesk.variable} ${instrumentSerif.variable} ${inter.variable} ${jetbrainsMono.variable}`}
+      className={`theme-dark ${bitcountPropSingle.variable}`}
       data-theme="dark"
     >
-      <body>
+      <body className={bitcountPropSingle.className}>
         <Providers>{children}</Providers>
       </body>
     </html>
