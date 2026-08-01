@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Bitcount_Grid_Single, Open_Sans } from "next/font/google";
+import { Bitcount_Grid_Single, Honk, Open_Sans } from "next/font/google";
 import localFont from "next/font/local";
 
 import "@/styles/globals.css";
@@ -31,6 +31,17 @@ const openSans = Open_Sans({
   display: "swap",
 });
 
+/** Funky display face for the PIMPMYRIDE (MySpace) easter egg only. */
+const honk = Honk({
+  subsets: ["latin"],
+  weight: "variable",
+  axes: ["MORF", "SHLN"],
+  variable: "--font-honk",
+  display: "swap",
+  preload: false,
+  adjustFontFallback: false,
+});
+
 export const viewport: Viewport = {
   themeColor: "#0e0e0e",
 };
@@ -48,7 +59,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`theme-dark ${bitcountGridSingle.variable} ${bitcountGridSingleInk.variable} ${openSans.variable}`}
+      className={`theme-dark ${bitcountGridSingle.variable} ${bitcountGridSingleInk.variable} ${openSans.variable} ${honk.variable}`}
       data-theme="dark"
     >
       <body className={bitcountGridSingle.className}>

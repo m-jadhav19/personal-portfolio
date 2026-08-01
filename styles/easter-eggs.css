@@ -29,12 +29,19 @@ html[data-easter-egg="myspace"] body {
   }
 }
 
+html[data-easter-egg="myspace"],
+html[data-easter-egg="myspace"] body {
+  font-family: var(--font-easter-myspace) !important;
+  font-variation-settings: "MORF" 28, "SHLN" 62;
+}
+
 html[data-easter-egg="myspace"] h1,
 html[data-easter-egg="myspace"] h2,
 html[data-easter-egg="myspace"] h3,
 html[data-easter-egg="myspace"] [class*="marquee"],
 html[data-easter-egg="myspace"] [class*="title"] {
-  font-family: var(--font-body) !important;
+  font-family: var(--font-easter-myspace) !important;
+  font-variation-settings: "MORF" 38, "SHLN" 78;
   text-shadow:
     2px 2px 0 #ff00ff,
     -1px -1px 0 #00ffff !important;
@@ -45,7 +52,7 @@ html[data-easter-egg="myspace"] span,
 html[data-easter-egg="myspace"] a,
 html[data-easter-egg="myspace"] button,
 html[data-easter-egg="myspace"] li {
-  font-family: var(--font-body) !important;
+  font-family: var(--font-easter-myspace) !important;
 }
 
 html[data-easter-egg="myspace"] a,

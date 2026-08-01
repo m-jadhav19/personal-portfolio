@@ -7,6 +7,8 @@
   --font-bitcount-ink: var(--font-bitcount-grid-single-ink), "Bitcount Grid Single Ink",
     var(--font-bitcount);
   --font-open-sans-family: var(--font-open-sans), "Open Sans", sans-serif;
+  /* Honk — PIMPMYRIDE / MySpace easter egg */
+  --font-easter-myspace: var(--font-honk), "Honk", system-ui, sans-serif;
 
   --font-display: var(--font-bitcount-ink);
   --font-display-sans: var(--font-bitcount-ink);
