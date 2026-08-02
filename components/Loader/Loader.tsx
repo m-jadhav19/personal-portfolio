@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { signalIntroComplete } from "@/animations/loader";
 import { playLoaderReveal, prefersReducedShapeMotion } from "@/animations/shapeOverlay";
 import { resetIntroDocumentState } from "@/lib/introDocument";
+import { resetScrollToTop } from "@/lib/lenis";
 
 import {
   getLoaderTiming,
@@ -28,6 +29,10 @@ type LoaderWindow = Window & {
   __lenis__?: {
     start: () => void;
     stop: () => void;
+    scrollTo: (
+      target: number,
+      options?: { immediate?: boolean; force?: boolean },
+    ) => void;
   };
 };
 
@@ -36,22 +41,21 @@ export function Loader() {
 }
 
 function lockLoaderScroll() {
-  const scrollY = window.scrollY;
+  window.scrollTo(0, 0);
+  (window as LoaderWindow).__lenis__?.scrollTo(0, {
+    immediate: true,
+    force: true,
+  });
   document.documentElement.classList.add("loader-active");
-  document.documentElement.style.setProperty("--loader-scroll-lock-y", `-${scrollY}px`);
-  document.documentElement.dataset.loaderScrollY = String(scrollY);
+  document.documentElement.style.setProperty("--loader-scroll-lock-y", "0px");
   (window as LoaderWindow).__lenis__?.stop();
-  return scrollY;
 }
 
 function unlockLoaderScroll() {
-  const raw = document.documentElement.dataset.loaderScrollY;
-  const scrollY = raw ? Number.parseInt(raw, 10) || 0 : 0;
   document.documentElement.classList.remove("loader-active");
   document.documentElement.style.removeProperty("--loader-scroll-lock-y");
-  delete document.documentElement.dataset.loaderScrollY;
   (window as LoaderWindow).__lenis__?.start();
-  window.scrollTo(0, scrollY);
+  resetScrollToTop();
 }
 
 function ProductionLoader() {

@@ -6,6 +6,11 @@ import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Lenis from "lenis";
 
+import {
+  disableBrowserScrollRestoration,
+  resetScrollToTop,
+} from "@/lib/lenis";
+
 import "lenis/dist/lenis.css";
 
 export type LenisScrollCallback = (scroll: number) => void;
@@ -41,7 +46,14 @@ export function useLenis() {
       "(prefers-reduced-motion: reduce)",
     ).matches;
 
-    if (prefersReducedMotion) return;
+    if (prefersReducedMotion) {
+      disableBrowserScrollRestoration();
+      window.scrollTo(0, 0);
+      return;
+    }
+
+    disableBrowserScrollRestoration();
+    window.scrollTo(0, 0);
 
     const win = getLenisWindow();
     const lenis = new Lenis({
@@ -51,6 +63,9 @@ export function useLenis() {
     });
 
     win.__lenis__ = lenis;
+    lenis.scrollTo(0, { immediate: true, force: true });
+    resetScrollToTop();
+
     if (document.documentElement.classList.contains("loader-active")) {
       lenis.stop();
     }
@@ -63,7 +78,7 @@ export function useLenis() {
     ScrollTrigger.scrollerProxy(document.documentElement, {
       scrollTop(value) {
         if (typeof value === "number") {
-          lenis.scrollTo(value, { immediate: true });
+          lenis.scrollTo(value, { immediate: true, force: true });
         }
         return lenis.scroll;
       },

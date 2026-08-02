@@ -1,3 +1,4 @@
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import type Lenis from "lenis";
 
 type LenisWindow = Window & {
@@ -7,6 +8,24 @@ type LenisWindow = Window & {
 export function getLenis() {
   if (typeof window === "undefined") return undefined;
   return (window as LenisWindow).__lenis__;
+}
+
+export function disableBrowserScrollRestoration() {
+  if (typeof window === "undefined") return;
+  if ("scrollRestoration" in history) {
+    history.scrollRestoration = "manual";
+  }
+}
+
+export function resetScrollToTop() {
+  const lenis = getLenis();
+
+  if (lenis) {
+    lenis.scrollTo(0, { immediate: true, force: true });
+  }
+
+  window.scrollTo(0, 0);
+  ScrollTrigger.update();
 }
 
 export function scrollByDelta(top: number, left = 0) {

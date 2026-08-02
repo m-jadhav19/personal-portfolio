@@ -33,6 +33,7 @@ export function setupFeaturedWorkScroll(
       pin: headingWrap,
       pinSpacing: false,
       anticipatePin: 1,
+      fastScrollEnd: true,
       invalidateOnRefresh: true,
     });
 

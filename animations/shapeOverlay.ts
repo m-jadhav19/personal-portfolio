@@ -2,6 +2,7 @@ import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 import { INTRO_DURATION } from "@/lib/motion";
+import { getLenis, resetScrollToTop } from "@/lib/lenis";
 
 const NUM_POINTS = 10;
 const DELAY_POINTS_MAX = 0.3;
@@ -46,24 +47,6 @@ export function prefersReducedShapeMotion() {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
-type LenisLike = {
-  scroll?: number;
-  scrollTo: (
-    target: number | string | HTMLElement,
-    options?: {
-      immediate?: boolean;
-      duration?: number;
-      force?: boolean;
-    },
-  ) => void;
-  stop: () => void;
-  start: () => void;
-};
-
-function getLenis() {
-  return (window as Window & { __lenis__?: LenisLike }).__lenis__;
-}
-
 function getScrollTop() {
   const lenis = getLenis();
   if (lenis && typeof lenis.scroll === "number") {
@@ -73,14 +56,7 @@ function getScrollTop() {
 }
 
 function scrollToTopImmediate() {
-  const lenis = getLenis();
-  if (lenis) {
-    lenis.scrollTo(0, { immediate: true, force: true });
-  } else {
-    window.scrollTo({ top: 0, behavior: "auto" });
-  }
-
-  ScrollTrigger.update();
+  resetScrollToTop();
 }
 
 export async function playScrollToTop() {

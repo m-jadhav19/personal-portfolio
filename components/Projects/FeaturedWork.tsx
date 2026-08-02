@@ -53,10 +53,12 @@ export function FeaturedWork() {
       await playBarCover();
       setIsCatalogReady(true);
       await playBarReveal();
+      ScrollTrigger.refresh();
     } catch {
       setIsCatalogMounted(false);
       setIsCatalogReady(false);
       unlockPageScroll();
+      ScrollTrigger.refresh();
     } finally {
       isTransitioningRef.current = false;
     }
@@ -66,22 +68,27 @@ export function FeaturedWork() {
     if (isTransitioningRef.current || isBarOverlayAnimating()) return;
 
     isTransitioningRef.current = true;
-    setIsCatalogReady(false);
 
     try {
       if (prefersReducedBarMotion()) {
+        setIsCatalogReady(false);
         setIsCatalogMounted(false);
         unlockPageScroll();
+        ScrollTrigger.refresh();
         return;
       }
 
       await playBarCover();
+      setIsCatalogReady(false);
       setIsCatalogMounted(false);
       unlockPageScroll();
       await playBarReveal();
+      ScrollTrigger.refresh();
     } catch {
+      setIsCatalogReady(false);
       setIsCatalogMounted(false);
       unlockPageScroll();
+      ScrollTrigger.refresh();
     } finally {
       isTransitioningRef.current = false;
     }
