@@ -47,7 +47,7 @@
   margin: 0;
   font-family: var(--font-body);
   font-size: clamp(2.5rem, 8vw, 6rem);
-  font-weight: var(--font-bitcount-weight-semibold);
+  font-weight: var(--font-bitcount-weight-regular);
   line-height: 0.9;
   letter-spacing: -0.05em;
   text-transform: uppercase;
@@ -159,6 +159,9 @@
   aspect-ratio: 4 / 3;
   overflow: hidden;
   background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
 }
 
 .thumbImage {

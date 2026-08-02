@@ -19,6 +19,8 @@ export function useActiveSection(sectionIds: string[]) {
         .map((id) => document.getElementById(id))
         .filter((section): section is HTMLElement => Boolean(section));
 
+    let activeRef: string | null = null;
+
     const updateActive = () => {
       const sections = getSections();
       if (!sections.length) return;
@@ -30,7 +32,10 @@ export function useActiveSection(sectionIds: string[]) {
         sections[0].getBoundingClientRect().top + scrollY;
 
       if (marker < firstSectionTop) {
-        setActiveId(null);
+        if (activeRef !== null) {
+          activeRef = null;
+          setActiveId(null);
+        }
         return;
       }
 
@@ -42,7 +47,10 @@ export function useActiveSection(sectionIds: string[]) {
         }
       }
 
-      setActiveId(currentId);
+      if (currentId !== activeRef) {
+        activeRef = currentId;
+        setActiveId(currentId);
+      }
     };
 
     const unsubscribe = subscribeLenisScroll(updateActive);

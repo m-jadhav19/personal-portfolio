@@ -42,16 +42,12 @@ export function setupFeaturedWorkScroll(
   if (heading) {
     const finalText = heading.textContent?.trim() ?? "Featured Work";
     const scramble = new TextScramble(heading);
-    let lastProgress = -1;
 
     const headingTrigger = ScrollTrigger.create({
       trigger: section,
-      start: "top bottom",
-      end: "bottom top",
-      onUpdate: (self) => {
-        const progress = Math.round(self.progress * 24) / 24;
-        if (progress === lastProgress) return;
-        lastProgress = progress;
+      start: "top 75%",
+      once: true,
+      onEnter: () => {
         void scramble.setText(finalText);
       },
     });

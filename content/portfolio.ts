@@ -1,4 +1,5 @@
 import type { Portfolio } from "@/lib/types";
+import { projectThumbnailSrc } from "@/lib/projectThumbnails";
 
 export const portfolio: Portfolio = {
   name: "Mandar",
@@ -50,7 +51,7 @@ export const portfolio: Portfolio = {
       status: "Completed",
       description:
         "A platform that allows users to search and stream their own retro cassette tapes",
-      imageSrc: "/images/retro.png",
+      imageSrc: projectThumbnailSrc("retro-cassette"),
       url: "https://retro-cassette.vercel.app/",
       tags: ["React", "Spotify API", "Framer Motion"],
     },
@@ -63,7 +64,7 @@ export const portfolio: Portfolio = {
       status: "Completed",
       description:
         "Brutalist UI components library for a Raw. Bold. Minimalist. Design.",
-      imageSrc: "/images/brutualist.png",
+      imageSrc: projectThumbnailSrc("brutalist-ui"),
       url: "https://brutalist-components.vercel.app/",
       tags: ["Next.js", "Tailwind CSS", "Storybook"],
     },
@@ -76,7 +77,7 @@ export const portfolio: Portfolio = {
       status: "Completed",
       description:
         "A tactile digital workspace where ideas come to life through motion, intuition, and design.",
-      imageSrc: "/images/ply-app.png",
+      imageSrc: projectThumbnailSrc("ply-digital-workspace"),
       url: "https://ply-app-delta.vercel.app/",
       tags: ["React", "GSAP", "Canvas"],
     },
@@ -89,7 +90,7 @@ export const portfolio: Portfolio = {
       status: "Completed",
       description:
         "A sleek world-time dashboard with an interactive time-travel experience.",
-      imageSrc: "/images/epoch.png",
+      imageSrc: projectThumbnailSrc("epoch-world-timer"),
       url: "https://globalsync-world-timer.vercel.app/",
       tags: ["Next.js", "Luxon", "Radix UI"],
     },
@@ -102,7 +103,7 @@ export const portfolio: Portfolio = {
       status: "Completed",
       description:
         "A web app that allows users to try on AR Accessories virtually",
-      imageSrc: "/images/auratry.png",
+      imageSrc: projectThumbnailSrc("auratry-virtual-try-on"),
       url: "https://virtual-try-on-lac.vercel.app/",
       tags: ["Mediapipe", "Three.js", "React"],
     },
@@ -114,7 +115,7 @@ export const portfolio: Portfolio = {
       role: "Design & Development",
       status: "Completed",
       description: "A Photo Dithering Effect Generator",
-      imageSrc: "/images/ditherboy.png",
+      imageSrc: projectThumbnailSrc("ditherboy"),
       url: "https://dithered-editor.vercel.app/",
       tags: ["GLSL", "Three.js", "Next.js"],
     },
@@ -127,7 +128,7 @@ export const portfolio: Portfolio = {
       status: "In Progress",
       description:
         "A 3D portfolio website that allows users to view 3D models in a 3D environment",
-      imageSrc: "/images/3dportfolio.png",
+      imageSrc: projectThumbnailSrc("3d-portfolio-website"),
       url: "https://3d-portfolio-zeta-ten.vercel.app/",
       tags: ["Three.js", "React Three Fiber", "GSAP"],
     },
@@ -136,7 +137,7 @@ export const portfolio: Portfolio = {
     {
       id: "1",
       title: "Art Direction",
-      imageSrc: "/images/retro.png",
+      imageSrc: projectThumbnailSrc("retro-cassette"),
       items: [
         "Visual strategy",
         "Creative concept",
@@ -147,7 +148,7 @@ export const portfolio: Portfolio = {
     {
       id: "2",
       title: "Branding",
-      imageSrc: "/images/brutualist.png",
+      imageSrc: projectThumbnailSrc("brutalist-ui"),
       items: [
         "Brand identity",
         "Logo design",
@@ -158,7 +159,7 @@ export const portfolio: Portfolio = {
     {
       id: "3",
       title: "Digital Design",
-      imageSrc: "/images/ply-app.png",
+      imageSrc: projectThumbnailSrc("ply-digital-workspace"),
       items: [
         "UI/UX design",
         "Prototyping",
@@ -169,7 +170,7 @@ export const portfolio: Portfolio = {
     {
       id: "4",
       title: "Development",
-      imageSrc: "/images/epoch.png",
+      imageSrc: projectThumbnailSrc("epoch-world-timer"),
       items: [
         "Frontend development",
         "React / Next.js",

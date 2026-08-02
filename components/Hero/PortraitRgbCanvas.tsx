@@ -5,6 +5,12 @@ import { gsap } from "gsap";
 import { useRef, type RefObject } from "react";
 import * as THREE from "three";
 
+import {
+  bindIdleAwareTicker,
+  hasSettled,
+  stepSmoothChannels,
+} from "@/lib/animationPerf";
+
 import styles from "./Hero.module.css";
 
 gsap.registerPlugin(useGSAP);
@@ -70,14 +76,14 @@ export function PortraitRgbCanvas({ src, pointerRef }: PortraitRgbCanvasProps) {
 
       let disposed = false;
       const smooth = {
-        mouseX: 0.5,
-        mouseY: 0.5,
-        strength: 0,
+        mouseX: { current: 0.5, target: 0.5 },
+        mouseY: { current: 0.5, target: 0.5 },
+        strength: { current: 0, target: 0, epsilon: 0.01 },
       };
 
       const renderer = new THREE.WebGLRenderer({
         alpha: true,
-        antialias: true,
+        antialias: false,
         premultipliedAlpha: false,
         powerPreference: "high-performance",
       });
@@ -113,7 +119,7 @@ export function PortraitRgbCanvas({ src, pointerRef }: PortraitRgbCanvasProps) {
         const width = container.clientWidth;
         const height = container.clientHeight;
         if (width < 1 || height < 1) return;
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
         renderer.setSize(width, height, false);
       };
 
@@ -147,24 +153,34 @@ export function PortraitRgbCanvas({ src, pointerRef }: PortraitRgbCanvasProps) {
 
       const tick = () => {
         const pointer = pointerRef.current;
-        const targetX = pointer?.x ?? 0.5;
-        const targetY = pointer?.y ?? 0.5;
-        const targetStrength = pointer?.hovered ? 1 : 0;
+        smooth.mouseX.target = pointer?.x ?? 0.5;
+        smooth.mouseY.target = pointer?.y ?? 0.5;
+        smooth.strength.target = pointer?.hovered ? 1 : 0;
 
-        smooth.mouseX += (targetX - smooth.mouseX) * 0.14;
-        smooth.mouseY += (targetY - smooth.mouseY) * 0.14;
-        smooth.strength += (targetStrength - smooth.strength) * 0.12;
+        const moving = stepSmoothChannels(
+          [smooth.mouseX, smooth.mouseY, smooth.strength],
+          0.14,
+        );
 
-        uniforms.uMouse.value.set(smooth.mouseX, 1 - smooth.mouseY);
-        uniforms.uStrength.value = smooth.strength;
+        if (
+          !moving &&
+          hasSettled(smooth.strength.current, 0, 0.01) &&
+          hasSettled(smooth.mouseX.current, 0.5) &&
+          hasSettled(smooth.mouseY.current, 0.5)
+        ) {
+          return;
+        }
+
+        uniforms.uMouse.value.set(smooth.mouseX.current, 1 - smooth.mouseY.current);
+        uniforms.uStrength.value = smooth.strength.current;
         renderer.render(scene, camera);
       };
 
-      gsap.ticker.add(tick);
+      const stopTicker = bindIdleAwareTicker(container, tick);
 
       return () => {
         disposed = true;
-        gsap.ticker.remove(tick);
+        stopTicker();
         resizeObserver.disconnect();
         uniforms.uTexture.value?.dispose();
         material.dispose();

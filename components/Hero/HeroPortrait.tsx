@@ -66,7 +66,7 @@ export function HeroPortrait({ portraitRef }: HeroPortraitProps) {
       }}
       onPointerMove={(event) => syncPointer(event.clientX, event.clientY)}
     >
-      <PortraitAsciiFrame isHovered={isHovered} />
+      <PortraitAsciiFrame isHovered={isHovered} pointerRef={pointerRef} />
       <PortraitRgbCanvas src={portraitSrc} pointerRef={pointerRef} />
     </div>
   );

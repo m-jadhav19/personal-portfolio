@@ -10,17 +10,29 @@ export function useHeaderScroll() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isHidden, setIsHidden] = useState(false);
   const lastScrollY = useRef(0);
+  const stateRef = useRef({ isScrolled: false, isHidden: false });
 
   useEffect(() => {
     const onScroll = (scrollY: number) => {
-      setIsScrolled(scrollY > SCROLL_THRESHOLD);
+      const nextScrolled = scrollY > SCROLL_THRESHOLD;
+      let nextHidden = stateRef.current.isHidden;
 
       if (scrollY <= SCROLL_THRESHOLD) {
-        setIsHidden(false);
+        nextHidden = false;
       } else if (scrollY > lastScrollY.current) {
-        setIsHidden(true);
+        nextHidden = true;
       } else {
-        setIsHidden(false);
+        nextHidden = false;
+      }
+
+      if (nextScrolled !== stateRef.current.isScrolled) {
+        stateRef.current.isScrolled = nextScrolled;
+        setIsScrolled(nextScrolled);
+      }
+
+      if (nextHidden !== stateRef.current.isHidden) {
+        stateRef.current.isHidden = nextHidden;
+        setIsHidden(nextHidden);
       }
 
       lastScrollY.current = scrollY;

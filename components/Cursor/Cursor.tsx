@@ -36,7 +36,6 @@ export function Cursor() {
     let curY = mouseY;
     let hasMoved = false;
     let visible = true;
-    let frame = 0;
 
     const moveCursor = (event: MouseEvent) => {
       mouseX = event.clientX;
@@ -56,10 +55,16 @@ export function Cursor() {
     };
 
     const animateCursor = () => {
-      curX += (mouseX - curX) * FOLLOW;
-      curY += (mouseY - curY) * FOLLOW;
+      const dx = mouseX - curX;
+      const dy = mouseY - curY;
+
+      if (Math.abs(dx) < 0.35 && Math.abs(dy) < 0.35) {
+        return;
+      }
+
+      curX += dx * FOLLOW;
+      curY += dy * FOLLOW;
       gsap.set(dot, { x: curX, y: curY });
-      frame = requestAnimationFrame(animateCursor);
     };
 
     const scaleTo = (size: number) => {
@@ -136,14 +141,14 @@ export function Cursor() {
       opacity: 0,
     });
 
-    frame = requestAnimationFrame(animateCursor);
+    gsap.ticker.add(animateCursor);
     window.addEventListener("mousemove", moveCursor, { passive: true });
     document.addEventListener("mouseover", onMouseOver);
     document.addEventListener("mouseout", onMouseOut);
     document.documentElement.addEventListener("mouseleave", onLeaveWindow);
 
     return () => {
-      cancelAnimationFrame(frame);
+      gsap.ticker.remove(animateCursor);
       document.body.classList.remove("custom-cursor-active");
       window.removeEventListener("mousemove", moveCursor);
       document.removeEventListener("mouseover", onMouseOver);
@@ -157,7 +162,7 @@ export function Cursor() {
       ref={dotRef}
       aria-hidden="true"
       className="pointer-events-none fixed top-0 left-0 z-[2000] rounded-full bg-white mix-blend-difference"
-      style={{ willChange: "transform, width, height, opacity" }}
+      style={{ willChange: "transform" }}
     />
   );
 }

@@ -5,6 +5,12 @@ import { gsap } from "gsap";
 import { useRef, type RefObject } from "react";
 import * as THREE from "three";
 
+import {
+  bindIdleAwareTicker,
+  hasSettled,
+  stepSmoothChannels,
+} from "@/lib/animationPerf";
+
 import styles from "./FeaturedWork.module.css";
 
 gsap.registerPlugin(useGSAP);
@@ -29,7 +35,7 @@ const VERTEX = /* glsl */ `
   }
 `;
 
-/** Lens magnification + soft RGB fringe — suited to UI/product screenshots. */
+/** Lens magnification + very subtle RGB fringe on hover only. */
 const FRAGMENT = /* glsl */ `
   uniform sampler2D uTexture;
   uniform vec2 uMouse;
@@ -37,23 +43,26 @@ const FRAGMENT = /* glsl */ `
   varying vec2 vUv;
 
   void main() {
+    if (uStrength < 0.001) {
+      gl_FragColor = texture2D(uTexture, vUv);
+      return;
+    }
+
     vec2 toMouse = uMouse - vUv;
     float dist = length(toMouse);
     float falloff = smoothstep(0.62, 0.0, dist) * uStrength;
 
-    // Magnify slightly toward the cursor (optical lens).
-    vec2 uv = vUv + toMouse * falloff * 0.085;
+    vec2 uv = vUv + toMouse * falloff * 0.05;
     uv = clamp(uv, 0.001, 0.999);
 
     vec2 dir = dist > 0.0008 ? normalize(toMouse) : vec2(0.08, 0.0);
-    float aberration = falloff * 0.014;
+    float aberration = falloff * 0.003;
 
     float r = texture2D(uTexture, clamp(uv + dir * aberration, 0.0, 1.0)).r;
     float g = texture2D(uTexture, uv).g;
     float b = texture2D(uTexture, clamp(uv - dir * aberration, 0.0, 1.0)).b;
 
-    // Gentle lift near the hot spot so the lens reads clearly.
-    float lift = 1.0 + falloff * 0.06;
+    float lift = 1.0 + falloff * 0.02;
     gl_FragColor = vec4(r * lift, g * lift, b * lift, 1.0);
   }
 `;
@@ -76,15 +85,16 @@ export function ProjectMediaShader({
       if (!container || prefersReducedMotion()) return;
 
       let disposed = false;
+      let restingFrameDrawn = false;
       const smooth = {
-        mouseX: 0.5,
-        mouseY: 0.5,
-        strength: 0,
+        mouseX: { current: 0.5, target: 0.5 },
+        mouseY: { current: 0.5, target: 0.5 },
+        strength: { current: 0, target: 0, epsilon: 0.01 },
       };
 
       const renderer = new THREE.WebGLRenderer({
         alpha: true,
-        antialias: true,
+        antialias: false,
         powerPreference: "high-performance",
       });
       renderer.setClearColor(0x000000, 0);
@@ -119,13 +129,22 @@ export function ProjectMediaShader({
         const width = container.clientWidth;
         const height = container.clientHeight;
         if (width < 1 || height < 1) return;
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
         renderer.setSize(width, height, false);
       };
 
       resize();
       const resizeObserver = new ResizeObserver(resize);
       resizeObserver.observe(container);
+
+      const renderFrame = () => {
+        uniforms.uMouse.value.set(
+          smooth.mouseX.current,
+          1 - smooth.mouseY.current,
+        );
+        uniforms.uStrength.value = smooth.strength.current;
+        renderer.render(scene, camera);
+      };
 
       const loader = new THREE.TextureLoader();
       loader.load(
@@ -141,6 +160,8 @@ export function ProjectMediaShader({
           texture.generateMipmaps = false;
           uniforms.uTexture.value = texture;
           material.needsUpdate = true;
+          renderFrame();
+          restingFrameDrawn = true;
           if (fallbackRef.current) {
             fallbackRef.current.hidden = true;
           }
@@ -153,24 +174,37 @@ export function ProjectMediaShader({
 
       const tick = () => {
         const pointer = pointerRef.current;
-        const targetX = pointer?.x ?? 0.5;
-        const targetY = pointer?.y ?? 0.5;
-        const targetStrength = pointer?.hovered ? 1 : 0;
+        smooth.mouseX.target = pointer?.x ?? 0.5;
+        smooth.mouseY.target = pointer?.y ?? 0.5;
+        smooth.strength.target = pointer?.hovered ? 1 : 0;
 
-        smooth.mouseX += (targetX - smooth.mouseX) * 0.16;
-        smooth.mouseY += (targetY - smooth.mouseY) * 0.16;
-        smooth.strength += (targetStrength - smooth.strength) * 0.12;
+        const moving = stepSmoothChannels(
+          [smooth.mouseX, smooth.mouseY, smooth.strength],
+          0.16,
+        );
 
-        uniforms.uMouse.value.set(smooth.mouseX, 1 - smooth.mouseY);
-        uniforms.uStrength.value = smooth.strength;
-        renderer.render(scene, camera);
+        const interacting =
+          smooth.strength.current > 0.01 || smooth.strength.target > 0.01;
+        const pointerMoving =
+          !hasSettled(smooth.mouseX.current, 0.5) ||
+          !hasSettled(smooth.mouseY.current, 0.5);
+
+        if (!moving && !interacting && !pointerMoving) {
+          if (restingFrameDrawn) return;
+          renderFrame();
+          restingFrameDrawn = true;
+          return;
+        }
+
+        restingFrameDrawn = false;
+        renderFrame();
       };
 
-      gsap.ticker.add(tick);
+      const stopTicker = bindIdleAwareTicker(container, tick);
 
       return () => {
         disposed = true;
-        gsap.ticker.remove(tick);
+        stopTicker();
         resizeObserver.disconnect();
         uniforms.uTexture.value?.dispose();
         material.dispose();

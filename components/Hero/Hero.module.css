@@ -38,7 +38,6 @@
   position: relative;
   overflow: hidden;
   width: 100%;
-  will-change: transform;
 }
 
 .marqueeRowBack {
@@ -64,7 +63,7 @@
   width: max-content;
   white-space: nowrap;
   font-family: var(--font-bitcount);
-  font-weight: var(--font-bitcount-weight-semibold);
+  font-weight: var(--font-bitcount-weight-);
   font-size: clamp(4rem, 14.5vw, 11rem);
   line-height: 0.95;
   letter-spacing: 0.02em;
@@ -74,7 +73,6 @@
   font-palette: normal;
   animation: marquee-left 24s linear infinite;
   animation-play-state: running;
-  will-change: transform;
 }
 
 /* Middle back row only — bottom front row matches the first (right → left). */
@@ -139,8 +137,8 @@
   position: absolute;
   inset: -6%;
   display: grid;
-  grid-template-columns: repeat(28, 1fr);
-  grid-template-rows: repeat(22, 1fr);
+  grid-template-columns: repeat(22, 1fr);
+  grid-template-rows: repeat(16, 1fr);
   font-family: var(--font-bitcount);
   font-size: clamp(0.68rem, 1.5vw, 1.05rem);
   font-weight: var(--font-bitcount-weight-medium);
@@ -148,7 +146,6 @@
   letter-spacing: 0.02em;
   color: rgba(245, 244, 240, 0.55);
   overflow: visible;
-  filter: blur(0.2px);
 }
 
 .asciiCell {
@@ -156,7 +153,6 @@
   place-items: center;
   opacity: 0.3;
   user-select: none;
-  will-change: transform;
   transform: translate3d(0, 0, 0);
 }
 

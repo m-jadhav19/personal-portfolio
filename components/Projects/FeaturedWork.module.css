@@ -102,6 +102,9 @@
   overflow: hidden;
   background: var(--surface);
   isolation: isolate;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
 }
 
 .mediaShader {
