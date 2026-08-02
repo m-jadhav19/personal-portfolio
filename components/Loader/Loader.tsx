@@ -6,6 +6,7 @@ import { signalIntroComplete } from "@/animations/loader";
 import { playLoaderReveal, prefersReducedShapeMotion } from "@/animations/shapeOverlay";
 import { resetIntroDocumentState } from "@/lib/introDocument";
 import { resetScrollToTop } from "@/lib/lenis";
+import { waitForLoaderAssets } from "@/lib/preloadCriticalAssets";
 
 import {
   getLoaderTiming,
@@ -87,32 +88,31 @@ function ProductionLoader() {
     lockLoaderScroll();
     setMessage(pickLoaderMessage(loaderMessages));
 
+    let cancelled = false;
+
     if (prefersReducedMotion) {
-      assetsReadyRef.current = true;
-      setCount(100);
-      return;
+      void waitForLoaderAssets().then(() => {
+        if (!cancelled) {
+          assetsReadyRef.current = true;
+          setCount(100);
+        }
+      });
+      return () => {
+        cancelled = true;
+      };
     }
 
     if (hasSeenLoader) {
       setCount(65);
     }
 
-    let cancelled = false;
     const markReady = () => {
       if (!cancelled) {
         assetsReadyRef.current = true;
       }
     };
 
-    const pageReady =
-      document.readyState === "complete"
-        ? Promise.resolve()
-        : new Promise<void>((resolve) => {
-            window.addEventListener("load", () => resolve(), { once: true });
-          });
-    const fontsReady = document.fonts?.ready ?? Promise.resolve();
-
-    void Promise.all([pageReady, fontsReady]).then(markReady);
+    void waitForLoaderAssets().then(markReady);
 
     const interval = window.setInterval(() => {
       setCount((current) => {

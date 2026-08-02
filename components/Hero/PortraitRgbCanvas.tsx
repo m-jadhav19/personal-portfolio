@@ -75,6 +75,7 @@ export function PortraitRgbCanvas({ src, pointerRef }: PortraitRgbCanvasProps) {
       if (!container || prefersReducedMotion()) return;
 
       let disposed = false;
+      let restingFrameDrawn = false;
       const smooth = {
         mouseX: { current: 0.5, target: 0.5 },
         mouseY: { current: 0.5, target: 0.5 },
@@ -127,6 +128,15 @@ export function PortraitRgbCanvas({ src, pointerRef }: PortraitRgbCanvasProps) {
       const resizeObserver = new ResizeObserver(resize);
       resizeObserver.observe(container);
 
+      const renderFrame = () => {
+        uniforms.uMouse.value.set(
+          smooth.mouseX.current,
+          1 - smooth.mouseY.current,
+        );
+        uniforms.uStrength.value = smooth.strength.current;
+        renderer.render(scene, camera);
+      };
+
       const loader = new THREE.TextureLoader();
       loader.load(
         src,
@@ -141,6 +151,8 @@ export function PortraitRgbCanvas({ src, pointerRef }: PortraitRgbCanvasProps) {
           texture.generateMipmaps = false;
           uniforms.uTexture.value = texture;
           material.needsUpdate = true;
+          renderFrame();
+          restingFrameDrawn = true;
           if (fallbackRef.current) {
             fallbackRef.current.hidden = true;
           }
@@ -162,18 +174,21 @@ export function PortraitRgbCanvas({ src, pointerRef }: PortraitRgbCanvasProps) {
           0.14,
         );
 
-        if (
-          !moving &&
-          hasSettled(smooth.strength.current, 0, 0.01) &&
-          hasSettled(smooth.mouseX.current, 0.5) &&
-          hasSettled(smooth.mouseY.current, 0.5)
-        ) {
+        const interacting =
+          smooth.strength.current > 0.01 || smooth.strength.target > 0.01;
+        const pointerMoving =
+          !hasSettled(smooth.mouseX.current, 0.5) ||
+          !hasSettled(smooth.mouseY.current, 0.5);
+
+        if (!moving && !interacting && !pointerMoving) {
+          if (restingFrameDrawn) return;
+          renderFrame();
+          restingFrameDrawn = true;
           return;
         }
 
-        uniforms.uMouse.value.set(smooth.mouseX.current, 1 - smooth.mouseY.current);
-        uniforms.uStrength.value = smooth.strength.current;
-        renderer.render(scene, camera);
+        restingFrameDrawn = false;
+        renderFrame();
       };
 
       const stopTicker = bindIdleAwareTicker(container, tick);
