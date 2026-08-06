@@ -84,7 +84,7 @@ html.catalog-open {
 body {
   margin: 0;
   font-family: var(--font-body);
-  font-weight: var(--font-bitcount-weight);
+  font-weight: 400;
   font-size: var(--text-body-l-size);
   line-height: var(--text-body-l-leading);
   color: var(--foreground);

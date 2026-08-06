@@ -1,16 +1,16 @@
 /* ─── Color Tokens ───────────────────────────────────────────────────────── */
 
 :root {
-  --background: #0e0e0e;
-  --foreground: #f5f4f0;
+  --background: #0a1428;
+  --foreground: #c8daff;
 
-  --muted: #8a8a8a;
-  --border: rgba(245, 244, 240, 0.12);
+  --muted: #6b82b0;
+  --border: rgba(200, 218, 255, 0.12);
 
-  --accent: #0ea5e9;
+  --accent: #3b6fff;
   --success: #22c55e;
 
-  --surface: #1a1a1a;
+  --surface: #111f3a;
 
   /* ─── Spacing Scale ──────────────────────────────────────────────────── */
 
@@ -33,7 +33,7 @@
 
   --radius: 0;
   --border-width: 1px;
-  --border-color: rgba(245, 244, 240, 0.12);
+  --border-color: rgba(200, 218, 255, 0.12);
 
   /* ─── Motion ─────────────────────────────────────────────────────────── */
 
@@ -46,10 +46,10 @@
   --nav-height: 80px;
 
   /* Light footer contrast on dark site */
-  --footer-background: #f5f4f0;
-  --footer-foreground: #0e0e0e;
-  --footer-muted: #6b6b6b;
-  --footer-border: rgba(14, 14, 14, 0.12);
+  --footer-background: #c8daff;
+  --footer-foreground: #0a1428;
+  --footer-muted: #4a5f8a;
+  --footer-border: rgba(10, 20, 40, 0.12);
 }
 
 html {

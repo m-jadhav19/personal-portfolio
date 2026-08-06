@@ -112,7 +112,7 @@ function drawMyspace(ctx: CanvasRenderingContext2D, frame: number) {
     { x: 24, y: 21, glyph: "✧" },
   ];
 
-  ctx.font = '7px "Bitcount Single", sans-serif';
+  ctx.font = '7px "Share Tech Mono", monospace';
   ctx.textAlign = "center";
   sparkles.forEach((sparkle, index) => {
     const bob = Math.sin(frame * 0.2 + index) * 1.5;

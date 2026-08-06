@@ -1,28 +1,25 @@
 import type { Metadata, Viewport } from "next";
-import { Bitcount_Single, Honk, Open_Sans } from "next/font/google";
-import localFont from "next/font/local";
+import { Honk, Open_Sans, Orbitron, Share_Tech_Mono } from "next/font/google";
 
 import "@/styles/globals.css";
 
 import { portfolio } from "@/content/portfolio";
 import { Providers } from "@/components/Providers";
 
-const bitcountSingle = Bitcount_Single({
+/** Futuristic geometric display — marquee, headings, hero type */
+const orbitron = Orbitron({
   subsets: ["latin"],
-  weight: "variable",
-  variable: "--font-bitcount-single",
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-orbitron",
   display: "swap",
-  adjustFontFallback: false,
 });
 
-/** Not yet in next/font/google — self-hosted latin variable cut. */
-const bitcountSingleInk = localFont({
-  src: "./fonts/bitcount-single-ink-latin.woff2",
-  weight: "100 900",
-  style: "normal",
-  variable: "--font-bitcount-single-ink",
+/** Digital numeric mono — UI, labels, ascii field, body copy */
+const shareTechMono = Share_Tech_Mono({
+  subsets: ["latin"],
+  weight: "400",
+  variable: "--font-share-tech-mono",
   display: "swap",
-  adjustFontFallback: false,
 });
 
 const openSans = Open_Sans({
@@ -44,7 +41,7 @@ const honk = Honk({
 });
 
 export const viewport: Viewport = {
-  themeColor: "#0e0e0e",
+  themeColor: "#0a1428",
 };
 
 export const metadata: Metadata = {
@@ -60,10 +57,10 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`theme-dark ${bitcountSingle.variable} ${bitcountSingleInk.variable} ${openSans.variable} ${honk.variable}`}
+      className={`theme-dark ${orbitron.variable} ${shareTechMono.variable} ${openSans.variable} ${honk.variable}`}
       data-theme="dark"
     >
-      <body className={bitcountSingle.className}>
+      <body className={shareTechMono.className}>
         <Providers>{children}</Providers>
       </body>
     </html>

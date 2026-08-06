@@ -62,11 +62,11 @@
   display: inline-flex;
   width: max-content;
   white-space: nowrap;
-  font-family: var(--font-bitcount);
-  font-weight: var(--font-bitcount-weight-);
-  font-size: clamp(4rem, 14.5vw, 11rem);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: calc(clamp(4rem, 14.5vw, 11rem) - 2px);
   line-height: 0.95;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.06em;
   color: var(--foreground);
   -webkit-text-fill-color: var(--foreground);
   text-transform: uppercase;
@@ -129,7 +129,7 @@
   inset: -18%;
   z-index: 0;
   pointer-events: none;
-  opacity: 0.95;
+  opacity: 1;
   transform-origin: center;
 }
 
@@ -139,19 +139,20 @@
   display: grid;
   grid-template-columns: repeat(22, 1fr);
   grid-template-rows: repeat(16, 1fr);
-  font-family: var(--font-bitcount);
-  font-size: clamp(0.68rem, 1.5vw, 1.05rem);
-  font-weight: var(--font-bitcount-weight-medium);
+  font-family: var(--font-mono);
+  font-size: clamp(0.74rem, 1.65vw, 1.15rem);
+  font-weight: 400;
   line-height: 1;
-  letter-spacing: 0.02em;
-  color: rgba(245, 244, 240, 0.55);
+  letter-spacing: 0.08em;
+  color: rgba(200, 218, 255, 0.72);
   overflow: visible;
+  will-change: transform;
 }
 
 .asciiCell {
   display: grid;
   place-items: center;
-  opacity: 0.3;
+  opacity: 0.45;
   user-select: none;
   transform: translate3d(0, 0, 0);
 }
@@ -206,10 +207,10 @@
   left: 50%;
   z-index: 2;
   transform: translateX(-50%);
-  font-family: var(--font-bitcount);
+  font-family: var(--font-mono);
   font-size: 0.7rem;
-  font-weight: var(--font-bitcount-weight);
-  letter-spacing: 0.1em;
+  font-weight: 400;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--muted);
   opacity: 0.55;
@@ -223,7 +224,7 @@ html.intro-loading [data-intro="portrait"] {
 
 @media (max-width: 767px) {
   .track {
-    font-size: clamp(3rem, 16vw, 5.25rem);
+    font-size: calc(clamp(3rem, 16vw, 5.25rem) - 2px);
     line-height: 0.92;
   }
 

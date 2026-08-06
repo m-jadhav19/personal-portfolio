@@ -1,8 +1,8 @@
 export const faviconColors = {
-  background: "#0e0e0e",
-  foreground: "#f5f4f0",
-  accent: "#0ea5e9",
-  muted: "#8a8a8a",
+  background: "#0a1428",
+  foreground: "#c8daff",
+  accent: "#3b6fff",
+  muted: "#6b82b0",
   brokenRed: "#ff3b30",
   brokenYellow: "#ffea00",
   myspacePink: "#ff66cc",
