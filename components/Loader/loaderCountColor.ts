@@ -1,6 +1,6 @@
-/** Muted blue → cobalt accent for the loader percentage. */
-const FROM = { r: 107, g: 130, b: 176 }; // --muted #6b82b0
-const TO = { r: 59, g: 111, b: 255 }; // --accent #3b6fff
+/** Muted grey → accent blue for the loader percentage. */
+const FROM = { r: 138, g: 138, b: 138 }; // --muted #8a8a8a
+const TO = { r: 14, g: 165, b: 233 }; // --accent #0ea5e9
 
 export function loaderCountColor(progress: number): string {
   const t = Math.min(1, Math.max(0, progress / 100));

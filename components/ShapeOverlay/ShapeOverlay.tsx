@@ -37,12 +37,12 @@ export function ShapeOverlay() {
     >
       <defs>
         <linearGradient id="shape-overlay-gradient-1" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor="#0a1428" />
-          <stop offset="100%" stopColor="#111f3a" />
+          <stop offset="0%" stopColor="#0e0e0e" />
+          <stop offset="100%" stopColor="#1a1a1a" />
         </linearGradient>
         <linearGradient id="shape-overlay-gradient-2" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor="#3b6fff" />
-          <stop offset="100%" stopColor="#c8daff" />
+          <stop offset="0%" stopColor="#0ea5e9" />
+          <stop offset="100%" stopColor="#f5f4f0" />
         </linearGradient>
       </defs>
       <path

@@ -49,13 +49,13 @@
 }
 
 .whisper {
-  border-color: rgba(200, 218, 255, 0.14);
+  border-color: rgba(245, 244, 240, 0.14);
   font-style: italic;
   color: var(--muted);
 }
 
 .fact {
-  border-color: rgba(200, 218, 255, 0.18);
+  border-color: rgba(245, 244, 240, 0.18);
 }
 
 .quiz {
@@ -97,7 +97,7 @@
   flex: 1;
   padding: 0.4rem 0.55rem;
   border: 1px solid var(--border);
-  background: rgba(200, 218, 255, 0.04);
+  background: rgba(245, 244, 240, 0.04);
   color: var(--foreground);
   font: inherit;
   font-size: 0.72rem;
@@ -109,7 +109,7 @@
 
 .quizButton:hover {
   border-color: var(--foreground);
-  background: rgba(200, 218, 255, 0.08);
+  background: rgba(245, 244, 240, 0.08);
 }
 
 .dismiss {
