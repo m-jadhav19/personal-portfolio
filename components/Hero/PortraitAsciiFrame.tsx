@@ -32,7 +32,7 @@ const CURSOR_PUSH = 30;
 const CURSOR_SWIRL = 8;
 
 const CHROMA_SHADOW =
-  "3px 0 rgba(255,90,90,0.7), -3px 0 rgba(180,220,255,0.65)";
+  "3px 0 rgba(59,111,255,0.85), -3px 0 rgba(140,195,255,0.75)";
 
 type CellSim = {
   depth: number;

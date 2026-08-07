@@ -41,7 +41,7 @@ const honk = Honk({
 });
 
 export const viewport: Viewport = {
-  themeColor: "#0e0e0e",
+  themeColor: "#0a1428",
 };
 
 export const metadata: Metadata = {
