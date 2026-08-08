@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Honk, Open_Sans, Orbitron, Share_Tech_Mono } from "next/font/google";
+import { Monoton, Open_Sans, Orbitron, Share_Tech_Mono, Syncopate } from "next/font/google";
 
 import "@/styles/globals.css";
 
@@ -29,15 +29,22 @@ const openSans = Open_Sans({
   display: "swap",
 });
 
-/** Funky display face for the PIMPMYRIDE (MySpace) easter egg only. */
-const honk = Honk({
+/** Neon display — PIMPMYRIDE marquee and panel titles */
+const monoton = Monoton({
   subsets: ["latin"],
-  weight: "variable",
-  axes: ["MORF", "SHLN"],
-  variable: "--font-honk",
+  weight: "400",
+  variable: "--font-monoton",
   display: "swap",
   preload: false,
-  adjustFontFallback: false,
+});
+
+/** Geometric sans — PIMPMYRIDE body copy */
+const syncopate = Syncopate({
+  subsets: ["latin"],
+  weight: ["400", "700"],
+  variable: "--font-syncopate",
+  display: "swap",
+  preload: false,
 });
 
 export const viewport: Viewport = {
@@ -57,7 +64,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`theme-dark ${orbitron.variable} ${shareTechMono.variable} ${openSans.variable} ${honk.variable}`}
+      className={`theme-dark ${orbitron.variable} ${shareTechMono.variable} ${openSans.variable} ${monoton.variable} ${syncopate.variable}`}
       data-theme="dark"
     >
       <body className={shareTechMono.className}>

@@ -38,11 +38,11 @@ Our implementation uses **Next.js 15 App Router + TypeScript + Tailwind v4 + GSA
 | Token | Prototype | Our `tokens.css` |
 |-------|-----------|------------------|
 | Page bg (light) | `#f5f4f0` | `--background` |
-| Text | `#0e0e0e` | `--foreground` |
+| Text | `#0e1111` | `--foreground` |
 | Text dim | `#6b6b6b` | `--muted` |
 | Accent | `#4b3bff` (placeholder) | `--accent` (ours: `#0ea5e9`) |
 | Border | `rgba(14,14,14,.12)` | `--border` |
-| Dark bg | `#0e0e0e` | `--background-dark` |
+| Dark bg | `#0e1111` | `--background-dark` |
 | Dark text | `#f5f4f0` | `--foreground-dark` |
 
 **Theme switch:** Light by default. `body.theme-dark` (or `data-theme="dark"`) when Contact is centered in viewport — `rootMargin: -45% 0px -45% 0px`.

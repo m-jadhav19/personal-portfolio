@@ -1,13 +1,15 @@
+import { MYSPACE_PALETTE } from "@/lib/easterEggs/myspacePalette";
+
 export const faviconColors = {
-  background: "#0a1428",
-  foreground: "#c8daff",
+  background: "#0e1111",
+  foreground: "#f5f4f0",
   accent: "#3b6fff",
-  muted: "#6b82b0",
+  muted: "#8a8a8a",
   brokenRed: "#ff3b30",
   brokenYellow: "#ffea00",
-  myspacePink: "#f890e7",
-  myspaceCyan: "#0bd3d3",
-  myspaceWhite: "#ffffff",
-  myspaceGray: "#d0d0d0",
-  myspaceBlack: "#000000",
+  myspacePink: MYSPACE_PALETTE.pink,
+  myspaceCyan: MYSPACE_PALETTE.cyan,
+  myspaceWhite: MYSPACE_PALETTE.white,
+  myspaceGray: MYSPACE_PALETTE.gray,
+  myspaceInk: MYSPACE_PALETTE.ink,
 } as const;

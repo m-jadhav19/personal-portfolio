@@ -30,7 +30,7 @@ export function BarOverlay() {
   }, []);
 
   return (
-    <div className={styles.overlay} aria-hidden="true">
+    <div className={styles.overlay} data-bar-overlay aria-hidden="true">
       {Array.from({ length: BAR_OVERLAY_COUNT }, (_, index) => (
         <div
           key={index}

@@ -7,6 +7,7 @@ import * as THREE from "three";
 
 import {
   bindIdleAwareTicker,
+  getRenderPixelRatio,
   hasSettled,
   stepSmoothChannels,
 } from "@/lib/animationPerf";
@@ -24,6 +25,7 @@ export type PortraitPointer = {
 type PortraitRgbCanvasProps = {
   src: string;
   pointerRef: RefObject<PortraitPointer>;
+  lowPower?: boolean;
 };
 
 const MAX_SHIFT = 0.045;
@@ -65,7 +67,11 @@ function prefersReducedMotion() {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
-export function PortraitRgbCanvas({ src, pointerRef }: PortraitRgbCanvasProps) {
+export function PortraitRgbCanvas({
+  src,
+  pointerRef,
+  lowPower = false,
+}: PortraitRgbCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const fallbackRef = useRef<HTMLImageElement>(null);
 
@@ -120,7 +126,9 @@ export function PortraitRgbCanvas({ src, pointerRef }: PortraitRgbCanvasProps) {
         const width = container.clientWidth;
         const height = container.clientHeight;
         if (width < 1 || height < 1) return;
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+        renderer.setPixelRatio(
+          getRenderPixelRatio(lowPower ? 1 : 1.5, lowPower ? 0.85 : 1),
+        );
         renderer.setSize(width, height, false);
       };
 
@@ -204,7 +212,7 @@ export function PortraitRgbCanvas({ src, pointerRef }: PortraitRgbCanvasProps) {
         renderer.domElement.remove();
       };
     },
-    { scope: containerRef, dependencies: [src, pointerRef] },
+    { scope: containerRef, dependencies: [src, pointerRef, lowPower] },
   );
 
   return (

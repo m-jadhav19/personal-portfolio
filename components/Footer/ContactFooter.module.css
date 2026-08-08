@@ -96,15 +96,22 @@
   border-bottom: 1px solid currentColor;
   font-size: clamp(1.2rem, 2.6vw, 2.5rem);
   color: var(--footer-foreground);
-  transition:
-    color var(--duration-fast) var(--ease),
-    border-color var(--duration-fast) var(--ease);
+  transition: border-color var(--duration-fast) var(--ease);
+}
+
+.email span {
+  display: inline-block;
+  transition: transform var(--duration-fast) var(--ease);
 }
 
 .email:hover,
 .email:focus-visible {
-  border-color: var(--accent);
-  color: var(--accent);
+  border-color: var(--footer-muted);
+}
+
+.email:hover span,
+.email:focus-visible span {
+  transform: translate(0.15em, -0.15em);
 }
 
 .details {
@@ -137,11 +144,27 @@
   transition: color var(--duration-fast) var(--ease);
 }
 
+.socials a span,
+.bottom a span {
+  display: inline-block;
+  transition: transform var(--duration-fast) var(--ease);
+}
+
 .socials a:hover,
 .socials a:focus-visible,
 .bottom a:hover,
 .bottom a:focus-visible {
-  color: var(--accent);
+  color: var(--footer-muted);
+}
+
+.socials a:hover span,
+.socials a:focus-visible span {
+  transform: translate(0.15em, -0.15em);
+}
+
+.bottom a:hover span,
+.bottom a:focus-visible span {
+  transform: translateY(-0.15em);
 }
 
 .bottom {
@@ -175,9 +198,9 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .email,
-  .socials a,
-  .bottom a {
+  .email span,
+  .socials a span,
+  .bottom a span {
     transition: none;
   }
 }

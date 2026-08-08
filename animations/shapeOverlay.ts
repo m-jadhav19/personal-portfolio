@@ -13,12 +13,17 @@ const LOADER_DELAY_PER_PATH = 0.14;
 const EASE = "power2.inOut";
 const SCROLL_TOP_THRESHOLD = 4;
 
-export type ShapeOverlayController = {
-  playReveal: () => Promise<void>;
-  playLoaderReveal: () => Promise<void>;
-  playCover: () => Promise<void>;
-  isAnimating: () => boolean;
-};
+type OverlayTheme = "loader" | "scroll-top" | "myspace";
+
+export function setOverlayTheme(theme: OverlayTheme) {
+  if (typeof document === "undefined") return;
+  document.documentElement.dataset.overlayTheme = theme;
+}
+
+export function clearOverlayTheme() {
+  if (typeof document === "undefined") return;
+  delete document.documentElement.dataset.overlayTheme;
+}
 
 let controller: ShapeOverlayController | null = null;
 
@@ -26,11 +31,19 @@ export function registerShapeOverlay(next: ShapeOverlayController | null) {
   controller = next;
 }
 
+export type ShapeOverlayController = {
+  playReveal: () => Promise<void>;
+  playLoaderReveal: () => Promise<void>;
+  playCover: () => Promise<void>;
+  isAnimating: () => boolean;
+};
+
 export function playReveal() {
   return controller?.playReveal() ?? Promise.resolve();
 }
 
 export function playLoaderReveal() {
+  setOverlayTheme("loader");
   return controller?.playLoaderReveal() ?? Promise.resolve();
 }
 
@@ -75,6 +88,8 @@ export async function playScrollToTop() {
 
   const lenis = getLenis();
   lenis?.stop();
+
+  setOverlayTheme("scroll-top");
 
   try {
     await playCover();

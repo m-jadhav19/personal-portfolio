@@ -16,37 +16,34 @@ type ItunesResult = {
   releaseDate?: string;
 };
 
-export const MYSPACE_SEARCH_QUERIES = [
-  "Linkin Park",
-  "Blink-182",
-  "Avril Lavigne",
-  "Britney Spears",
-  "Green Day",
-  "Eminem",
-  "Outkast",
-  "Usher",
-  "Beyonce",
-  "The Killers",
-  "Fall Out Boy",
-  "My Chemical Romance",
-  "Simple Plan",
-  "Sum 41",
-  "Good Charlotte",
-  "Evanescence",
-  "Nickelback",
-  "Nelly",
-  "50 Cent",
-  "Destiny's Child",
-  "NSYNC",
-  "Backstreet Boys",
-  "System of a Down",
-  "Papa Roach",
-  "Hoobastank",
-  "Yellowcard",
-  "Taking Back Sunday",
-  "Brand New",
-  "Dashboard Confessional",
-  "Jimmy Eat World",
+/** Artists and tracks featured on GTA Vice City radio stations */
+export const VICE_CITY_SEARCH_QUERIES = [
+  "Jan Hammer Crockett's Theme",
+  "Michael Jackson Billie Jean",
+  "Run-DMC Rock Box",
+  "Quiet Riot Cum On Feel the Noize",
+  "Judas Priest You've Got Another Thing Comin",
+  "Wham Wake Me Up Before You Go-Go",
+  "Laura Branigan Self Control",
+  "Gary Numan Cars",
+  "Kate Bush Wow",
+  "Roxy Music More Than This",
+  "Pointer Sisters Jump",
+  "Autograph Turn Up the Radio",
+  "Ozzy Osbourne Bark at the Moon",
+  "Herbie Hancock Rockit",
+  "Electric Light Orchestra Four Little Diamonds",
+  "Glenn Frey The Heat Is On",
+  "Madonna Borderline",
+  "Squeeze Tempted",
+  "Cutting Crew Died In Your Arms",
+  "Billy Ocean Caribbean Queen",
+  "Village People YMCA",
+  "Freak Power Freak Power",
+  "Lynyrd Skynyrd Free Bird",
+  "Iron Maiden 2 Minutes to Midnight",
+  "Night Ranger Sister Christian",
+  "Rockstar Games Vice City",
 ] as const;
 
 function getReleaseYear(releaseDate?: string) {
@@ -54,8 +51,8 @@ function getReleaseYear(releaseDate?: string) {
   return new Date(releaseDate).getFullYear();
 }
 
-function isEarly2000s(year: number) {
-  return year >= 2000 && year <= 2009;
+function isViceCityEra(year: number) {
+  return year >= 1978 && year <= 1989;
 }
 
 export function mapItunesResults(results: ItunesResult[]): MySpaceTrack[] {
@@ -67,7 +64,7 @@ export function mapItunesResults(results: ItunesResult[]): MySpaceTrack[] {
       if (seen.has(item.trackId)) return false;
 
       const year = getReleaseYear(item.releaseDate);
-      if (!isEarly2000s(year)) return false;
+      if (year > 0 && !isViceCityEra(year)) return false;
 
       seen.add(item.trackId);
       return true;
@@ -92,6 +89,6 @@ export function shuffleTracks<T>(items: T[]): T[] {
 }
 
 export function pickSearchQueries(count = 4) {
-  const pool = shuffleTracks([...MYSPACE_SEARCH_QUERIES]);
+  const pool = shuffleTracks([...VICE_CITY_SEARCH_QUERIES]);
   return pool.slice(0, count);
 }

@@ -1,7 +1,7 @@
 /* ─── Color Tokens ───────────────────────────────────────────────────────── */
 
 :root {
-  --background: #0e0e0e;
+  --background: #0e1111;
   --foreground: #f5f4f0;
 
   --muted: #f5f4f0;
@@ -45,13 +45,30 @@
 
   --nav-height: 80px;
 
+  /* Layering — custom cursor above overlays, modals, and easter-egg UI */
+  --z-cursor: 10200;
+
+  /* Shape overlay — loader reveal uses accent; scroll-to-top uses background */
+  --overlay-layer-primary: var(--accent);
+  --overlay-layer-secondary: var(--accent);
+
+  /* Bar overlay — project catalog transitions */
+  --bar-overlay-a: var(--foreground);
+  --bar-overlay-b: var(--background);
+  --bar-overlay-c: var(--accent);
+
   /* Light footer contrast on dark site */
   --footer-background: #3b6fff;
-  --footer-foreground: #0e0e0e;
+  --footer-foreground: #0e1111;
   --footer-muted: #f5f4f0;
   --footer-border: rgba(10, 20, 40, 0.12);
 }
 
 html {
   color-scheme: dark;
+}
+
+html[data-overlay-theme="scroll-top"] {
+  --overlay-layer-primary: var(--background);
+  --overlay-layer-secondary: var(--background);
 }

@@ -19,6 +19,7 @@ gsap.registerPlugin(useGSAP, ScrambleTextPlugin);
 type PortraitAsciiFrameProps = {
   isHovered?: boolean;
   pointerRef?: RefObject<PortraitPointer>;
+  reducedEffects?: boolean;
 };
 
 const CHARS = "0123456789ABCDEF#%&*+=<>/\\|{}[]~^._";
@@ -99,6 +100,7 @@ function computePortraitOffset(
 export function PortraitAsciiFrame({
   isHovered = false,
   pointerRef,
+  reducedEffects = false,
 }: PortraitAsciiFrameProps) {
   const rootRef = useRef<HTMLDivElement>(null);
   const matrixRef = useRef<HTMLDivElement>(null);
@@ -175,11 +177,13 @@ export function PortraitAsciiFrame({
 
       const scrambleBurst = () => {
         if (!scrambleAlive || !scrambleVisible || !isDocumentVisible()) {
-          gsap.delayedCall(0.5, scrambleBurst);
+          gsap.delayedCall(reducedEffects ? 1.2 : 0.5, scrambleBurst);
           return;
         }
 
-        const batchSize = gsap.utils.random(4, 7, 1);
+        const batchSize = reducedEffects
+          ? gsap.utils.random(2, 3, 1)
+          : gsap.utils.random(4, 7, 1);
         const batch = pickRandomNodes(nodes, batchSize);
         const speed = scrambleScaleRef.current.value;
 
@@ -198,7 +202,11 @@ export function PortraitAsciiFrame({
           });
         });
 
-        gsap.delayedCall(gsap.utils.random(0.28, 0.55) / speed, scrambleBurst);
+        gsap.delayedCall(
+          gsap.utils.random(reducedEffects ? 1.1 : 0.28, reducedEffects ? 1.8 : 0.55) /
+            speed,
+          scrambleBurst,
+        );
       };
 
       const nodesByRow = new Map<number, HTMLElement[]>();
@@ -314,7 +322,9 @@ export function PortraitAsciiFrame({
       };
 
       gsap.delayedCall(0.55, scrambleBurst);
-      gsap.delayedCall(0.7, datamoshBurst);
+      if (!reducedEffects) {
+        gsap.delayedCall(0.7, datamoshBurst);
+      }
 
       const pointer = { x: 0.5, y: 0.5, strength: 0 };
       const setters = nodes.map((node) => ({
@@ -438,7 +448,7 @@ export function PortraitAsciiFrame({
         resizeObserver.disconnect();
       };
     },
-    { scope: rootRef, dependencies: [cells, pointerRef] },
+    { scope: rootRef, dependencies: [cells, pointerRef, reducedEffects] },
   );
 
   useGSAP(
@@ -468,7 +478,7 @@ export function PortraitAsciiFrame({
         overwrite: "auto",
       });
 
-      if (matrix) {
+      if (matrix && !reducedEffects) {
         gsap.to(matrix, {
           filter: isHovered
             ? "saturate(1.35) brightness(1.12)"
@@ -479,7 +489,7 @@ export function PortraitAsciiFrame({
         });
       }
     },
-    { dependencies: [isHovered], scope: rootRef },
+    { dependencies: [isHovered, reducedEffects], scope: rootRef },
   );
 
   return (

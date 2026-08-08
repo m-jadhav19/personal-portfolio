@@ -31,6 +31,16 @@ html.intro-loading [data-intro="meta-item"] {
   opacity: 0;
 }
 
+html[data-easter-egg="myspace"] .meta {
+  font-family: var(--font-easter-myspace-body);
+  color: var(--myspace-lavender, #c4a1ff);
+}
+
+html[data-easter-egg="myspace"] .statusDot {
+  background-color: var(--myspace-cyan, #0bd3d3);
+  box-shadow: 0 0 8px var(--myspace-cyan, #0bd3d3);
+}
+
 @media (max-width: 767px) {
   .meta {
     flex-direction: column;

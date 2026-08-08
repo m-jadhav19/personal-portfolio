@@ -5,6 +5,7 @@ import { useEffect, useRef } from "react";
 import { playHeroIntro } from "@/animations/hero";
 import { bindMarqueeParallax } from "@/animations/marquee";
 import { INTRO_COMPLETE_EVENT } from "@/animations/navigation";
+import { useMyspaceTheme } from "@/components/EasterEggs/MyspaceThemeProvider";
 import { portfolio } from "@/content/portfolio";
 
 import { HeroMarquee } from "./HeroMarquee";
@@ -13,10 +14,12 @@ import { HeroPortrait } from "./HeroPortrait";
 import styles from "./Hero.module.css";
 
 export function Hero() {
+  const { isMyspace } = useMyspaceTheme();
   const lineOneRef = useRef<HTMLDivElement>(null);
   const lineTwoRef = useRef<HTMLDivElement>(null);
   const lineThreeRef = useRef<HTMLDivElement>(null);
   const portraitRef = useRef<HTMLDivElement>(null);
+  const heroRef = useRef<HTMLElement>(null);
   const hasPlayedIntro = useRef(false);
 
   const marqueeLines = portfolio.hero.roles;
@@ -53,7 +56,11 @@ export function Hero() {
   }, []);
 
   return (
-    <section id="hero" className={styles.hero}>
+    <section
+      id="hero"
+      ref={heroRef}
+      className={`${styles.hero} ${isMyspace ? styles.heroMyspace : ""}`}
+    >
       <div className={styles.stage}>
         <HeroMarquee
           lines={marqueeLines}

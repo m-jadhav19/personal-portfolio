@@ -6,8 +6,10 @@
   /* Share Tech Mono — digital numeric UI */
   --font-share-tech-family: var(--font-share-tech-mono), "Share Tech Mono", monospace;
   --font-open-sans-family: var(--font-open-sans), "Open Sans", sans-serif;
-  /* Honk — PIMPMYRIDE / MySpace easter egg */
-  --font-easter-myspace: var(--font-honk), "Honk", system-ui, sans-serif;
+  /* PIMPMYRIDE / MySpace easter egg */
+  --font-easter-myspace-display: var(--font-monoton), "Monoton", cursive;
+  --font-easter-myspace-body: var(--font-syncopate), "Syncopate", sans-serif;
+  --font-easter-myspace: var(--font-easter-myspace-body);
 
   --font-display: var(--font-orbitron-family);
   --font-display-sans: var(--font-orbitron-family);

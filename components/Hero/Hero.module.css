@@ -47,15 +47,7 @@
 .marqueeRowFront {
   z-index: 3;
   overflow: visible;
-  margin-top: 0;
   pointer-events: none;
-  mix-blend-mode: difference;
-  will-change: auto;
-}
-
-.marqueeRowFront .track {
-  color: var(--foreground);
-  opacity: 0.96;
 }
 
 .track {
@@ -71,8 +63,16 @@
   -webkit-text-fill-color: var(--foreground);
   text-transform: uppercase;
   font-palette: normal;
+  text-shadow:
+    0.05em 0.06em 0 var(--accent),
+    0.1em 0.12em 0 color-mix(in srgb, var(--accent) 40%, transparent);
   animation: marquee-left 24s linear infinite;
   animation-play-state: running;
+}
+
+.track span {
+  flex-shrink: 0;
+  padding-right: 4.5em;
 }
 
 /* Middle back row only — bottom front row matches the first (right → left). */
@@ -82,11 +82,6 @@
 
 .marqueeRow.marqueeRowFront .track {
   animation-name: marquee-left;
-}
-
-.track span {
-  flex-shrink: 0;
-  padding-right: 4.5em;
 }
 
 @keyframes marquee-left {
@@ -222,6 +217,34 @@ html.intro-loading [data-intro="portrait"] {
   clip-path: inset(100% 0 0 0);
 }
 
+/* ─── PIMPMYRIDE — OG hero layout, MySpace palette + fonts only ─────────── */
+
+.heroMyspace .stage,
+.heroMyspace .footer,
+.heroMyspace .scrollCue {
+  position: relative;
+  z-index: 2;
+}
+
+.heroMyspace .track {
+  font-family: var(--font-easter-myspace-display);
+  color: var(--foreground);
+  -webkit-text-fill-color: var(--foreground);
+  text-shadow:
+    0.05em 0.06em 0 var(--myspace-cyan, #0bd3d3),
+    0.1em 0.12em 0 color-mix(in srgb, var(--myspace-pink, #f890e7) 55%, transparent);
+}
+
+.heroMyspace .asciiMatrix {
+  color: rgba(11, 211, 211, 0.55);
+}
+
+.heroMyspace .scrollCue {
+  font-family: var(--font-easter-myspace-body);
+  color: var(--myspace-lavender, #c4a1ff);
+  opacity: 0.85;
+}
+
 @media (max-width: 767px) {
   .track {
     font-size: calc(clamp(3rem, 16vw, 5.25rem) - 2px);
@@ -243,6 +266,10 @@ html.intro-loading [data-intro="portrait"] {
 
 @media (prefers-reduced-motion: reduce) {
   .track {
+    animation: none;
+  }
+
+  .heroMyspace .track {
     animation: none;
   }
 

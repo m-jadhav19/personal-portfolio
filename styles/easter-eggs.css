@@ -3,65 +3,67 @@
 html[data-easter-egg="myspace"] {
   --myspace-cyan: #0bd3d3;
   --myspace-pink: #f890e7;
-  --myspace-white: #ffffff;
-  --myspace-gray: #d0d0d0;
-  --myspace-black: #000000;
+  --myspace-coral: #ff7e9e;
+  --myspace-sunset: #ff9a6c;
+  --myspace-lavender: #c4a1ff;
+  --myspace-dusk: #2d1b4e;
+  --myspace-twilight: #1a1035;
+  --myspace-deep: #120a24;
+  --myspace-white: #fff5f8;
+  --myspace-gray: #d8c4e8;
+  --myspace-ink: #1e1238;
 
-  filter: saturate(1.2) contrast(1.05);
-  font-family: var(--font-easter-myspace);
-  font-variation-settings: "MORF" 28, "SHLN" 62;
+  /* Retheme the portfolio — Miami Vice dusk, not black */
+  --accent: var(--myspace-cyan);
+  --surface: var(--myspace-dusk);
+  --background: var(--myspace-twilight);
+  --foreground: var(--myspace-white);
+  --muted: var(--myspace-lavender);
+  --border: rgba(11, 211, 211, 0.28);
+  --border-color: rgba(248, 144, 231, 0.25);
+  --footer-background: linear-gradient(
+    135deg,
+    var(--myspace-pink) 0%,
+    var(--myspace-coral) 50%,
+    var(--myspace-cyan) 100%
+  );
+  --footer-foreground: var(--myspace-deep);
+  --footer-muted: var(--myspace-white);
+  --footer-border: rgba(18, 10, 36, 0.2);
+
+  --overlay-layer-primary: var(--myspace-cyan);
+  --overlay-layer-secondary: var(--myspace-pink);
+
+  --bar-overlay-a: var(--myspace-pink);
+  --bar-overlay-b: var(--myspace-cyan);
+  --bar-overlay-c: var(--myspace-white);
+
   cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Ctext y='18' font-size='18' fill='%23f890e7'%3E%E2%99%A5%3C/text%3E%3C/svg%3E")
     12 12, auto;
 }
 
 html[data-easter-egg="myspace"] body {
-  font-family: var(--font-easter-myspace) !important;
-  font-variation-settings: "MORF" 28, "SHLN" 62;
-  background: linear-gradient(
-    135deg,
-    var(--myspace-pink) 0%,
-    var(--myspace-cyan) 35%,
-    var(--myspace-white) 70%,
-    var(--myspace-pink) 100%
-  ) !important;
-  background-size: 400% 400% !important;
-  animation: myspaceBgShift 12s ease infinite !important;
-}
-
-@keyframes myspaceBgShift {
-  0%,
-  100% {
-    background-position: 0% 50%;
-  }
-
-  50% {
-    background-position: 100% 50%;
-  }
-}
-
-html[data-easter-egg="myspace"] h1,
-html[data-easter-egg="myspace"] h2,
-html[data-easter-egg="myspace"] h3,
-html[data-easter-egg="myspace"] [class*="marquee"],
-html[data-easter-egg="myspace"] [class*="title"] {
-  font-family: var(--font-easter-myspace) !important;
-  font-variation-settings: "MORF" 38, "SHLN" 78;
-  text-shadow:
-    2px 2px 0 var(--myspace-pink),
-    -1px -1px 0 var(--myspace-cyan) !important;
-}
-
-html[data-easter-egg="myspace"] p,
-html[data-easter-egg="myspace"] span,
-html[data-easter-egg="myspace"] a,
-html[data-easter-egg="myspace"] button,
-html[data-easter-egg="myspace"] li {
-  font-family: var(--font-easter-myspace) !important;
-}
-
-html[data-easter-egg="myspace"] a,
-html[data-easter-egg="myspace"] button {
-  text-decoration: underline wavy var(--myspace-pink);
+  background:
+    radial-gradient(
+      ellipse 90% 55% at 50% 0%,
+      rgba(11, 211, 211, 0.35) 0%,
+      transparent 58%
+    ),
+    radial-gradient(
+      ellipse 70% 45% at 85% 15%,
+      rgba(248, 144, 231, 0.28) 0%,
+      transparent 50%
+    ),
+    linear-gradient(
+      180deg,
+      #1a4a6e 0%,
+      #2d1b4e 28%,
+      #4a2060 48%,
+      #ff7e9e 72%,
+      #ff9a6c 82%,
+      var(--myspace-twilight) 100%
+    ) !important;
+  background-attachment: scroll !important;
 }
 
 body.easter-egg-myspace-active.custom-cursor-active,
@@ -89,6 +91,16 @@ html.lenis[data-easter-egg="broken-ux"] {
 
 .broken-ux-runaway {
   transition: transform 0.15s ease-out !important;
+}
+
+html[data-overlay-theme="myspace"] {
+  --overlay-layer-primary: var(--myspace-cyan, #0bd3d3);
+  --overlay-layer-secondary: var(--myspace-pink, #f890e7);
+}
+
+html[data-easter-egg="myspace"] [data-bar-overlay],
+html[data-overlay-theme="myspace"] [data-shape-overlay] {
+  z-index: 10100;
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -30,6 +30,26 @@ type IdleAwareTickerOptions = {
   rootMargin?: string;
 };
 
+/** Cap animation rate — returns true when a new frame should run. */
+export function createFrameThrottle(fps: number) {
+  const frameMs = 1000 / fps;
+  let last = 0;
+
+  return () => {
+    const now = performance.now();
+    if (now - last < frameMs) return false;
+    last = now;
+    return true;
+  };
+}
+
+export function getRenderPixelRatio(max = 1.25, scale = 1) {
+  const dpr = window.devicePixelRatio || 1;
+  const mobile = window.innerWidth < 768;
+  const cap = mobile ? Math.min(max, 1) : max;
+  return Math.min(dpr, cap) * scale;
+}
+
 /** Runs `tick` on gsap.ticker only while the element is on-screen and the tab is visible. */
 export function bindIdleAwareTicker(
   element: HTMLElement,

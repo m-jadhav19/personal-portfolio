@@ -6,18 +6,29 @@
   flex-direction: column;
   justify-content: flex-end;
   padding: clamp(1.5rem, 4vw, 3rem) var(--grid-padding-inline);
-  background: linear-gradient(
-    165deg,
-    var(--accent) 0%,
-    color-mix(in srgb, var(--accent) 35%, var(--foreground)) 48%,
-    var(--foreground) 100%
-  );
-  color: var(--background);
+  background: var(--loader-background, #000);
+  color: var(--loader-foreground, #fff);
   pointer-events: all;
   opacity: 1;
   overflow: hidden;
   isolation: isolate;
   transition: opacity 0.5s cubic-bezier(0.76, 0, 0.24, 1);
+}
+
+.loaderThemeTransition {
+  z-index: 1100;
+}
+
+.loaderVice {
+  z-index: 1100;
+  --loader-background: linear-gradient(
+    165deg,
+    #1a1035 0%,
+    #2d1b4e 35%,
+    #f890e7 72%,
+    #0bd3d3 100%
+  );
+  --loader-foreground: #fff5f8;
 }
 
 .loaderExiting {
@@ -45,8 +56,8 @@
   line-height: 0.98;
   letter-spacing: 0.03em;
   text-transform: uppercase;
-  color: var(--background);
-  -webkit-text-fill-color: var(--background);
+  color: var(--loader-foreground, #fff);
+  -webkit-text-fill-color: var(--loader-foreground, #fff);
   overflow: hidden;
   font-palette: normal;
 }

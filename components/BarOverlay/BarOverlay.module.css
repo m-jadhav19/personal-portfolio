@@ -17,13 +17,13 @@
 }
 
 .bar:nth-child(3n + 1) {
-  background: var(--foreground);
+  background: var(--bar-overlay-a);
 }
 
 .bar:nth-child(3n + 2) {
-  background: var(--background);
+  background: var(--bar-overlay-b);
 }
 
 .bar:nth-child(3n) {
-  background: var(--accent);
+  background: var(--bar-overlay-c);
 }

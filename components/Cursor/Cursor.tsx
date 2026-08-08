@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 import { gsap } from "gsap";
 
@@ -16,8 +17,15 @@ const HIDE_CURSOR_SELECTOR = '[data-cursor="hide"]';
 export function Cursor() {
   const dotRef = useRef<HTMLDivElement>(null);
   const sizeRef = useRef(BASE_SIZE);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
+
     const dot = dotRef.current;
     if (!dot) return;
 
@@ -155,14 +163,17 @@ export function Cursor() {
       document.removeEventListener("mouseout", onMouseOut);
       document.documentElement.removeEventListener("mouseleave", onLeaveWindow);
     };
-  }, []);
+  }, [mounted]);
 
-  return (
+  if (!mounted) return null;
+
+  return createPortal(
     <div
       ref={dotRef}
       aria-hidden="true"
-      className="pointer-events-none fixed top-0 left-0 z-[2000] rounded-full bg-white mix-blend-difference"
-      style={{ willChange: "transform" }}
-    />
+      className="pointer-events-none fixed top-0 left-0 rounded-full bg-white mix-blend-difference"
+      style={{ willChange: "transform", zIndex: "var(--z-cursor)" }}
+    />,
+    document.body,
   );
 }
