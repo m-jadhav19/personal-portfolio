@@ -34,10 +34,4 @@
   .hint {
     display: none !important;
   }
-
-  /* Hide site chrome if Providers still mount nav/cursor wrappers */
-  :global(header),
-  :global([data-resume-hide]) {
-    display: none !important;
-  }
 }
