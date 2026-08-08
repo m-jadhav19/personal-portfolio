@@ -12,6 +12,7 @@ import {
   prefersReducedBarMotion,
 } from "@/animations/barOverlay";
 import { portfolio } from "@/content/portfolio";
+import type { Project } from "@/lib/types";
 import {
   lockPageScroll,
   resetPageScrollLock,
@@ -20,6 +21,7 @@ import {
 
 import { AllProjectsCatalog } from "./AllProjectsCatalog";
 import { initFeaturedWorkScroll } from "./featuredWorkScroll";
+import { ProjectDetail } from "./ProjectDetail";
 import { ProjectSlide } from "./ProjectSlide";
 import { selectFeaturedProjects } from "./projectMotion";
 import styles from "./FeaturedWork.module.css";
@@ -34,6 +36,7 @@ export function FeaturedWork() {
 
   const [isCatalogMounted, setIsCatalogMounted] = useState(false);
   const [isCatalogReady, setIsCatalogReady] = useState(false);
+  const [detailProject, setDetailProject] = useState<Project | null>(null);
   const isTransitioningRef = useRef(false);
 
   const openCatalog = useCallback(async () => {
@@ -94,6 +97,18 @@ export function FeaturedWork() {
     }
   }, []);
 
+  const openDetail = useCallback((project: Project) => {
+    setDetailProject(project);
+    lockPageScroll();
+  }, []);
+
+  const closeDetail = useCallback(() => {
+    setDetailProject(null);
+    if (!isCatalogMounted) {
+      unlockPageScroll();
+    }
+  }, [isCatalogMounted]);
+
   useEffect(() => {
     const section = sectionRef.current;
     if (!section) return;
@@ -123,16 +138,21 @@ export function FeaturedWork() {
       <section id="projects" ref={sectionRef} className={styles.featuredWork}>
         <div className={styles.stickyHeading} data-featured-heading-wrap>
           <h2 className={styles.headingTitle} data-featured-heading>
-            Featured Work
+            Selected Work
           </h2>
           <span className={styles.headingCue}>[Scroll to explore more]</span>
         </div>
 
         <div className={styles.projects} data-featured-projects>
-            {projects.map((project, index) => (
-              <ProjectSlide key={project.id} project={project} index={index} />
-            ))}
-          </div>
+          {projects.map((project, index) => (
+            <ProjectSlide
+              key={project.id}
+              project={project}
+              index={index}
+              onOpenDetail={openDetail}
+            />
+          ))}
+        </div>
 
         {hasMoreProjects ? (
           <div className={styles.showMoreWrap}>
@@ -156,6 +176,13 @@ export function FeaturedWork() {
         isOpen={isCatalogMounted}
         isReady={isCatalogReady}
         onClose={() => void closeCatalog()}
+        onOpenDetail={openDetail}
+      />
+
+      <ProjectDetail
+        project={detailProject}
+        isOpen={Boolean(detailProject)}
+        onClose={closeDetail}
       />
     </>
   );

@@ -32,11 +32,13 @@ export function Navigation() {
   const magneticTwo = useMagneticHover<HTMLDivElement>();
   const magneticThree = useMagneticHover<HTMLDivElement>();
   const magneticFour = useMagneticHover<HTMLDivElement>();
+  const magneticFive = useMagneticHover<HTMLDivElement>();
   const magneticHandlers = [
     magneticOne,
     magneticTwo,
     magneticThree,
     magneticFour,
+    magneticFive,
   ];
 
   useEffect(() => {

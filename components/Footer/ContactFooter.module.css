@@ -21,6 +21,24 @@
   gap: var(--space-24);
 }
 
+.resumeNote {
+  margin: 0;
+  font-family: var(--font-description);
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: color-mix(in srgb, var(--footer-foreground) 70%, transparent);
+}
+
+.resumeNote a {
+  color: var(--footer-foreground);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.resumeNote a:hover {
+  opacity: 0.75;
+}
+
 .eyebrow,
 .availability,
 .prompt,

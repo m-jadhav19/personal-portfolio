@@ -15,14 +15,26 @@ export type Project = {
   year?: string;
   role?: string;
   status?: string;
+  /** Recruiter-facing one-liner about what was accomplished */
+  impact?: string;
+  /** Short case-study style contribution (100–150 words) */
+  contribution?: string;
+  /** Structured stack for the technical strip */
+  technologies?: string[];
+  /** Roles played on the project */
+  roles?: string[];
+  caseStudyUrl?: string;
 };
 
-export type Service = {
+export type Capability = {
   id: string;
   title: string;
   imageSrc: string;
   items: string[];
 };
+
+/** @deprecated Use Capability — kept for transitional imports */
+export type Service = Capability;
 
 export type Experience = {
   id: string;
@@ -30,6 +42,9 @@ export type Experience = {
   type: string;
   position: string;
   bullets: string[];
+  company?: string;
+  stack?: string[];
+  summary?: string;
 };
 
 export type Resume = {
@@ -46,6 +61,27 @@ export type Resume = {
   others: string[];
 };
 
+export type TechnicalStackCategory = {
+  id: string;
+  label: string;
+  items: string[];
+};
+
+export type MetricItem = {
+  value: string;
+  label: string;
+  sublabel?: string;
+};
+
+export type Experiment = {
+  id: string;
+  title: string;
+  stack: string[];
+  blurb: string;
+  status?: string;
+  url?: string;
+};
+
 export type Portfolio = {
   name: string;
   headerTaglineOne: string;
@@ -57,21 +93,32 @@ export type Portfolio = {
   darkMode: boolean;
   socials: Social[];
   projects: Project[];
-  services: Service[];
-  servicesIntro: string;
+  capabilities: Capability[];
+  capabilitiesIntro: string;
+  /** @deprecated alias — prefer capabilities */
+  services?: Capability[];
+  servicesIntro?: string;
   aboutCopy: string;
+  technicalStack: TechnicalStackCategory[];
+  techTicker: string[];
+  heroStack: string[];
   stats: {
     yearsExperience: string;
     projectsCompleted: number;
     technologiesMastered: number;
     happyClients: number;
   };
+  metrics: MetricItem[];
   featuredSkills: {
     name: string;
     icon: string;
     color: string;
   }[];
   resume: Resume;
+  resumeUrl: string;
+  experiences: Experience[];
+  exploring: string[];
+  experiments: Experiment[];
   hero: {
     roles: string[];
     portrait: {

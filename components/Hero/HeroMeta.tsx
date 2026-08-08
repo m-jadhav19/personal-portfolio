@@ -52,22 +52,26 @@ export function HeroMeta() {
 
   return (
     <div ref={metaRef} className={styles.meta} data-intro="meta-item">
-      <span className={styles.location}>
-        Based in {portfolio.hero.location}
-        {time ? (
-          <>
-            {" "}
-            <span aria-hidden="true">•</span> {time}
-          </>
-        ) : null}
-      </span>
-
-      {portfolio.hero.availability ? (
-        <span className={styles.status}>
-          <span className={styles.statusDot} aria-hidden="true" />
-          Open to work
+      <div className={styles.metaPrimary}>
+        <span className={styles.location}>
+          {portfolio.hero.location}
+          {time ? (
+            <>
+              {" "}
+              <span aria-hidden="true">—</span> {time}
+            </>
+          ) : null}
         </span>
-      ) : null}
+
+        {portfolio.hero.availability ? (
+          <span className={styles.status}>
+            <span className={styles.statusDot} aria-hidden="true" />
+            Open to work
+          </span>
+        ) : null}
+      </div>
+
+      <p className={styles.stack}>{portfolio.heroStack.join(" · ")}</p>
     </div>
   );
 }

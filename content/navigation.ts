@@ -1,3 +1,5 @@
+import { portfolio } from "@/content/portfolio";
+
 export type NavigationItem = {
   id: string;
   label: string;
@@ -5,10 +7,11 @@ export type NavigationItem = {
 };
 
 export const navigation: NavigationItem[] = [
-  { id: "about", label: "About", number: "01" },
-  { id: "projects", label: "Projects", number: "02" },
-  { id: "services", label: "Services", number: "03" },
-  { id: "contact", label: "Contact", number: "04" },
+  { id: "projects", label: "Work", number: "01" },
+  { id: "about", label: "About", number: "02" },
+  { id: "lab", label: "Lab", number: "03" },
+  { id: "experience", label: "Experience", number: "04" },
+  { id: "contact", label: "Contact", number: "05" },
 ];
 
 export type MobileExtraLink = {
@@ -18,7 +21,11 @@ export type MobileExtraLink = {
 };
 
 export const mobileExtraLinks: MobileExtraLink[] = [
-  { label: "Resume", href: "/resume" },
+  {
+    label: "Resume",
+    href: portfolio.resumeUrl,
+    external: true,
+  },
   { label: "Github", href: "https://github.com/m-jadhav19/", external: true },
   {
     label: "LinkedIn",

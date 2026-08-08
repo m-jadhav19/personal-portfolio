@@ -7,7 +7,9 @@ export type SectionId =
   | "hero"
   | "about"
   | "projects"
-  | "services"
+  | "capabilities"
+  | "experience"
+  | "lab"
   | "contact";
 
 export type SectionDefinition = {
@@ -21,10 +23,12 @@ export type SectionDefinition = {
 
 export const pageSections: SectionDefinition[] = [
   { id: "hero", label: "Hero" },
-  { id: "about", label: "About", number: "01" },
-  { id: "projects", label: "Projects", number: "02", legacyId: "work" },
-  { id: "services", label: "Services", number: "03" },
-  { id: "contact", label: "Contact", number: "04", themeTrigger: true },
+  { id: "projects", label: "Work", number: "01", legacyId: "work" },
+  { id: "about", label: "About", number: "02" },
+  { id: "lab", label: "Lab", number: "03" },
+  { id: "experience", label: "Experience", number: "04" },
+  { id: "capabilities", label: "Capabilities", legacyId: "services" },
+  { id: "contact", label: "Contact", number: "05", themeTrigger: true },
 ];
 
 /** Section ids that toggle dark theme when centered (Contact) */

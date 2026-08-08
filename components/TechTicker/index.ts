@@ -1,0 +1,1 @@
+export { TechTicker } from "./TechTicker";

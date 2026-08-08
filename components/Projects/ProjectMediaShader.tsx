@@ -35,12 +35,20 @@ const VERTEX = /* glsl */ `
   }
 `;
 
-/** Lens magnification + very subtle RGB fringe on hover only. */
+/**
+ * Hover signature: brief RGB separation + pixel displacement + scanline.
+ * Settles quickly (~200–400ms via strength smoothing).
+ */
 const FRAGMENT = /* glsl */ `
   uniform sampler2D uTexture;
   uniform vec2 uMouse;
   uniform float uStrength;
+  uniform float uTime;
   varying vec2 vUv;
+
+  float hash(vec2 p) {
+    return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+  }
 
   void main() {
     if (uStrength < 0.001) {
@@ -50,25 +58,46 @@ const FRAGMENT = /* glsl */ `
 
     vec2 toMouse = uMouse - vUv;
     float dist = length(toMouse);
-    float falloff = smoothstep(0.62, 0.0, dist) * uStrength;
+    float falloff = smoothstep(0.72, 0.0, dist) * uStrength;
 
-    vec2 uv = vUv + toMouse * falloff * 0.05;
+    // Pixel displacement (blocky offset)
+    float pixelSize = mix(120.0, 48.0, uStrength);
+    vec2 pixelUv = floor(vUv * pixelSize) / pixelSize;
+    float noise = hash(pixelUv + floor(uTime * 12.0));
+    vec2 displace = vec2(
+      (noise - 0.5) * 0.028,
+      (hash(pixelUv.yx) - 0.5) * 0.016
+    ) * uStrength;
+
+    vec2 uv = vUv + toMouse * falloff * 0.04 + displace;
     uv = clamp(uv, 0.001, 0.999);
 
-    vec2 dir = dist > 0.0008 ? normalize(toMouse) : vec2(0.08, 0.0);
-    float aberration = falloff * 0.003;
-
+    // RGB separation
+    vec2 dir = dist > 0.0008 ? normalize(toMouse) : vec2(0.12, 0.0);
+    float aberration = falloff * 0.012 + uStrength * 0.006;
     float r = texture2D(uTexture, clamp(uv + dir * aberration, 0.0, 1.0)).r;
     float g = texture2D(uTexture, uv).g;
     float b = texture2D(uTexture, clamp(uv - dir * aberration, 0.0, 1.0)).b;
 
-    float lift = 1.0 + falloff * 0.02;
-    gl_FragColor = vec4(r * lift, g * lift, b * lift, 1.0);
+    // Scanlines
+    float scan = sin((vUv.y + uTime * 0.35) * 780.0) * 0.045 * uStrength;
+    float lift = 1.0 + falloff * 0.03;
+
+    gl_FragColor = vec4(
+      (r + scan) * lift,
+      (g + scan * 0.6) * lift,
+      (b + scan * 0.8) * lift,
+      1.0
+    );
   }
 `;
 
 function prefersReducedMotion() {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+function isCoarsePointer() {
+  return window.matchMedia("(pointer: coarse)").matches;
 }
 
 export function ProjectMediaShader({
@@ -82,14 +111,15 @@ export function ProjectMediaShader({
   useGSAP(
     () => {
       const container = containerRef.current;
-      if (!container || prefersReducedMotion()) return;
+      if (!container || prefersReducedMotion() || isCoarsePointer()) return;
 
       let disposed = false;
       let restingFrameDrawn = false;
       const smooth = {
         mouseX: { current: 0.5, target: 0.5 },
         mouseY: { current: 0.5, target: 0.5 },
-        strength: { current: 0, target: 0, epsilon: 0.01 },
+        // Faster settle (~250–350ms feel) for signature burst
+        strength: { current: 0, target: 0, epsilon: 0.008 },
       };
 
       const renderer = new THREE.WebGLRenderer({
@@ -110,6 +140,7 @@ export function ProjectMediaShader({
         uTexture: { value: null as THREE.Texture | null },
         uMouse: { value: new THREE.Vector2(0.5, 0.5) },
         uStrength: { value: 0 },
+        uTime: { value: 0 },
       };
 
       const material = new THREE.ShaderMaterial({
@@ -143,6 +174,7 @@ export function ProjectMediaShader({
           1 - smooth.mouseY.current,
         );
         uniforms.uStrength.value = smooth.strength.current;
+        uniforms.uTime.value = performance.now() * 0.001;
         renderer.render(scene, camera);
       };
 
@@ -180,7 +212,7 @@ export function ProjectMediaShader({
 
         const moving = stepSmoothChannels(
           [smooth.mouseX, smooth.mouseY, smooth.strength],
-          0.16,
+          0.22,
         );
 
         const interacting =

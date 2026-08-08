@@ -1,0 +1,119 @@
+.experience {
+  position: relative;
+  z-index: 2;
+  padding: clamp(7.5rem, 14vw, 12.5rem) var(--grid-padding-inline)
+    clamp(5rem, 10vw, 8rem);
+  border-top: 1px solid var(--border);
+  background: var(--background);
+}
+
+.label {
+  margin: 0 0 clamp(2rem, 5vw, 3.5rem);
+  font-family: var(--font-mono);
+  font-size: var(--text-label-size);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.current {
+  max-width: min(100%, 72rem);
+}
+
+.dates {
+  margin: 0 0 var(--space-16);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.company {
+  margin: 0;
+  max-width: 100%;
+  font-family: var(--font-display-sans);
+  font-size: clamp(2.25rem, 5.5vw, 5.25rem);
+  font-weight: var(--font-bitcount-weight-semibold);
+  line-height: 0.95;
+  letter-spacing: -0.035em;
+  text-transform: uppercase;
+}
+
+.position {
+  margin: var(--space-16) 0 0;
+  font-family: var(--font-body);
+  font-size: clamp(1.05rem, 2vw, 1.35rem);
+  font-weight: var(--font-bitcount-weight-medium);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.summary {
+  margin: var(--space-8) 0 0;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--foreground) 60%, transparent);
+}
+
+.stack {
+  margin: var(--space-24) 0 0;
+  padding-top: var(--space-16);
+  border-top: 1px solid var(--border);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.previously {
+  margin-top: clamp(3rem, 8vw, 5rem);
+  padding-top: clamp(2rem, 4vw, 3rem);
+  border-top: 1px solid var(--border);
+}
+
+.previouslyLabel {
+  margin: 0 0 var(--space-24);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--foreground) 45%, transparent);
+}
+
+.previousRow {
+  display: grid;
+  grid-template-columns: minmax(8rem, 14rem) minmax(0, 1fr);
+  gap: clamp(1.5rem, 4vw, 3rem);
+  padding-block: var(--space-24);
+  border-bottom: 1px solid var(--border);
+}
+
+.previousTitle {
+  margin: 0;
+  max-width: min(100%, 56rem);
+  font-family: var(--font-display-sans);
+  font-size: clamp(1.5rem, 3.5vw, 2.5rem);
+  font-weight: var(--font-bitcount-weight-semibold);
+  letter-spacing: -0.025em;
+  line-height: 1.05;
+  text-transform: uppercase;
+}
+
+@media (max-width: 767px) {
+  .experience {
+    padding-block: clamp(5rem, 18vw, 7rem);
+  }
+
+  .previousRow {
+    grid-template-columns: 1fr;
+    gap: var(--space-8);
+  }
+
+  .company {
+    font-size: clamp(1.75rem, 10vw, 2.75rem);
+  }
+}

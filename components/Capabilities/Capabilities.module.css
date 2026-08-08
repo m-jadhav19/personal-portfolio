@@ -1,0 +1,224 @@
+.capabilities {
+  position: relative;
+  z-index: 2;
+  padding: clamp(7.5rem, 14vw, 12.5rem) var(--grid-padding-inline)
+    clamp(5rem, 10vw, 8rem);
+  border-top: 1px solid var(--border);
+  background: var(--background);
+}
+
+.label {
+  margin: 0 0 clamp(2rem, 5vw, 4rem);
+  font-family: var(--font-mono);
+  font-size: var(--text-label-size);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(0.5rem, 1.2vw, 0.75rem);
+  overflow: hidden;
+}
+
+.row {
+  display: flex;
+  opacity: 0;
+  transform: translateX(-80px);
+  transition:
+    transform 0.8s var(--ease),
+    opacity 0.8s ease;
+  will-change: transform, opacity;
+}
+
+.rowRight {
+  justify-content: flex-end;
+  transform: translateX(80px);
+}
+
+.rowIndent {
+  padding-left: 10%;
+}
+
+.rowVisible {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.rowInner {
+  display: inline-flex;
+  flex-direction: column;
+  max-width: 100%;
+}
+
+.rowRight .rowInner {
+  align-items: flex-end;
+}
+
+.trigger {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.rowRight .trigger {
+  text-align: right;
+}
+
+.trigger:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 8px;
+}
+
+.title {
+  font-family: var(--font-body);
+  font-size: clamp(2rem, 8vw, 6.5rem);
+  font-weight: var(--font-bitcount-weight-semibold);
+  line-height: 0.9;
+  letter-spacing: -0.025em;
+  text-transform: uppercase;
+}
+
+.index {
+  font-weight: var(--font-bitcount-weight-light);
+  color: color-mix(in srgb, var(--foreground) 40%, transparent);
+}
+
+.thumbnailWrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.06em;
+  font-weight: var(--font-bitcount-weight-light);
+  white-space: nowrap;
+}
+
+.thumbnail {
+  position: relative;
+  display: inline-block;
+  width: 0.62em;
+  height: 0.5em;
+  overflow: hidden;
+  border-radius: 0.08em;
+  background: #000;
+  vertical-align: middle;
+}
+
+.thumbnailImage {
+  object-fit: cover;
+}
+
+.hint {
+  position: absolute;
+  top: 50%;
+  display: none;
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  font-weight: var(--font-bitcount-weight-light);
+  color: color-mix(in srgb, var(--foreground) 55%, transparent);
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateY(-50%);
+  transition: opacity 0.3s ease;
+}
+
+.rowLeft .hint {
+  left: 100%;
+  margin-left: var(--space-16);
+}
+
+.rowRight .hint {
+  right: 100%;
+  margin-right: var(--space-16);
+}
+
+.trigger:hover .hint,
+.trigger:focus-visible .hint {
+  opacity: 1;
+}
+
+.panel {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition:
+    max-height 0.6s var(--ease),
+    opacity 0.5s ease;
+}
+
+.panelOpen {
+  max-height: 15rem;
+  opacity: 1;
+}
+
+.items {
+  margin: var(--space-16) 0 0;
+  font-family: var(--font-body);
+  font-size: clamp(0.875rem, 1.4vw, 1.125rem);
+  font-weight: var(--font-bitcount-weight-light);
+  line-height: 1.35;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--foreground) 65%, transparent);
+}
+
+.rowRight .items {
+  text-align: right;
+}
+
+.intro {
+  max-width: 30rem;
+  margin: clamp(2.5rem, 5vw, 4rem) 0 0 auto;
+  font-family: var(--font-body);
+  font-size: clamp(1rem, 1.35vw, 1.125rem);
+  line-height: 1.45;
+  color: color-mix(in srgb, var(--foreground) 65%, transparent);
+}
+
+@media (min-width: 768px) {
+  .hint {
+    display: block;
+  }
+}
+
+@media (max-width: 767px) {
+  .row,
+  .rowRight {
+    justify-content: flex-start;
+    transform: translateX(0);
+  }
+
+  .rowIndent {
+    padding-left: 0;
+  }
+
+  .rowRight .rowInner,
+  .rowRight .trigger,
+  .rowRight .items {
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .title {
+    font-size: clamp(2rem, 11vw, 3.5rem);
+  }
+
+  .intro {
+    max-width: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .row,
+  .panel,
+  .hint {
+    transition: none;
+  }
+}

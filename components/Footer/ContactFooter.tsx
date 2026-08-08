@@ -8,10 +8,10 @@ export function ContactFooter() {
   return (
     <footer id="contact" className={styles.footer}>
       <div className={styles.top}>
-        <p className={styles.eyebrow}>(04) Contact</p>
+        <p className={styles.eyebrow}>(05) Contact</p>
         <p className={styles.availability}>
           <span aria-hidden="true" />
-          {portfolio.hero.availability ? "Open to work" : "Currently booked"}
+          {portfolio.hero.availability ? "Available for work" : "Currently booked"}
         </p>
       </div>
 
@@ -25,7 +25,7 @@ export function ContactFooter() {
         <a
           className={styles.email}
           href={`mailto:${portfolio.contact.email}`}
-          data-cursor="interactive"
+          data-cursor="external"
         >
           {portfolio.contact.email}
           <span aria-hidden="true">↗</span>
@@ -51,7 +51,7 @@ export function ContactFooter() {
                     ? "noopener noreferrer"
                     : undefined
                 }
-                data-cursor="interactive"
+                data-cursor="external"
               >
                 {social.title}
                 <span aria-hidden="true">↗</span>
@@ -61,8 +61,22 @@ export function ContactFooter() {
         </nav>
       </div>
 
+      <p className={styles.resumeNote}>
+        Want the boring version?{" "}
+        <a
+          href={portfolio.resumeUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          data-cursor="external"
+        >
+          View résumé ↗
+        </a>
+      </p>
+
       <div className={styles.bottom}>
-        <p>© {new Date().getFullYear()} {portfolio.name} Jadhav</p>
+        <p>
+          © {new Date().getFullYear()} {portfolio.name} Jadhav
+        </p>
         <p>{portfolio.contact.credit}</p>
         <BackToTopLink>
           Back to top <span aria-hidden="true">↑</span>

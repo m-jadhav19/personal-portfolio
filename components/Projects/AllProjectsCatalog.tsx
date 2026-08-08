@@ -15,6 +15,7 @@ type AllProjectsCatalogProps = {
   isOpen: boolean;
   isReady: boolean;
   onClose: () => void;
+  onOpenDetail?: (project: Project) => void;
 };
 
 export function AllProjectsCatalog({
@@ -22,6 +23,7 @@ export function AllProjectsCatalog({
   isOpen,
   isReady,
   onClose,
+  onOpenDetail,
 }: AllProjectsCatalogProps) {
   const catalogRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -61,14 +63,15 @@ export function AllProjectsCatalog({
     const ctx = gsap.context(() => {
       gsap.fromTo(
         items,
-        { opacity: 0, y: 36 },
+        { opacity: 0, y: 28, filter: "blur(4px)" },
         {
           opacity: 1,
           y: 0,
-          duration: 0.65,
-          stagger: 0.07,
+          filter: "blur(0px)",
+          duration: 0.55,
+          stagger: 0.055,
           ease: "power3.out",
-          delay: 0.08,
+          delay: 0.06,
         },
       );
     }, list);
@@ -106,21 +109,24 @@ export function AllProjectsCatalog({
       <div ref={scrollRef} className={styles.scrollArea}>
         <div ref={listRef} className={styles.list}>
           {projects.map((project, index) => (
-            <a
+            <div
               key={project.id}
-              href={project.url}
-              target="_blank"
-              rel="noopener noreferrer"
               className={styles.item}
               data-catalog-item
-              data-cursor="interactive"
             >
               <p className={styles.index}>
                 {String(index + 1).padStart(2, "0")}
               </p>
 
               <div className={styles.body}>
-                <div className={styles.thumb} data-catalog-thumb>
+                <a
+                  href={project.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={styles.thumb}
+                  data-catalog-thumb
+                  data-cursor="project"
+                >
                   <Image
                     src={project.imageSrc}
                     alt=""
@@ -128,15 +134,39 @@ export function AllProjectsCatalog({
                     sizes="(max-width: 900px) 100vw, 180px"
                     className={styles.thumbImage}
                   />
-                </div>
+                </a>
 
                 <div className={styles.copy} data-catalog-copy>
                   <p className={styles.meta}>
-                    {project.role ?? "Design & Development"}
+                    {project.year ?? "—"}
+                    {project.status ? ` · ${project.status}` : ""}
                   </p>
                   <h3 className={styles.projectTitle}>{project.title}</h3>
-                  <p className={styles.description}>{project.description}</p>
-                  <p className={styles.tags}>{project.tags.join(" · ")}</p>
+                  <p className={styles.description}>
+                    {project.impact ?? project.description}
+                  </p>
+                  <p className={styles.tags}>
+                    {(project.technologies ?? project.tags).join(" · ")}
+                  </p>
+                  <div className={styles.itemActions}>
+                    <a
+                      href={project.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      data-cursor="external"
+                    >
+                      View project ↗
+                    </a>
+                    {onOpenDetail ? (
+                      <button
+                        type="button"
+                        onClick={() => onOpenDetail(project)}
+                        data-cursor="interactive"
+                      >
+                        Case study →
+                      </button>
+                    ) : null}
+                  </div>
                 </div>
               </div>
 
@@ -144,14 +174,11 @@ export function AllProjectsCatalog({
                 {project.year ? (
                   <p className={styles.year}>{project.year}</p>
                 ) : null}
-                {project.status ? (
-                  <p className={styles.status}>{project.status}</p>
-                ) : null}
                 <span className={styles.arrow} aria-hidden="true">
                   ↗
                 </span>
               </div>
-            </a>
+            </div>
           ))}
         </div>
       </div>

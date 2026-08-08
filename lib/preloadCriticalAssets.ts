@@ -13,7 +13,7 @@ export function getCriticalImageUrls() {
   return uniqueUrls([
     portfolio.hero.portrait.src,
     ...featured.map((project) => project.imageSrc),
-    ...portfolio.services.map((service) => service.imageSrc),
+    ...portfolio.capabilities.map((capability) => capability.imageSrc),
   ]);
 }
 

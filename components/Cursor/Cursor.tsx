@@ -7,16 +7,49 @@ import { gsap } from "gsap";
 
 const BASE_SIZE = 12;
 const HOVER_SIZE = 28;
+const LABEL_SIZE = 56;
 /** Snappy enough to feel attached; soft enough to avoid jitter. */
 const FOLLOW = 0.42;
 
 const INTERACTIVE_SELECTOR =
-  'a, button, [data-cursor="nav"], [data-cursor="interactive"]';
+  'a, button, [data-cursor="nav"], [data-cursor="interactive"], [data-cursor="project"], [data-cursor="external"], [data-cursor="explore"]';
 const HIDE_CURSOR_SELECTOR = '[data-cursor="hide"]';
 
+type CursorMode = "default" | "project" | "external" | "explore" | "interactive";
+
+function resolveMode(element: Element): CursorMode {
+  if (element.closest('[data-cursor="project"]')) return "project";
+  if (element.closest('[data-cursor="external"]')) return "external";
+  if (element.closest('[data-cursor="explore"]')) return "explore";
+  if (
+    element.closest(
+      'a[target="_blank"], a[href^="http"], a[href^="mailto:"]',
+    )
+  ) {
+    return "external";
+  }
+  if (element.closest(INTERACTIVE_SELECTOR)) return "interactive";
+  return "default";
+}
+
+function labelForMode(mode: CursorMode) {
+  switch (mode) {
+    case "project":
+      return "VIEW";
+    case "external":
+      return "OPEN ↗";
+    case "explore":
+      return "EXPLORE";
+    default:
+      return "+";
+  }
+}
+
 export function Cursor() {
-  const dotRef = useRef<HTMLDivElement>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const labelRef = useRef<HTMLSpanElement>(null);
   const sizeRef = useRef(BASE_SIZE);
+  const modeRef = useRef<CursorMode>("default");
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -26,8 +59,9 @@ export function Cursor() {
   useEffect(() => {
     if (!mounted) return;
 
-    const dot = dotRef.current;
-    if (!dot) return;
+    const root = rootRef.current;
+    const label = labelRef.current;
+    if (!root || !label) return;
 
     const prefersReducedMotion = window.matchMedia(
       "(prefers-reduced-motion: reduce)",
@@ -53,12 +87,12 @@ export function Cursor() {
         hasMoved = true;
         curX = mouseX;
         curY = mouseY;
-        gsap.set(dot, { x: curX, y: curY, opacity: 1 });
+        gsap.set(root, { x: curX, y: curY, opacity: 1 });
       }
 
       if (!visible) {
         visible = true;
-        gsap.to(dot, { opacity: 1, duration: 0.12, overwrite: "auto" });
+        gsap.to(root, { opacity: 1, duration: 0.12, overwrite: "auto" });
       }
     };
 
@@ -72,13 +106,13 @@ export function Cursor() {
 
       curX += dx * FOLLOW;
       curY += dy * FOLLOW;
-      gsap.set(dot, { x: curX, y: curY });
+      gsap.set(root, { x: curX, y: curY });
     };
 
     const scaleTo = (size: number) => {
       if (sizeRef.current === size) return;
       sizeRef.current = size;
-      gsap.to(dot, {
+      gsap.to(root, {
         width: size,
         height: size,
         duration: 0.16,
@@ -87,25 +121,43 @@ export function Cursor() {
       });
     };
 
+    const setMode = (mode: CursorMode) => {
+      if (modeRef.current === mode) return;
+      modeRef.current = mode;
+      label.textContent = labelForMode(mode);
+      const showLabel = mode !== "default" && mode !== "interactive";
+      label.style.opacity = showLabel || mode === "default" ? "1" : "0.85";
+      if (mode === "default") {
+        label.style.fontSize = "0.7rem";
+      } else if (showLabel) {
+        label.style.fontSize = "0.55rem";
+      }
+    };
+
     const onMouseOver = (event: MouseEvent) => {
       const target = event.target;
       if (!(target instanceof Element)) return;
 
       if (target.closest(HIDE_CURSOR_SELECTOR)) {
-        gsap.to(dot, { opacity: 0, duration: 0.1, overwrite: "auto" });
+        gsap.to(root, { opacity: 0, duration: 0.1, overwrite: "auto" });
         scaleTo(BASE_SIZE);
+        setMode("default");
         return;
       }
 
       if (hasMoved) {
-        gsap.to(dot, { opacity: 1, duration: 0.1, overwrite: "auto" });
+        gsap.to(root, { opacity: 1, duration: 0.1, overwrite: "auto" });
       }
 
-      if (
-        target.closest(INTERACTIVE_SELECTOR) &&
-        !target.closest(HIDE_CURSOR_SELECTOR)
-      ) {
+      const mode = resolveMode(target);
+      setMode(mode);
+
+      if (mode === "project" || mode === "external" || mode === "explore") {
+        scaleTo(LABEL_SIZE);
+      } else if (target.closest(INTERACTIVE_SELECTOR)) {
         scaleTo(HOVER_SIZE);
+      } else {
+        scaleTo(BASE_SIZE);
       }
     };
 
@@ -122,7 +174,7 @@ export function Cursor() {
           return;
         }
         if (hasMoved) {
-          gsap.to(dot, { opacity: 1, duration: 0.1, overwrite: "auto" });
+          gsap.to(root, { opacity: 1, duration: 0.1, overwrite: "auto" });
         }
         return;
       }
@@ -132,14 +184,15 @@ export function Cursor() {
         return;
       }
       scaleTo(BASE_SIZE);
+      setMode("default");
     };
 
     const onLeaveWindow = () => {
       visible = false;
-      gsap.to(dot, { opacity: 0, duration: 0.15, overwrite: "auto" });
+      gsap.to(root, { opacity: 0, duration: 0.15, overwrite: "auto" });
     };
 
-    gsap.set(dot, {
+    gsap.set(root, {
       x: mouseX,
       y: mouseY,
       xPercent: -50,
@@ -148,6 +201,7 @@ export function Cursor() {
       height: BASE_SIZE,
       opacity: 0,
     });
+    setMode("default");
 
     gsap.ticker.add(animateCursor);
     window.addEventListener("mousemove", moveCursor, { passive: true });
@@ -169,11 +223,23 @@ export function Cursor() {
 
   return createPortal(
     <div
-      ref={dotRef}
+      ref={rootRef}
       aria-hidden="true"
-      className="pointer-events-none fixed top-0 left-0 rounded-full bg-white mix-blend-difference"
+      className="pointer-events-none fixed top-0 left-0 flex items-center justify-center overflow-hidden rounded-full bg-white mix-blend-difference"
       style={{ willChange: "transform", zIndex: "var(--z-cursor)" }}
-    />,
+    >
+      <span
+        ref={labelRef}
+        className="select-none font-mono font-semibold tracking-widest text-black"
+        style={{
+          fontSize: "0.7rem",
+          lineHeight: 1,
+          letterSpacing: "0.12em",
+        }}
+      >
+        +
+      </span>
+    </div>,
     document.body,
   );
 }

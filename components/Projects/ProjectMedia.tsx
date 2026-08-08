@@ -61,7 +61,7 @@ export function ProjectMedia({ project }: ProjectMediaProps) {
       target="_blank"
       rel="noopener noreferrer"
       className={styles.media}
-      data-cursor="hide"
+      data-cursor="project"
       onMouseEnter={() => {
         pointerRef.current.hovered = true;
         setIsHovering(true);
@@ -84,7 +84,7 @@ export function ProjectMedia({ project }: ProjectMediaProps) {
         className={`${styles.viewBtn} ${isHovering ? styles.viewBtnVisible : ""}`}
         aria-hidden="true"
       >
-        View project
+        View project →
       </span>
     </a>
   );
