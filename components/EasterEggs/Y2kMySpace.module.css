@@ -7,15 +7,15 @@
   background-image:
     repeating-linear-gradient(
       45deg,
-      #ff66cc 0,
-      #ff66cc 12px,
-      #66ffff 12px,
-      #66ffff 24px
+      var(--myspace-pink, #f890e7) 0,
+      var(--myspace-pink, #f890e7) 12px,
+      var(--myspace-cyan, #0bd3d3) 12px,
+      var(--myspace-cyan, #0bd3d3) 24px
     ),
     repeating-linear-gradient(
       -45deg,
-      #ffff66 0,
-      #ffff66 12px,
+      var(--myspace-gray, #d0d0d0) 0,
+      var(--myspace-gray, #d0d0d0) 12px,
       transparent 12px,
       transparent 24px
     );
@@ -33,8 +33,8 @@
   position: absolute;
   bottom: -2rem;
   font-size: 1.2rem;
-  color: #ff0099;
-  text-shadow: 0 0 6px #ff66cc;
+  color: var(--myspace-pink, #f890e7);
+  text-shadow: 0 0 6px var(--myspace-cyan, #0bd3d3);
   animation: heartFloat 5s linear forwards;
 }
 
@@ -96,17 +96,23 @@
   right: 0;
   z-index: 10035;
   padding: 0.4rem 0;
-  background: linear-gradient(90deg, #ff00ff, #00ffff, #ffff00, #ff00ff);
+  background: linear-gradient(
+    90deg,
+    var(--myspace-pink, #f890e7),
+    var(--myspace-cyan, #0bd3d3),
+    var(--myspace-white, #ffffff),
+    var(--myspace-pink, #f890e7)
+  );
   background-size: 200% 100%;
   animation: marqueeBg 4s linear infinite;
-  color: #000;
+  color: var(--myspace-black, #000000);
   font-family: var(--font-easter-myspace);
   font-size: 0.95rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   overflow: hidden;
   pointer-events: auto;
-  border-bottom: 4px ridge #fff;
+  border-bottom: 4px ridge var(--myspace-white, #ffffff);
 }
 
 @keyframes marqueeBg {
@@ -139,13 +145,13 @@
   position: fixed;
   z-index: 10035;
   padding: 0.75rem;
-  border: 3px ridge #ff66cc;
-  background: rgba(255, 240, 255, 0.94);
-  color: #330033;
+  border: 3px ridge var(--myspace-pink, #f890e7);
+  background: rgba(255, 255, 255, 0.94);
+  color: var(--myspace-black, #000000);
   font-family: var(--font-easter-myspace);
   box-shadow:
-    0 0 0 2px #00ffff,
-    4px 4px 0 #000;
+    0 0 0 2px var(--myspace-cyan, #0bd3d3),
+    4px 4px 0 var(--myspace-black, #000000);
   pointer-events: auto;
 }
 
@@ -165,9 +171,13 @@
   bottom: 4.5rem;
   left: 0.75rem;
   width: min(300px, calc(100vw - 1.5rem));
-  background: linear-gradient(180deg, #2a2a3a 0%, #1a1a28 100%);
-  border-color: #666;
-  color: #00ff00;
+  background: linear-gradient(
+    180deg,
+    var(--myspace-black, #000000) 0%,
+    #111111 100%
+  );
+  border-color: var(--myspace-gray, #d0d0d0);
+  color: var(--myspace-cyan, #0bd3d3);
 }
 
 .commentsPanel {
@@ -196,15 +206,15 @@
   margin: 0 0 0.5rem;
   font-size: 0.95rem;
   font-weight: 700;
-  text-decoration: underline wavy #ff00ff;
+  text-decoration: underline wavy var(--myspace-pink, #f890e7);
 }
 
 .online {
   display: inline-block;
   margin-bottom: 0.35rem;
   padding: 0.15rem 0.45rem;
-  background: #00ff00;
-  color: #003300;
+  background: var(--myspace-cyan, #0bd3d3);
+  color: var(--myspace-black, #000000);
   font-size: 0.7rem;
   font-weight: 700;
   animation: blink 1s step-end infinite;
@@ -214,8 +224,8 @@
   display: inline-block;
   margin-left: 0.35rem;
   padding: 0.1rem 0.35rem;
-  background: #ff0000;
-  color: #fff;
+  background: var(--myspace-pink, #f890e7);
+  color: var(--myspace-black, #000000);
   font-size: 0.6rem;
   font-weight: 700;
   animation: blink 0.5s step-end infinite;
@@ -233,14 +243,14 @@
 }
 
 .mood strong {
-  color: #ff0099;
+  color: var(--myspace-pink, #f890e7);
 }
 
 .profileQuote {
   margin-top: 0.5rem;
   padding: 0.35rem;
-  border: 2px dashed #ff66cc;
-  background: #fffacd;
+  border: 2px dashed var(--myspace-pink, #f890e7);
+  background: var(--myspace-gray, #d0d0d0);
   font-size: 0.72rem;
   font-style: italic;
   text-align: center;
@@ -268,8 +278,8 @@
   left: -0.15rem;
   z-index: 1;
   padding: 0.05rem 0.2rem;
-  background: #ff0099;
-  color: #fff;
+  background: var(--myspace-pink, #f890e7);
+  color: var(--myspace-black, #000000);
   font-size: 0.5rem;
   font-weight: 700;
 }
@@ -278,14 +288,14 @@
   width: 100%;
   aspect-ratio: 1;
   object-fit: cover;
-  border: 2px solid #ff66cc;
+  border: 2px solid var(--myspace-cyan, #0bd3d3);
 }
 
 .nowPlaying {
   margin: 0;
   font-size: 0.8rem;
   line-height: 1.35;
-  color: #aaffaa;
+  color: var(--myspace-cyan, #0bd3d3);
 }
 
 .playerRow {
@@ -297,8 +307,8 @@
 
 .albumArt {
   flex-shrink: 0;
-  border: 2px solid #444;
-  box-shadow: 0 0 8px rgba(0, 255, 0, 0.3);
+  border: 2px solid var(--myspace-gray, #d0d0d0);
+  box-shadow: 0 0 8px rgba(11, 211, 211, 0.35);
 }
 
 .albumArtPlaceholder {
@@ -306,9 +316,9 @@
   place-items: center;
   width: 52px;
   height: 52px;
-  border: 2px solid #444;
-  background: #333;
-  color: #00ff00;
+  border: 2px solid var(--myspace-gray, #d0d0d0);
+  background: var(--myspace-black, #000000);
+  color: var(--myspace-cyan, #0bd3d3);
   font-size: 0.65rem;
   font-weight: 700;
 }
@@ -321,7 +331,7 @@
   margin: 0;
   font-size: 0.75rem;
   font-weight: 700;
-  color: #00ff00;
+  color: var(--myspace-cyan, #0bd3d3);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -330,7 +340,7 @@
 .trackArtist {
   margin: 0.1rem 0 0;
   font-size: 0.68rem;
-  color: #88ff88;
+  color: var(--myspace-pink, #f890e7);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -339,7 +349,7 @@
 .trackYear {
   margin: 0.1rem 0 0;
   font-size: 0.6rem;
-  color: #66aa66;
+  color: var(--myspace-gray, #d0d0d0);
 }
 
 .equalizer {
@@ -357,8 +367,8 @@
 .bar {
   width: 5px;
   height: 20%;
-  background: #00ff00;
-  box-shadow: 0 0 4px #00ff00;
+  background: var(--myspace-cyan, #0bd3d3);
+  box-shadow: 0 0 4px var(--myspace-cyan, #0bd3d3);
 }
 
 .bar:nth-child(2) {
@@ -403,21 +413,21 @@
 
 .playerControls button {
   padding: 0.2rem 0.45rem;
-  border: 2px outset #555;
-  background: #333;
-  color: #00ff00;
+  border: 2px outset var(--myspace-gray, #d0d0d0);
+  background: var(--myspace-black, #000000);
+  color: var(--myspace-cyan, #0bd3d3);
   font-size: 0.75rem;
   cursor: pointer;
 }
 
 .playerControls button:hover {
-  background: #444;
+  background: #1a1a1a;
 }
 
 .volumeSlider {
   flex: 1;
   min-width: 0;
-  accent-color: #00ff00;
+  accent-color: var(--myspace-cyan, #0bd3d3);
 }
 
 .unmuteButton {
@@ -425,9 +435,9 @@
   width: 100%;
   margin-top: 0.45rem;
   padding: 0.35rem;
-  border: 2px dashed #ffea00;
-  background: #332200;
-  color: #ffea00;
+  border: 2px dashed var(--myspace-pink, #f890e7);
+  background: var(--myspace-black, #000000);
+  color: var(--myspace-pink, #f890e7);
   font: inherit;
   font-size: 0.68rem;
   cursor: pointer;
@@ -437,13 +447,13 @@
 .musicError {
   margin: 0.35rem 0 0;
   font-size: 0.65rem;
-  color: #ff6666;
+  color: var(--myspace-pink, #f890e7);
 }
 
 .musicCredit {
   margin: 0.35rem 0 0;
   font-size: 0.55rem;
-  color: #558855;
+  color: var(--myspace-gray, #d0d0d0);
 }
 
 .commentList {
@@ -455,13 +465,13 @@
 .commentItem {
   margin-bottom: 0.45rem;
   padding-bottom: 0.35rem;
-  border-bottom: 1px dotted #ff66cc;
+  border-bottom: 1px dotted var(--myspace-pink, #f890e7);
   font-size: 0.68rem;
   line-height: 1.35;
 }
 
 .commentItem strong {
-  color: #ff0099;
+  color: var(--myspace-pink, #f890e7);
 }
 
 .webRing {
@@ -472,9 +482,9 @@
 
 .webRingLink {
   padding: 0.25rem 0.4rem;
-  border: 2px inset #ccc;
-  background: #ffff99;
-  color: #330033;
+  border: 2px inset var(--myspace-gray, #d0d0d0);
+  background: var(--myspace-white, #ffffff);
+  color: var(--myspace-black, #000000);
   font: inherit;
   font-size: 0.65rem;
   text-align: left;
@@ -482,7 +492,7 @@
 }
 
 .webRingLink:hover {
-  background: #ffff66;
+  background: var(--myspace-gray, #d0d0d0);
 }
 
 .visitorCount {
@@ -490,13 +500,13 @@
   font-family: var(--font-easter-myspace);
   font-size: 1.2rem;
   font-weight: 700;
-  color: #ff0099;
+  color: var(--myspace-pink, #f890e7);
 }
 
 .visitorLabel {
   margin: 0;
   font-size: 0.65rem;
-  color: #660066;
+  color: var(--myspace-black, #000000);
 }
 
 .underConstruction {
@@ -514,21 +524,21 @@
 
 .blinkie {
   padding: 0.1rem 0.3rem;
-  border: 1px solid #000;
-  background: #00ffff;
-  color: #000;
+  border: 1px solid var(--myspace-black, #000000);
+  background: var(--myspace-cyan, #0bd3d3);
+  color: var(--myspace-black, #000000);
   font-size: 0.55rem;
   font-weight: 700;
   animation: blink 0.6s step-end infinite;
 }
 
 .blinkie:nth-child(2) {
-  background: #ff00ff;
+  background: var(--myspace-pink, #f890e7);
   animation-delay: 0.2s;
 }
 
 .blinkie:nth-child(3) {
-  background: #ffff00;
+  background: var(--myspace-white, #ffffff);
   animation-delay: 0.4s;
 }
 
@@ -539,9 +549,9 @@
   z-index: 10036;
   transform: translateX(-50%);
   padding: 0.35rem 0.85rem;
-  border: 3px outset #ccc;
-  background: #c0c0c0;
-  color: #000;
+  border: 3px outset var(--myspace-gray, #d0d0d0);
+  background: var(--myspace-gray, #d0d0d0);
+  color: var(--myspace-black, #000000);
   font-family: var(--font-easter-myspace);
   font-size: 0.75rem;
   cursor: pointer;
@@ -549,7 +559,7 @@
 }
 
 .exitButton:hover {
-  background: #ddd;
+  background: var(--myspace-white, #ffffff);
 }
 
 .guestbookButton {
@@ -557,16 +567,16 @@
   width: 100%;
   margin-top: 0.5rem;
   padding: 0.35rem;
-  border: 2px inset #ccc;
-  background: #ffff99;
-  color: #000;
+  border: 2px inset var(--myspace-gray, #d0d0d0);
+  background: var(--myspace-white, #ffffff);
+  color: var(--myspace-black, #000000);
   font: inherit;
   font-size: 0.75rem;
   cursor: pointer;
 }
 
 .guestbookButton:hover {
-  background: #ffff66;
+  background: var(--myspace-gray, #d0d0d0);
 }
 
 .guestbookModal {
@@ -586,9 +596,9 @@
   max-height: 80vh;
   overflow: auto;
   padding: 1rem;
-  border: 4px ridge #ff66cc;
-  background: #fff0ff;
-  color: #330033;
+  border: 4px ridge var(--myspace-pink, #f890e7);
+  background: var(--myspace-white, #ffffff);
+  color: var(--myspace-black, #000000);
   font-family: var(--font-easter-myspace);
 }
 
@@ -610,15 +620,15 @@
 .guestbookEntries li {
   margin-bottom: 0.5rem;
   padding: 0.35rem;
-  border: 1px dashed #ff66cc;
-  background: #fffacd;
+  border: 1px dashed var(--myspace-pink, #f890e7);
+  background: var(--myspace-gray, #d0d0d0);
   font-size: 0.78rem;
 }
 
 .guestbookCard button {
   padding: 0.35rem 0.75rem;
-  border: 2px outset #ccc;
-  background: #c0c0c0;
+  border: 2px outset var(--myspace-gray, #d0d0d0);
+  background: var(--myspace-gray, #d0d0d0);
   font: inherit;
   cursor: pointer;
 }
@@ -630,9 +640,9 @@
   z-index: 10037;
   transform: translateX(-50%);
   padding: 0.35rem 0.75rem;
-  border: 2px solid #000;
-  background: #000;
-  color: #00ff00;
+  border: 2px solid var(--myspace-cyan, #0bd3d3);
+  background: var(--myspace-black, #000000);
+  color: var(--myspace-cyan, #0bd3d3);
   font-family: var(--font-easter-myspace);
   font-size: 0.7rem;
   pointer-events: none;
@@ -645,9 +655,9 @@
   right: 0.75rem;
   z-index: 10038;
   padding: 0.35rem 0.65rem;
-  border: 2px solid #ff0099;
-  background: #ffff99;
-  color: #330033;
+  border: 2px solid var(--myspace-pink, #f890e7);
+  background: var(--myspace-white, #ffffff);
+  color: var(--myspace-black, #000000);
   font-family: var(--font-easter-myspace);
   font-size: 0.72rem;
   pointer-events: none;

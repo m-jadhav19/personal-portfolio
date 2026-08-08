@@ -95,7 +95,7 @@ function drawMyspace(ctx: CanvasRenderingContext2D, frame: number) {
   const shift = Math.sin(frame * 0.12) * 0.5 + 0.5;
   gradient.addColorStop(0, c.myspacePink);
   gradient.addColorStop(0.45 + shift * 0.1, c.myspaceCyan);
-  gradient.addColorStop(1, c.myspaceYellow);
+  gradient.addColorStop(1, c.myspaceWhite);
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, SIZE, SIZE);
 
@@ -118,12 +118,12 @@ function drawMyspace(ctx: CanvasRenderingContext2D, frame: number) {
     const bob = Math.sin(frame * 0.2 + index) * 1.5;
     const blink = Math.sin(frame * 0.3 + index * 2) > -0.2;
     if (!blink) return;
-    ctx.fillStyle = index % 2 === 0 ? "#ffffff" : "#ff0099";
+    ctx.fillStyle = index % 2 === 0 ? c.myspaceWhite : c.myspacePink;
     ctx.fillText(sparkle.glyph, sparkle.x, sparkle.y + bob);
   });
 
   if (frame % 20 < 10) {
-    ctx.fillStyle = "#00ff00";
+    ctx.fillStyle = c.myspaceCyan;
     ctx.fillRect(4, 4, 4, 4);
   }
 }

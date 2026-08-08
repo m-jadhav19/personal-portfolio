@@ -4,7 +4,7 @@
   --background: #0e0e0e;
   --foreground: #f5f4f0;
 
-  --muted: #6b82b0;
+  --muted: #f5f4f0;
   --border: rgba(200, 218, 255, 0.12);
 
   --accent: #3b6fff;
@@ -46,7 +46,7 @@
   --nav-height: 80px;
 
   /* Light footer contrast on dark site */
-  --footer-background: #f5f4f0;
+  --footer-background: #3b6fff;
   --footer-foreground: #0e0e0e;
   --footer-muted: #f5f4f0;
   --footer-border: rgba(10, 20, 40, 0.12);
