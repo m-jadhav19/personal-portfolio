@@ -52,11 +52,11 @@ export const portfolio: Portfolio = {
   ],
   contact: {
     email: "jadhavmandar44@gmail.com",
-    phone: "",
+    phone: "+91-8956193777",
     cta: "Let's build something interesting.",
     credit: "Designed & Developed by Mandar",
   },
-  resumeUrl: "https://www.linkedin.com/in/mjadhav19/",
+  resumeUrl: "/resume",
   projects: [
     {
       id: "1",

@@ -28,7 +28,6 @@ export function ContactFooter() {
             className={styles.email}
             href={`mailto:${portfolio.contact.email}`}
             data-cursor="link"
-            data-cursor-text="OPEN ↗"
           >
             {portfolio.contact.email}
             <span aria-hidden="true">↗</span>
@@ -56,7 +55,6 @@ export function ContactFooter() {
                     : undefined
                 }
                 data-cursor="link"
-                data-cursor-text="OPEN ↗"
               >
                 {social.title}
                 <span aria-hidden="true">↗</span>
@@ -69,13 +67,7 @@ export function ContactFooter() {
       <div className={styles.resumeNote}>
         Want the boring version?{" "}
         <Magnetic strength={0.2}>
-          <a
-            href={portfolio.resumeUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            data-cursor="link"
-            data-cursor-text="OPEN ↗"
-          >
+          <a href={portfolio.resumeUrl} data-cursor="link">
             View résumé ↗
           </a>
         </Magnetic>

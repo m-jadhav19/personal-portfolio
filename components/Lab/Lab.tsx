@@ -68,7 +68,6 @@ export function Lab() {
               className={styles.exploringItem}
               data-lab-reveal
               data-cursor="lab"
-              data-cursor-text="EXPERIMENT"
             >
               <span className={styles.exploringIndex}>
                 {String(index + 1).padStart(2, "0")}
@@ -109,7 +108,6 @@ export function Lab() {
                 className={styles.experiment}
                 data-lab-reveal
                 data-cursor="lab"
-                data-cursor-text="EXPERIMENT"
               >
                 {content}
               </a>
@@ -122,7 +120,6 @@ export function Lab() {
               className={styles.experiment}
               data-lab-reveal
               data-cursor="lab"
-              data-cursor-text="EXPERIMENT"
             >
               {content}
             </article>

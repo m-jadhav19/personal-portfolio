@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 
 import {
   INTRO_COMPLETE_EVENT,
@@ -19,6 +20,7 @@ import { NavItem } from "./NavItem";
 import styles from "./Navigation.module.css";
 
 export function Navigation() {
+  const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { isHidden } = useHeaderScroll();
   const scrollToSection = useSmoothScroll();
@@ -42,6 +44,8 @@ export function Navigation() {
   ];
 
   useEffect(() => {
+    if (pathname !== "/") return;
+
     const runIntro = () => {
       if (hasPlayedIntro.current && process.env.NODE_ENV !== "development") {
         return;
@@ -64,11 +68,15 @@ export function Navigation() {
     return () => {
       window.removeEventListener(INTRO_COMPLETE_EVENT, runIntro);
     };
-  }, []);
+  }, [pathname]);
 
   const setLinkRef = (index: number) => (element: HTMLAnchorElement | null) => {
     if (element) linkRefs.current[index] = element;
   };
+
+  if (pathname?.startsWith("/resume")) {
+    return null;
+  }
 
   const headerClassName = [
     styles.header,

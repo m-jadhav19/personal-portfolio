@@ -1,5 +1,7 @@
 "use client";
 
+import { usePathname } from "next/navigation";
+
 import { BarOverlay } from "@/components/BarOverlay";
 import { Cursor } from "@/components/Cursor/Cursor";
 import { DynamicFavicon } from "@/components/DynamicFavicon";
@@ -14,16 +16,23 @@ type ProvidersProps = {
 };
 
 export function Providers({ children }: ProvidersProps) {
+  const pathname = usePathname();
+  const isResume = pathname?.startsWith("/resume");
+
   useLenis();
 
   return (
     <MyspaceThemeProvider>
-      <ShapeOverlay />
-      <BarOverlay />
-      <Loader />
-      <Navigation />
-      <Cursor />
-      <DynamicFavicon />
+      {!isResume ? (
+        <>
+          <ShapeOverlay />
+          <BarOverlay />
+          <Loader />
+          <Navigation />
+          <Cursor />
+          <DynamicFavicon />
+        </>
+      ) : null}
       {children}
     </MyspaceThemeProvider>
   );

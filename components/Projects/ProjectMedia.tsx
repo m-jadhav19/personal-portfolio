@@ -20,7 +20,6 @@ export function ProjectMedia({ project }: ProjectMediaProps) {
       rel="noopener noreferrer"
       className={`${styles.media} ${isHovering ? styles.mediaHovered : ""}`}
       data-cursor="project"
-      data-cursor-text="VIEW →"
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => setIsHovering(false)}
       aria-label={`View ${project.title}`}

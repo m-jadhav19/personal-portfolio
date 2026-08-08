@@ -13,7 +13,6 @@ export function BackToTopLink({ children }: BackToTopLinkProps) {
     <a
       href="#top"
       data-cursor="button"
-      data-cursor-text="→"
       onClick={(event) => {
         event.preventDefault();
         void scrollToSection("top");

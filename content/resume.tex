@@ -1,0 +1,159 @@
+\documentclass[letterpaper,11pt]{article}
+
+\usepackage{latexsym}
+\usepackage[empty]{fullpage}
+\usepackage{titlesec}
+\usepackage{marvosym}
+\usepackage[usenames,dvipsnames]{color}
+\usepackage{verbatim}
+\usepackage{enumitem}
+\usepackage[pdftex]{hyperref}
+\usepackage{fancyhdr}
+\newcommand{\Csh}{C{\lserif\#}}
+
+\pagestyle{fancy}
+\fancyhf{} % clear all header and footer fields
+\fancyfoot{}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+
+% Adjust margins
+\addtolength{\oddsidemargin}{-0.375in}
+\addtolength{\evensidemargin}{-0.375in}
+\addtolength{\textwidth}{1in}
+\addtolength{\topmargin}{-.5in}
+\addtolength{\textheight}{1.15in}
+
+\urlstyle{same}
+
+\raggedbottom
+\raggedright
+\setlength{\tabcolsep}{0in}
+\setlength{\parskip}{0pt}
+\titlespacing{\section}{0pt}{8pt}{4pt}
+
+% Sections formatting
+\titleformat{\section}{
+  \scshape\raggedright\large
+}{}{0em}{}[\color{black}\titlerule]
+
+%-------------------------
+% Custom commands
+\newcommand{\resumeItem}[2]{
+  \item\small{
+    \textbf{#1}{: #2 \vspace{-2pt}}
+  }
+}
+
+\newcommand{\resumeSubheading}[4]{
+  \vspace{6pt}\item
+    \begin{tabular*}{0.97\textwidth}{l@{\extracolsep{\fill}}r}
+      \textbf{#1} & #2 \\
+      \textit{\small#3} & \textit{\small #4} \\
+    \end{tabular*}\vspace{-2pt}
+}
+
+\newcommand{\resumeSubItem}[2]{\resumeItem{#1}{#2}\vspace{-4pt}}
+
+\renewcommand{\labelitemii}{$\circ$}
+
+\newcommand{\resumeSubHeadingListStart}{\begin{itemize}[leftmargin=*]}
+\newcommand{\resumeSubHeadingListEnd}{\end{itemize}}
+\newcommand{\resumeItemListStart}{\begin{itemize}[topsep=0pt, itemsep=-2pt, leftmargin=*]}
+\newcommand{\resumeItemListEnd}{\end{itemize}\vspace{2pt}}
+\begin{document}
+
+%----------HEADING-----------------
+\begin{center}
+  \textbf{\Huge Mandar Jadhav} \\
+  \vspace{2pt}
+  \href{mailto:jadhavmandar44@gmail.com}{jadhavmandar44@gmail.com} \quad | \quad
+  \href{https://mandar.is-a.dev/}{Portfolio} \quad | \quad
+  \href{https://github.com/m-jadhav19/}{GitHub} \quad | \quad
+  \href{https://www.linkedin.com/in/mjadhav19/}{LinkedIn} \quad | \quad
+  +91-8956193777
+\end{center}
+
+%----------CAREER SUMMARY------------
+\section{Career Summary}
+  \vspace{-2pt}
+  \small
+Frontend Developer specializing in building modern, responsive web applications and IoT solutions.
+
+  \textbf{Key Highlights:}
+  \resumeItemListStart
+    \resumeItem{Cross-Framework Development}{Experienced across React.js, Vue.js, and Next.js, building production-grade interfaces for e-commerce and B2B/D2C platforms.}
+    \resumeItem{Mentorship \& Process Improvement}{Mentored junior developers and introduced collaboration tools that improved team productivity and delivery speed.}
+    \resumeItem{Web3 and IoT}{Prior experience with Web3 and IoT projects, integrating emerging technologies into scalable solutions.}
+  \resumeItemListEnd
+
+%-----------SKILLS-----------------
+\section{Skills}
+ \resumeSubHeadingListStart
+   \item{\textbf{Languages \& Technologies:} HTML5, CSS3, JavaScript, TypeScript, PHP, C{\lserif\#}}
+   \item{\textbf{Frameworks \& Libraries:} React.js, Next.js, Vue.js, Nuxt, React Native}
+   \item{\textbf{Web3 \& UI/UX:} Solidity, Web3.js, Figma, Redux, Bootstrap, Tailwind CSS}
+   \item{\textbf{E-Commerce:} Shopify App Development, B2B/D2C Platform Integrations}
+   \item{\textbf{Performance \& Optimization:} Code Splitting, Lazy Loading, Web Performance Optimization (WPO)}
+   \item{\textbf{Testing \& Debugging:} Jest, Mocha, React Testing Library, Chrome DevTools}
+   \item{\textbf{Collaboration \& Communication:} Agile/Scrum, Jira, Trello}
+ \resumeSubHeadingListEnd
+
+%-----------WORK EXPERIENCE-----------------
+\section{Work Experience}
+  \resumeSubHeadingListStart
+
+    \resumeSubheading
+      {Frontend Developer}{January 2025 - Present}
+      {ShipDelight Logistics Technologies}{Mumbai, India}
+      \resumeItemListStart
+        \resumeItem{Multi-Framework Development}{Built and maintained responsive web applications using Vue.js and Next.js, delivering seamless user experiences across logistics platforms.}
+        \resumeItem{Shopify App Development}{Developed custom Shopify applications, extending platform functionality to meet merchant-specific requirements.}
+        \resumeItem{B2B/D2C Operations}{Contributed to applications supporting both B2B and D2C business operations, streamlining order management and customer-facing workflows.}
+      \resumeItemListEnd
+
+    \resumeSubheading
+      {Associate IoT Engineer}{August 2022 - May 2024}
+      {Futurism Technologies Pvt. Ltd.}{Pune, India}
+      \resumeItemListStart
+        \resumeItem{Led Team Development}{Spearheaded UI development for IoT projects, improving efficiency by 20\%.}
+        \resumeItem{Optimized Operations}{Enhanced frontend performance, reducing load times by 30\%.}
+        \resumeItem{Managed Initiatives}{Streamlined project meetings, achieving a 15\% faster delivery rate.}
+      \resumeItemListEnd
+
+  \resumeSubHeadingListEnd
+
+%-----------PROJECTS-----------------
+\section{Projects}
+  \resumeSubHeadingListStart
+
+    \resumeSubheading
+     {Post-Purchase SaaS Platform}{2025}{Vue.js, Nuxt, Next.js, Tailwind CSS}{}
+      \resumeItemListStart
+        \resumeItem{Product Development}{Built and maintained core frontend modules for a SaaS platform serving B2B and D2C e-commerce clients.}
+        \resumeItem{Shopify Integrations}{Developed custom Shopify applications to extend platform capabilities for merchant workflows.}
+      \resumeItemListEnd
+
+    \resumeSubheading
+      {Property Search}{2024}{Vue.js and Maptiler}{}
+      \resumeItemListStart
+        \resumeItem{Interactive Mapping}{Created an interactive map with property markers and filters for precise searches.}
+      \resumeItemListEnd
+
+    \resumeSubheading
+      {Retro Cassette}{2023}{React, Spotify API, Framer Motion}{}
+      \resumeItemListStart
+        \resumeItem{Music Streaming}{Built a platform enabling users to search and stream their own retro cassette tapes with smooth, animated interactions.}
+      \resumeItemListEnd
+
+  \resumeSubHeadingListEnd
+
+%-----------EDUCATION-----------------
+\section{Education}
+  \resumeSubHeadingListStart
+    \resumeSubheading
+      {MIT ADT University}{Pune, India}
+      {B.Tech in Computer Science and Engineering}{2018 -- 2021}
+  \resumeSubHeadingListEnd
+
+\end{document}

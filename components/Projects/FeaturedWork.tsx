@@ -157,13 +157,11 @@ export function FeaturedWork() {
 
         {hasMoreProjects ? (
           <div className={styles.showMoreWrap}>
-            <Magnetic>
+            <Magnetic data-cursor="button">
               <button
                 type="button"
                 className={styles.showMoreBtn}
                 onClick={() => void openCatalog()}
-                data-cursor="button"
-                data-cursor-text="→"
               >
                 <span>Show all projects</span>
                 <span className={styles.showMoreCount}>

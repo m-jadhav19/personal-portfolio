@@ -138,7 +138,6 @@ export function ProjectDetail({ project, isOpen, onClose }: ProjectDetailProps) 
             rel="noopener noreferrer"
             className={styles.primaryLink}
           data-cursor="link"
-          data-cursor-text="OPEN ↗"
         >
           View project <span aria-hidden="true">↗</span>
         </a>

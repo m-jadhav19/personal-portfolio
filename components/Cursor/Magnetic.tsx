@@ -6,12 +6,14 @@ type MagneticProps = {
   children: ReactNode;
   strength?: number;
   className?: string;
+  "data-cursor"?: string;
 };
 
 export function Magnetic({
   children,
   strength = 0.22,
   className,
+  "data-cursor": dataCursor,
 }: MagneticProps) {
   const ref = useRef<HTMLDivElement>(null);
 
@@ -37,6 +39,7 @@ export function Magnetic({
     <div
       ref={ref}
       className={className}
+      data-cursor={dataCursor}
       onMouseMove={onMove}
       onMouseLeave={onLeave}
       style={{

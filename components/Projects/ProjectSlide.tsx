@@ -56,26 +56,22 @@ export function ProjectSlide({
         ) : null}
 
         <div className={styles.hoverLinks} data-reveal>
-          <Magnetic>
+          <Magnetic data-cursor="project">
             <a
               href={project.url}
               target="_blank"
               rel="noopener noreferrer"
               className={styles.hoverLink}
-              data-cursor="project"
-              data-cursor-text="VIEW →"
             >
               View project →
             </a>
           </Magnetic>
           {onOpenDetail ? (
-            <Magnetic strength={0.18}>
+            <Magnetic strength={0.18} data-cursor="button">
               <button
                 type="button"
                 className={styles.hoverLink}
                 onClick={() => onOpenDetail(project)}
-                data-cursor="button"
-                data-cursor-text="→"
               >
                 Details →
               </button>

@@ -1,0 +1,43 @@
+.resume {
+  min-height: 100svh;
+  background: #e8e6e1;
+  color: #111;
+}
+
+.sheet {
+  padding: 1.25rem 1rem 2rem;
+}
+
+.hint {
+  max-width: 42rem;
+  margin: 0 auto;
+  padding: 0 1.25rem 2.5rem;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: rgba(0, 0, 0, 0.55);
+}
+
+.hint code {
+  font-size: 0.8em;
+}
+
+@media print {
+  .resume {
+    background: #fff;
+  }
+
+  .sheet {
+    padding: 0;
+  }
+
+  .hint {
+    display: none !important;
+  }
+
+  /* Hide site chrome if Providers still mount nav/cursor wrappers */
+  :global(header),
+  :global([data-resume-hide]) {
+    display: none !important;
+  }
+}

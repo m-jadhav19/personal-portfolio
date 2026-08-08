@@ -43,7 +43,6 @@ export function HeroPortrait({ portraitRef }: HeroPortraitProps) {
       className={styles.portraitStage}
       data-intro="portrait"
       data-cursor="image"
-      data-cursor-text="EXPLORE"
       tabIndex={0}
       role="img"
       aria-label={`Portrait of ${portfolio.headerTaglineTwo}`}

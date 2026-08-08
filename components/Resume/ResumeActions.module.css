@@ -1,0 +1,55 @@
+.actions {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 1.25rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+  background: rgba(250, 250, 248, 0.94);
+  backdrop-filter: blur(8px);
+}
+
+.group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.link,
+.button,
+.buttonSecondary {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 0.85rem;
+  color: #111;
+  text-decoration: none;
+}
+
+.button,
+.buttonSecondary {
+  padding: 0.45rem 0.85rem;
+  border: 1px solid #111;
+  background: #111;
+  color: #fafaf8;
+  cursor: pointer;
+}
+
+.buttonSecondary {
+  background: transparent;
+  color: #111;
+}
+
+@media (max-width: 640px) {
+  .actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+@media print {
+  .actions {
+    display: none !important;
+  }
+}

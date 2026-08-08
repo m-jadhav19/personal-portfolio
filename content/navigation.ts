@@ -24,7 +24,6 @@ export const mobileExtraLinks: MobileExtraLink[] = [
   {
     label: "Resume",
     href: portfolio.resumeUrl,
-    external: true,
   },
   { label: "Github", href: "https://github.com/m-jadhav19/", external: true },
   {
