@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 import { resumeDocument } from "@/content/resume";
 
 import styles from "./ResumeActions.module.css";
@@ -7,9 +9,9 @@ import styles from "./ResumeActions.module.css";
 export function ResumeActions() {
   return (
     <div className={styles.actions} data-resume-chrome>
-      <a href="/" className={styles.link}>
+      <Link href="/" className={styles.link}>
         ← Portfolio
-      </a>
+      </Link>
       <div className={styles.group}>
         <a
           href={resumeDocument.pdfPath}
