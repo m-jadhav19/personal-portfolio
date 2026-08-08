@@ -35,9 +35,10 @@ function resolveCursor(element: Element | null): {
   const target = element.closest("[data-cursor]");
   if (!target) return { state: "default", label: "" };
 
-  const type = (target.getAttribute("data-cursor") || "default") as CursorState;
-  if (type === "hide") return { state: "default", label: "" };
+  const raw = target.getAttribute("data-cursor") || "default";
+  if (raw === "hide") return { state: "default", label: "" };
 
+  const type = raw as CursorState;
   const custom = target.getAttribute("data-cursor-text") || "";
   const label = custom || LABEL_BY_STATE[type] || "";
 
