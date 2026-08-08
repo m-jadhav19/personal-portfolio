@@ -126,6 +126,7 @@ export function AllProjectsCatalog({
                   className={styles.thumb}
                   data-catalog-thumb
                   data-cursor="project"
+                  data-cursor-text="VIEW →"
                 >
                   <Image
                     src={project.imageSrc}
@@ -153,7 +154,8 @@ export function AllProjectsCatalog({
                       href={project.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      data-cursor="external"
+                      data-cursor="project"
+                      data-cursor-text="VIEW →"
                     >
                       View project ↗
                     </a>
@@ -161,9 +163,10 @@ export function AllProjectsCatalog({
                       <button
                         type="button"
                         onClick={() => onOpenDetail(project)}
-                        data-cursor="interactive"
+                        data-cursor="button"
+                        data-cursor-text="→"
                       >
-                        Case study →
+                        Details →
                       </button>
                     ) : null}
                   </div>

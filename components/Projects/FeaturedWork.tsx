@@ -11,6 +11,7 @@ import {
   playBarReveal,
   prefersReducedBarMotion,
 } from "@/animations/barOverlay";
+import { Magnetic } from "@/components/Cursor/Magnetic";
 import { portfolio } from "@/content/portfolio";
 import type { Project } from "@/lib/types";
 import {
@@ -156,17 +157,20 @@ export function FeaturedWork() {
 
         {hasMoreProjects ? (
           <div className={styles.showMoreWrap}>
-            <button
-              type="button"
-              className={styles.showMoreBtn}
-              onClick={() => void openCatalog()}
-              data-cursor="interactive"
-            >
-              <span>Show all projects</span>
-              <span className={styles.showMoreCount}>
-                {String(allProjects.length).padStart(2, "0")}
-              </span>
-            </button>
+            <Magnetic>
+              <button
+                type="button"
+                className={styles.showMoreBtn}
+                onClick={() => void openCatalog()}
+                data-cursor="button"
+                data-cursor-text="→"
+              >
+                <span>Show all projects</span>
+                <span className={styles.showMoreCount}>
+                  {String(allProjects.length).padStart(2, "0")}
+                </span>
+              </button>
+            </Magnetic>
           </div>
         ) : null}
       </section>

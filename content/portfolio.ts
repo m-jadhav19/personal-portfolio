@@ -264,7 +264,7 @@ export const portfolio: Portfolio = {
     happyClients: 3,
   },
   metrics: [
-    { value: "03+", label: "Years", sublabel: "Building" },
+    { value: "03+", label: "Years", sublabel: "Professional experience" },
     { value: "07", label: "Selected", sublabel: "Projects" },
     { value: "∞", label: "Experiments", sublabel: "" },
     { value: "01", label: "Very", sublabel: "Curious developer" },

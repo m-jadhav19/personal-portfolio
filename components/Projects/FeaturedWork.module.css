@@ -105,6 +105,12 @@
   border: 1px solid var(--border);
   border-radius: 6px;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+  transition: border-color 0.35s var(--ease);
+}
+
+.mediaHovered,
+.media:focus-visible {
+  border-color: color-mix(in srgb, var(--foreground) 45%, var(--border));
 }
 
 .mediaShader {
@@ -130,6 +136,34 @@
   object-fit: cover;
   object-position: center;
   pointer-events: none;
+  transform: scale(1);
+  transition:
+    transform 0.55s var(--ease),
+    filter 0.45s var(--ease);
+}
+
+.mediaHovered .mediaImage,
+.media:focus-visible .mediaImage {
+  transform: scale(1.04);
+  filter:
+    brightness(1.03)
+    contrast(1.02)
+    drop-shadow(1.5px 0 0 rgba(255, 60, 60, 0.35))
+    drop-shadow(-1.5px 0 0 rgba(60, 220, 255, 0.3));
+}
+
+.mediaVeil {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: color-mix(in srgb, var(--background) 0%, transparent);
+  transition: background 0.4s var(--ease);
+}
+
+.mediaHovered .mediaVeil,
+.media:focus-visible .mediaVeil {
+  background: color-mix(in srgb, var(--background) 14%, transparent);
 }
 
 .viewBtn {
@@ -137,7 +171,7 @@
   top: 0;
   left: 0;
   z-index: 2;
-  display: inline-flex;
+  display: none;
   align-items: center;
   justify-content: center;
   min-width: 9rem;
@@ -153,8 +187,11 @@
   pointer-events: none;
   opacity: 0;
   transform: translate(-50%, -50%);
-  transition: opacity 0.2s var(--ease);
   mix-blend-mode: difference;
+}
+
+.viewBtnTouch {
+  display: none;
 }
 
 .viewBtnVisible,
@@ -307,17 +344,37 @@
 }
 
 @media (hover: none) {
-  .viewBtn {
-    top: auto;
+  .viewBtnTouch {
+    position: absolute;
+    z-index: 2;
     left: var(--space-16);
     bottom: var(--space-16);
-    opacity: 1;
-    transform: none !important;
+    display: inline-flex;
+    padding: 0.75rem 1rem;
+    background: #fff;
+    color: #000;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    font-weight: var(--font-bitcount-weight-semibold);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    mix-blend-mode: difference;
   }
 
   .hoverLinks {
     opacity: 1;
     transform: none;
+  }
+
+  .mediaHovered .mediaImage,
+  .media:focus-visible .mediaImage {
+    transform: none;
+    filter: none;
+  }
+
+  .mediaHovered .mediaVeil,
+  .media:focus-visible .mediaVeil {
+    background: color-mix(in srgb, var(--background) 12%, transparent);
   }
 }
 
@@ -358,5 +415,17 @@
   .info,
   .featuredWork[data-scroll-sequence="true"] .stickyHeading {
     will-change: auto;
+  }
+
+  .mediaImage,
+  .mediaVeil,
+  .media {
+    transition: none;
+  }
+
+  .mediaHovered .mediaImage,
+  .media:focus-visible .mediaImage {
+    transform: none;
+    filter: none;
   }
 }

@@ -63,7 +63,13 @@ export function Lab() {
         </p>
         <ul className={styles.exploringList}>
           {portfolio.exploring.map((item, index) => (
-            <li key={item} className={styles.exploringItem} data-lab-reveal>
+            <li
+              key={item}
+              className={styles.exploringItem}
+              data-lab-reveal
+              data-cursor="lab"
+              data-cursor-text="EXPERIMENT"
+            >
               <span className={styles.exploringIndex}>
                 {String(index + 1).padStart(2, "0")}
               </span>
@@ -102,7 +108,8 @@ export function Lab() {
                 rel="noopener noreferrer"
                 className={styles.experiment}
                 data-lab-reveal
-                data-cursor="external"
+                data-cursor="lab"
+                data-cursor-text="EXPERIMENT"
               >
                 {content}
               </a>
@@ -114,6 +121,8 @@ export function Lab() {
               key={experiment.id}
               className={styles.experiment}
               data-lab-reveal
+              data-cursor="lab"
+              data-cursor-text="EXPERIMENT"
             >
               {content}
             </article>

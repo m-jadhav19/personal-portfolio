@@ -70,7 +70,8 @@ export function CapabilityRow({
           aria-expanded={isActive}
           aria-controls={`capability-panel-${capability.id}`}
           onClick={onToggle}
-          data-cursor="interactive"
+          data-cursor="button"
+          data-cursor-text="→"
         >
           <span className={styles.title}>
             <span className={styles.index}>

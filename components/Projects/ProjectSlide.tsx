@@ -1,6 +1,7 @@
 "use client";
 
 import type { Project } from "@/lib/types";
+import { Magnetic } from "@/components/Cursor/Magnetic";
 
 import { ProjectMedia } from "./ProjectMedia";
 import { getProjectSide } from "./projectMotion";
@@ -55,24 +56,30 @@ export function ProjectSlide({
         ) : null}
 
         <div className={styles.hoverLinks} data-reveal>
-          <a
-            href={project.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.hoverLink}
-            data-cursor="project"
-          >
-            View project →
-          </a>
-          {onOpenDetail ? (
-            <button
-              type="button"
+          <Magnetic>
+            <a
+              href={project.url}
+              target="_blank"
+              rel="noopener noreferrer"
               className={styles.hoverLink}
-              onClick={() => onOpenDetail(project)}
-              data-cursor="interactive"
+              data-cursor="project"
+              data-cursor-text="VIEW →"
             >
-              Case study →
-            </button>
+              View project →
+            </a>
+          </Magnetic>
+          {onOpenDetail ? (
+            <Magnetic strength={0.18}>
+              <button
+                type="button"
+                className={styles.hoverLink}
+                onClick={() => onOpenDetail(project)}
+                data-cursor="button"
+                data-cursor-text="→"
+              >
+                Details →
+              </button>
+            </Magnetic>
           ) : null}
         </div>
       </div>

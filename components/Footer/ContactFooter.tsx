@@ -1,4 +1,5 @@
 import { ScrambleText } from "@/components/About/ScrambleText";
+import { Magnetic } from "@/components/Cursor/Magnetic";
 import { portfolio } from "@/content/portfolio";
 
 import { BackToTopLink } from "./BackToTopLink";
@@ -22,14 +23,17 @@ export function ContactFooter() {
           text="Get in touch"
           className={styles.heading}
         />
-        <a
-          className={styles.email}
-          href={`mailto:${portfolio.contact.email}`}
-          data-cursor="external"
-        >
-          {portfolio.contact.email}
-          <span aria-hidden="true">↗</span>
-        </a>
+        <Magnetic strength={0.2}>
+          <a
+            className={styles.email}
+            href={`mailto:${portfolio.contact.email}`}
+            data-cursor="link"
+            data-cursor-text="OPEN ↗"
+          >
+            {portfolio.contact.email}
+            <span aria-hidden="true">↗</span>
+          </a>
+        </Magnetic>
       </div>
 
       <div className={styles.details}>
@@ -51,7 +55,8 @@ export function ContactFooter() {
                     ? "noopener noreferrer"
                     : undefined
                 }
-                data-cursor="external"
+                data-cursor="link"
+                data-cursor-text="OPEN ↗"
               >
                 {social.title}
                 <span aria-hidden="true">↗</span>
@@ -61,17 +66,20 @@ export function ContactFooter() {
         </nav>
       </div>
 
-      <p className={styles.resumeNote}>
+      <div className={styles.resumeNote}>
         Want the boring version?{" "}
-        <a
-          href={portfolio.resumeUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          data-cursor="external"
-        >
-          View résumé ↗
-        </a>
-      </p>
+        <Magnetic strength={0.2}>
+          <a
+            href={portfolio.resumeUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            data-cursor="link"
+            data-cursor-text="OPEN ↗"
+          >
+            View résumé ↗
+          </a>
+        </Magnetic>
+      </div>
 
       <div className={styles.bottom}>
         <p>

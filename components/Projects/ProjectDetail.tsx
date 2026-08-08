@@ -76,8 +76,7 @@ export function ProjectDetail({ project, isOpen, onClose }: ProjectDetailProps) 
         <header className={styles.header}>
           <div data-detail-reveal>
             <p className={styles.eyebrow}>
-              {project.year ? `${project.year} · ` : ""}
-              Case study
+              {project.year ? `${project.year} · Details` : "Details"}
             </p>
             <h2 id="project-detail-title" className={styles.title}>
               {project.title}
@@ -138,10 +137,11 @@ export function ProjectDetail({ project, isOpen, onClose }: ProjectDetailProps) 
             target="_blank"
             rel="noopener noreferrer"
             className={styles.primaryLink}
-            data-cursor="external"
-          >
-            View project <span aria-hidden="true">↗</span>
-          </a>
+          data-cursor="link"
+          data-cursor-text="OPEN ↗"
+        >
+          View project <span aria-hidden="true">↗</span>
+        </a>
         </div>
       </div>
     </div>

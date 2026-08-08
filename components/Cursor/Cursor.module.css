@@ -1,0 +1,153 @@
+.main,
+.ring {
+  position: fixed;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: var(--z-cursor);
+  will-change: transform;
+  color: var(--foreground);
+  mix-blend-mode: difference;
+  transform: translate3d(-100px, -100px, 0);
+}
+
+.main {
+  width: 10px;
+  height: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  border-radius: 999px;
+  transition:
+    width 220ms var(--ease),
+    height 220ms var(--ease),
+    border-radius 220ms ease,
+    background 220ms ease;
+}
+
+.cross {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: var(--font-bitcount-weight-medium);
+  line-height: 1;
+  transform: translate(-50%, -50%);
+}
+
+.ring {
+  width: 32px;
+  height: 32px;
+  margin: 0;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  opacity: 0.35;
+  transition:
+    width 300ms var(--ease),
+    height 300ms var(--ease),
+    opacity 250ms ease,
+    border-radius 300ms ease;
+}
+
+.label {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  font-weight: var(--font-bitcount-weight-semibold);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  transform: translate(-50%, -50%);
+}
+
+/* Project */
+.main_project,
+.main_image,
+.main_lab {
+  width: 5.25rem;
+  height: 5.25rem;
+  background: #fff;
+  color: #000;
+  mix-blend-mode: difference;
+}
+
+.ring_project,
+.ring_image,
+.ring_lab {
+  width: 6.25rem;
+  height: 6.25rem;
+  opacity: 0.14;
+}
+
+.main_lab {
+  width: 5.75rem;
+  height: 5.75rem;
+}
+
+.ring_lab {
+  width: 6.85rem;
+  height: 6.85rem;
+}
+
+/* External link */
+.main_link {
+  width: 3.5rem;
+  height: 3.5rem;
+  background: #fff;
+  color: #000;
+}
+
+.ring_link {
+  width: 4.35rem;
+  height: 4.35rem;
+  opacity: 0.2;
+}
+
+/* Button / interactive */
+.main_button,
+.main_interactive {
+  width: 2.75rem;
+  height: 2.75rem;
+  background: #fff;
+  color: #000;
+}
+
+.ring_button,
+.ring_interactive {
+  width: 3.5rem;
+  height: 3.5rem;
+  opacity: 0.18;
+}
+
+.main_nav {
+  width: 1.35rem;
+  height: 1.35rem;
+}
+
+.ring_nav {
+  width: 2.5rem;
+  height: 2.5rem;
+  opacity: 0.28;
+}
+
+.mainLabeled .cross {
+  display: none;
+}
+
+@media (pointer: coarse) {
+  .main,
+  .ring {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .main,
+  .ring {
+    display: none;
+  }
+}
