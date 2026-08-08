@@ -65,11 +65,11 @@ export const portfolio: Portfolio = {
       year: "2024",
       role: "Design & Development",
       status: "Completed",
-      description: "Interactive music browsing experience",
+      description: "Spotify-powered cassette browser with motion-led discovery",
       impact:
-        "Interactive music experience with motion-driven browsing and Spotify playback",
+        "Client-side Spotify OAuth + playback UI with Framer Motion browse transitions",
       contribution:
-        "Designed and developed an interactive music browsing experience that lets users search and stream retro cassette tapes. Built playful motion patterns around discovery, and wired Spotify API playback so the interface feels like a physical collection rather than a standard player.",
+        "Built the full React app end-to-end: Spotify auth and playback wiring, cassette-style browse/search flows, and motion states that keep discovery feeling physical instead of like a generic media player. Owned layout, interaction timing, and API error/empty states.",
       imageSrc: projectThumbnailSrc("retro-cassette"),
       url: "https://retro-cassette.vercel.app/",
       tags: ["React", "Spotify API", "Framer Motion"],
@@ -83,11 +83,11 @@ export const portfolio: Portfolio = {
       year: "2024",
       role: "Design & Development",
       status: "Completed",
-      description: "Reusable component system for raw, bold interfaces",
+      description: "Production-minded component library with Storybook coverage",
       impact:
-        "Reusable React component system with 40+ UI primitives and Storybook docs",
+        "40+ documented primitives — tokens, variants, and composition patterns in Storybook",
       contribution:
-        "Built a brutalist component library focused on raw typography, hard edges, and minimal chrome. Documented primitives in Storybook so the system stays usable as a design-to-code reference rather than a one-off aesthetic demo.",
+        "Designed and engineered a Next.js + Tailwind component system with typed props, consistent spacing/type tokens, and Storybook stories for each primitive. Focused on reusable architecture (composition over one-offs) so the library works as a real UI kit, not a visual demo.",
       imageSrc: projectThumbnailSrc("brutalist-ui"),
       url: "https://brutalist-components.vercel.app/",
       tags: ["Next.js", "Tailwind CSS", "Storybook"],
@@ -101,11 +101,11 @@ export const portfolio: Portfolio = {
       year: "2024",
       role: "Design & Development",
       status: "Completed",
-      description: "Tactile interactive workspace with canvas motion",
+      description: "Canvas workspace with GSAP-driven spatial interaction",
       impact:
-        "Interactive canvas-based interface with 60fps scroll animations",
+        "Canvas + GSAP interaction layer targeting 60fps pan, drag, and settle motion",
       contribution:
-        "Designed and developed a tactile digital workspace where ideas surface through motion and intuition. Combined React structure with GSAP and canvas drawing so interactions feel physical — drag, settle, and respond without feeling heavy.",
+        "Implemented a React + Canvas workspace where cards and surfaces respond to drag, inertia, and scroll-linked GSAP timelines. Tuned transform/compositing paths so motion stays smooth under load, and structured the UI so interaction logic stays separate from presentational components.",
       imageSrc: projectThumbnailSrc("ply-digital-workspace"),
       url: "https://ply-app-delta.vercel.app/",
       tags: ["React", "GSAP", "Canvas"],
@@ -119,11 +119,11 @@ export const portfolio: Portfolio = {
       year: "2024",
       role: "Design & Development",
       status: "Completed",
-      description: "World-time dashboard with interactive time travel",
+      description: "Multi-timezone dashboard with Luxon-accurate scrubbing",
       impact:
-        "Timezone visualization dashboard with interactive time-travel scrubbing",
+        "Luxon timezone engine + Radix UI controls for live multi-city time scrubbing",
       contribution:
-        "Built a world-time dashboard that makes global clocks feel explorable. Luxon handles accurate timezone math while the UI leans into a time-travel metaphor — scrub, compare, and settle across cities without losing clarity.",
+        "Shipped a Next.js world-time dashboard with Luxon for DST-safe conversions and a scrubbable timeline for comparing cities. Used Radix primitives for accessible controls, and kept the time-travel metaphor readable so operators can scan offsets without losing precision.",
       imageSrc: projectThumbnailSrc("epoch-world-timer"),
       url: "https://globalsync-world-timer.vercel.app/",
       tags: ["Next.js", "Luxon", "Radix UI"],
@@ -137,11 +137,11 @@ export const portfolio: Portfolio = {
       year: "2024",
       role: "Design & Development",
       status: "Completed",
-      description: "AR accessory try-on in the browser",
+      description: "Browser AR try-on with landmark-locked 3D overlays",
       impact:
-        "Real-time AR try-on using MediaPipe face landmarks and Three.js overlays",
+        "MediaPipe face mesh → Three.js accessory overlays at camera frame rate",
       contribution:
-        "Created a browser-based virtual try-on for AR accessories. MediaPipe tracks facial landmarks in real time while Three.js renders overlays that stay locked to the face — turning a camera feed into a product experience.",
+        "Built a React webcam pipeline that feeds MediaPipe landmarks into Three.js meshes so accessories stay locked to the face in real time. Handled calibration, occlusion-friendly layering, and performance so the try-on feels product-ready in a browser tab — no native app required.",
       imageSrc: projectThumbnailSrc("auratry-virtual-try-on"),
       url: "https://virtual-try-on-lac.vercel.app/",
       tags: ["Mediapipe", "Three.js", "React"],
@@ -155,11 +155,11 @@ export const portfolio: Portfolio = {
       year: "2024",
       role: "Design & Development",
       status: "Completed",
-      description: "Photo dithering effect generator",
+      description: "Live GLSL dithering editor with tunable image pipelines",
       impact:
-        "GPU-accelerated image dithering tool with live GLSL preview controls",
+        "Fragment-shader dither pipeline with live threshold, palette, and grain controls",
       contribution:
-        "Built a photo dithering generator that exposes algorithmic image processing as a playful creative tool. GLSL shaders drive the effect pipeline so previews stay responsive while users tune threshold, palette, and grain.",
+        "Engineered a Next.js + Three.js tool where GLSL shaders run the dither pipeline on the GPU. Exposed threshold, palette, and grain as live uniforms so artists get instant feedback, and structured the UI around a clear process: upload → tune → export.",
       imageSrc: projectThumbnailSrc("ditherboy"),
       url: "https://dithered-editor.vercel.app/",
       tags: ["GLSL", "Three.js", "Next.js"],
@@ -173,11 +173,11 @@ export const portfolio: Portfolio = {
       year: "2025",
       role: "Design & Development",
       status: "In Progress",
-      description: "Spatial portfolio experience in a 3D environment",
+      description: "R3F scene with GSAP-orchestrated camera navigation",
       impact:
-        "Immersive 3D portfolio scene with R3F models and GSAP camera motion",
+        "React Three Fiber scene graph + GSAP camera paths for spatial project browsing",
       contribution:
-        "Exploring a spatial portfolio where projects live inside a navigable 3D environment. React Three Fiber handles scene composition while GSAP orchestrates camera and transition timing so browsing feels intentional rather than gimmicky.",
+        "Prototyping a navigable 3D portfolio in React Three Fiber: scene composition, lighting, and GSAP-driven camera transitions between project nodes. Goal is intentional spatial browsing — clear wayfinding and readable hierarchy — not a gimmick flythrough.",
       imageSrc: projectThumbnailSrc("3d-portfolio-website"),
       url: "https://3d-portfolio-zeta-ten.vercel.app/",
       tags: ["Three.js", "React Three Fiber", "GSAP"],
@@ -190,46 +190,61 @@ export const portfolio: Portfolio = {
       id: "1",
       title: "Frontend Engineering",
       imageSrc: projectThumbnailSrc("retro-cassette"),
-      items: ["React", "Next.js", "TypeScript", "Responsive architecture"],
+      items: [
+        "React / Next.js / Vue / Nuxt",
+        "TypeScript component architecture",
+        "API integration & state flows",
+        "Performance & responsive systems",
+      ],
     },
     {
       id: "2",
       title: "Interaction",
       imageSrc: projectThumbnailSrc("ply-digital-workspace"),
-      items: ["GSAP", "Canvas", "WebGL", "Scroll-driven motion"],
+      items: [
+        "GSAP timelines & ScrollTrigger",
+        "Canvas interaction systems",
+        "WebGL hover / distortion effects",
+        "Motion that survives production constraints",
+      ],
     },
     {
       id: "3",
       title: "3D Development",
       imageSrc: projectThumbnailSrc("3d-portfolio-website"),
-      items: ["Three.js", "R3F", "Shaders", "Spatial UI"],
+      items: [
+        "Three.js / React Three Fiber",
+        "GLSL shaders & post-processing",
+        "Camera / scene orchestration",
+        "Realtime landmark-driven overlays",
+      ],
     },
     {
       id: "4",
       title: "UI Engineering",
       imageSrc: projectThumbnailSrc("brutalist-ui"),
       items: [
-        "Design systems",
-        "Responsive UI",
-        "Component architecture",
-        "Storybook",
+        "Design systems & tokens",
+        "Composable component APIs",
+        "Storybook documentation",
+        "Accessible, production-ready UI",
       ],
     },
   ],
   capabilitiesIntro:
-    "I design and build interfaces where engineering, motion, and craft share the same brief — from first interaction to shipped product.",
+    "I ship frontend systems — component architecture, motion, and 3D when the product needs it — from prototype to production.",
   aboutCopy:
-    "I design and build digital experiences with a focus on craft, motion, and interaction — creating interfaces where every detail feels intentional. Based in Mumbai, I work across React, Next.js, and GSAP to turn ideas into polished, responsive products.",
+    "I design and build digital experiences with a focus on craft, motion, and interaction — creating interfaces where every detail feels intentional. Based in Mumbai, I work across React, Next.js, Vue, and GSAP to turn ideas into polished, responsive products that hold up in production.",
   technicalStack: [
     {
       id: "frontend",
       label: "Frontend",
-      items: ["React", "Next.js", "TypeScript", "Vue"],
+      items: ["React", "Next.js", "TypeScript", "Vue", "Nuxt"],
     },
     {
       id: "creative",
       label: "Creative",
-      items: ["Three.js", "R3F", "GSAP", "WebGL", "Canvas"],
+      items: ["Three.js", "R3F", "GSAP", "WebGL", "Canvas", "GLSL"],
     },
     {
       id: "backend",
@@ -271,8 +286,9 @@ export const portfolio: Portfolio = {
       stack: ["Vue", "Nuxt", "React", "TypeScript", "Tailwind CSS"],
       summary: "Frontend · Logistics · Post-purchase platforms",
       bullets: [
-        "Building web applications for post-purchase logistics platforms and client solutions",
-        "Shipping interfaces with Vue, Nuxt, React, and modern frontend tooling",
+        "Own frontend delivery for post-purchase logistics UIs used by merchant and ops workflows",
+        "Ship Vue/Nuxt and React features against REST APIs — tables, status flows, and responsive layouts that stay fast under real data",
+        "Tighten UX and performance on high-traffic screens so operators can scan shipments without fighting the interface",
       ],
     },
     {
@@ -284,8 +300,9 @@ export const portfolio: Portfolio = {
       stack: ["React", "Vue", "Three.js", "GraphQL"],
       summary: "Frontend · IoT · Data Visualization",
       bullets: [
-        "Led frontend work across IoT and data visualization products",
-        "Shipped interactive interfaces with React, Vue, Three.js, and GraphQL",
+        "Led frontend for IoT dashboards — device state, alerts, and operator views over GraphQL/REST",
+        "Built interactive data visualizations (including Three.js where spatial context helped) for live telemetry",
+        "Mentored juniors on component structure, reviews, and shipping stable UI against hardware-backed APIs",
       ],
     },
   ],
@@ -302,49 +319,55 @@ export const portfolio: Portfolio = {
       id: "1",
       title: "Image Distortion System",
       stack: ["WebGL", "Canvas", "GLSL"],
-      blurb: "Experimental image processing with RGB separation and displacement",
+      blurb:
+        "Reusable GLSL pass for RGB split, displacement, and scanline — tuned for short hover bursts",
       status: "Active",
     },
     {
       id: "2",
       title: "Datamoshing Studies",
       stack: ["Canvas", "Pixel sorting"],
-      blurb: "Compression artifacts and glitch as intentional visual language",
+      blurb:
+        "Frame-delta and compression-artifact techniques treated as controllable visual parameters",
       status: "Exploring",
     },
     {
       id: "3",
       title: "Pixel Sorting",
       stack: ["Canvas", "Image processing"],
-      blurb: "Sorting pixels by luminance and channel for generative stills",
+      blurb:
+        "Luminance / channel sort kernels for generative stills and transition frames",
       status: "Exploring",
     },
     {
       id: "4",
       title: "Shader Sketches",
       stack: ["GLSL", "Three.js"],
-      blurb: "Small fragment-shader experiments for texture and light",
+      blurb:
+        "Fragment-shader notebooks for noise, light falloff, and texture synthesis",
       status: "Active",
     },
     {
       id: "5",
       title: "Generative Typography",
       stack: ["Canvas", "GSAP"],
-      blurb: "Type as a procedural surface — scramble, warp, settle",
+      blurb:
+        "Procedural scramble / warp / settle cycles on display type for section intros",
       status: "Exploring",
     },
     {
       id: "6",
       title: "Three.js Experiments",
       stack: ["Three.js", "R3F"],
-      blurb: "Spatial sketches and camera-driven micro-scenes",
+      blurb:
+        "Small R3F scenes testing camera paths, instancing, and interaction picking",
       status: "Active",
     },
   ],
   resume: {
-    tagline: "I'm a Creative Developer and Frontend Engineer.",
+    tagline: "Creative Developer and Frontend Engineer.",
     description:
-      "I create top-class user experiences using modern frontend tools and design principles. Well-versed with React, JavaScript, Three.js, and the modern web stack.",
+      "I build production frontend systems with React, Vue, TypeScript, and motion/3D when the product needs it — from logistics UIs to interactive WebGL experiences.",
     experiences: [
       {
         id: "1",
@@ -355,8 +378,9 @@ export const portfolio: Portfolio = {
         stack: ["Vue", "Nuxt", "React", "TypeScript", "Tailwind CSS"],
         summary: "Frontend · Logistics · Post-purchase platforms",
         bullets: [
-          "Building web applications for post-purchase logistics platforms and client solutions",
-          "Shipping interfaces with Vue, Nuxt, React, and modern frontend tooling",
+          "Own frontend delivery for post-purchase logistics UIs used by merchant and ops workflows",
+          "Ship Vue/Nuxt and React features against REST APIs — tables, status flows, and responsive layouts that stay fast under real data",
+          "Tighten UX and performance on high-traffic screens so operators can scan shipments without fighting the interface",
         ],
       },
       {
@@ -368,8 +392,9 @@ export const portfolio: Portfolio = {
         stack: ["React", "Vue", "Three.js", "GraphQL"],
         summary: "Frontend · IoT · Data Visualization",
         bullets: [
-          "Led frontend work across IoT and data visualization products",
-          "Shipped interactive interfaces with React, Vue, Three.js, and GraphQL",
+          "Led frontend for IoT dashboards — device state, alerts, and operator views over GraphQL/REST",
+          "Built interactive data visualizations (including Three.js where spatial context helped) for live telemetry",
+          "Mentored juniors on component structure, reviews, and shipping stable UI against hardware-backed APIs",
         ],
       },
     ],
@@ -379,7 +404,7 @@ export const portfolio: Portfolio = {
       universityPara: "",
     },
     languages: ["Javascript", "HTML5", "CSS", "TypeScript"],
-    frameworks: ["React", "Next.js", "Vue.js", "Tailwind CSS"],
-    others: ["Figma", "Three.js", "GSAP"],
+    frameworks: ["React", "Next.js", "Vue.js", "Nuxt", "Tailwind CSS"],
+    others: ["Figma", "Three.js", "GSAP", "GraphQL"],
   },
 };

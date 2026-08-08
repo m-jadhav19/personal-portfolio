@@ -64,6 +64,13 @@ export function Experience() {
           {current.summary ? (
             <p className={styles.summary}>{current.summary}</p>
           ) : null}
+          {current.bullets.length > 0 ? (
+            <ul className={styles.bullets}>
+              {current.bullets.map((bullet) => (
+                <li key={bullet}>{bullet}</li>
+              ))}
+            </ul>
+          ) : null}
           {current.stack && current.stack.length > 0 ? (
             <p className={styles.stack}>{current.stack.join(" · ")}</p>
           ) : null}
@@ -81,9 +88,19 @@ export function Experience() {
             >
               <p className={styles.dates}>{job.dates}</p>
               <div>
+                {job.company ? (
+                  <p className={styles.previousCompany}>{job.company}</p>
+                ) : null}
                 <h3 className={styles.previousTitle}>{job.position}</h3>
                 {job.summary ? (
                   <p className={styles.summary}>{job.summary}</p>
+                ) : null}
+                {job.bullets.length > 0 ? (
+                  <ul className={styles.bullets}>
+                    {job.bullets.map((bullet) => (
+                      <li key={bullet}>{bullet}</li>
+                    ))}
+                  </ul>
                 ) : null}
                 {job.stack && job.stack.length > 0 ? (
                   <p className={styles.stack}>{job.stack.join(" · ")}</p>
