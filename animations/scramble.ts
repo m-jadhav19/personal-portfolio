@@ -75,6 +75,26 @@ export class TextScramble {
   }
 }
 
+/** One-shot scramble to `finalText` (hero intro reveal). */
+export function scrambleElementOnce(element: HTMLElement, finalText: string) {
+  const prefersReducedMotion = window.matchMedia(
+    "(prefers-reduced-motion: reduce)",
+  ).matches;
+
+  if (prefersReducedMotion) {
+    element.textContent = finalText;
+    return Promise.resolve();
+  }
+
+  const fx = new TextScramble(element);
+  element.textContent = finalText
+    .split("")
+    .map(() => CHARS[Math.floor(Math.random() * CHARS.length)] ?? "#")
+    .join("");
+
+  return fx.setText(finalText);
+}
+
 export function bindScrambleOnView(element: HTMLElement, finalText: string) {
   const prefersReducedMotion = window.matchMedia(
     "(prefers-reduced-motion: reduce)",

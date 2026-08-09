@@ -408,7 +408,12 @@ export function BrokenUxSimulator({ onExit }: BrokenUxSimulatorProps) {
     <div className={styles.overlay} aria-live="polite">
       {modeFlash ? <div className={styles.modeFlash} aria-hidden="true" /> : null}
 
-      <header className={styles.hud} data-broken-ux-ignore>
+      <header
+        className={styles.hud}
+        data-broken-ux-ignore
+        data-cursor-surface
+        data-cursor="interactive"
+      >
         <div className={styles.hudBrand}>
           <span className={styles.hudIcon}>⚠</span>
           <div>
@@ -430,13 +435,23 @@ export function BrokenUxSimulator({ onExit }: BrokenUxSimulatorProps) {
           <span>{toasts.length} alerts</span>
         </div>
 
-        <button type="button" className={styles.exitButton} onClick={onExit}>
+        <button
+          type="button"
+          className={styles.exitButton}
+          onClick={onExit}
+          data-cursor="button"
+        >
           Exit <kbd>ESC</kbd>
         </button>
       </header>
 
       {downloadProgress !== null ? (
-        <div className={styles.downloadBar} data-broken-ux-ignore>
+        <div
+          className={styles.downloadBar}
+          data-broken-ux-ignore
+          data-cursor-surface
+          data-cursor="interactive"
+        >
           <span className={styles.downloadLabel}>more_scroll.exe</span>
           <div className={styles.downloadTrack}>
             <div
@@ -448,9 +463,13 @@ export function BrokenUxSimulator({ onExit }: BrokenUxSimulatorProps) {
         </div>
       ) : null}
 
-      <div className={styles.toastStack}>
+      <div className={styles.toastStack} data-cursor-surface>
         {toasts.map((toast) => (
-          <div key={toast.id} className={styles.toast}>
+          <div
+            key={toast.id}
+            className={styles.toast}
+            data-cursor="interactive"
+          >
             <span className={styles.toastIcon}>!</span>
             {toast.message}
           </div>
@@ -480,6 +499,8 @@ export function BrokenUxSimulator({ onExit }: BrokenUxSimulatorProps) {
               transform: `rotate(${ad.rotation}deg)`,
             }}
             data-broken-ux-ignore
+            data-cursor-surface
+            data-cursor="interactive"
             onPointerDown={(event) => handleAdPointerDown(event, ad)}
             onPointerMove={handleAdPointerMove}
             onPointerUp={handleAdPointerUp}
@@ -496,6 +517,7 @@ export function BrokenUxSimulator({ onExit }: BrokenUxSimulatorProps) {
                   className={styles.adWinBtn}
                   onClick={() => pushToast("Minimize failed. Opening another ad.")}
                   aria-label="Minimize ad"
+                  data-cursor="button"
                 >
                   _
                 </button>
@@ -508,6 +530,7 @@ export function BrokenUxSimulator({ onExit }: BrokenUxSimulatorProps) {
                     button.style.transform = `translate(${(Math.random() - 0.5) * 70}px, ${(Math.random() - 0.5) * 50}px)`;
                   }}
                   aria-label="Close ad"
+                  data-cursor="button"
                 >
                   ✕
                 </button>
@@ -526,6 +549,7 @@ export function BrokenUxSimulator({ onExit }: BrokenUxSimulatorProps) {
                     rel="noopener noreferrer"
                     className={styles.adQrLink}
                     onClick={(event) => event.stopPropagation()}
+                    data-cursor="link"
                   >
                     <Image
                       src={ad.qrImageSrc}
@@ -557,6 +581,7 @@ export function BrokenUxSimulator({ onExit }: BrokenUxSimulatorProps) {
                       dismissAd(ad.id);
                       spawnAd();
                     }}
+                    data-cursor="button"
                   >
                     {ad.secondaryCta ?? "No thanks"}
                   </button>
@@ -569,6 +594,7 @@ export function BrokenUxSimulator({ onExit }: BrokenUxSimulatorProps) {
                       spawnAd(true);
                       spawnAd();
                     }}
+                    data-cursor="button"
                   >
                     {ad.cta}
                   </button>
@@ -583,6 +609,7 @@ export function BrokenUxSimulator({ onExit }: BrokenUxSimulatorProps) {
                     spawnAd(true);
                     spawnAd();
                   }}
+                  data-cursor="button"
                 >
                   {ad.cta}
                 </button>
@@ -602,7 +629,12 @@ export function BrokenUxSimulator({ onExit }: BrokenUxSimulatorProps) {
         </div>
       ) : null}
 
-      <div className={styles.cookieBanner} data-broken-ux-ignore>
+      <div
+        className={styles.cookieBanner}
+        data-broken-ux-ignore
+        data-cursor-surface
+        data-cursor="interactive"
+      >
         <div className={styles.cookieIcon}>🍪</div>
         <p className={styles.cookieText}>
           We use cookies, localStorage, your soul, and <strong>inverted scrolling</strong>.
@@ -613,6 +645,7 @@ export function BrokenUxSimulator({ onExit }: BrokenUxSimulatorProps) {
             type="button"
             className={styles.cookieReject}
             onClick={() => pushToast("Reject ignored. Cookies installed anyway.")}
+            data-cursor="button"
           >
             Reject all
           </button>
@@ -623,6 +656,7 @@ export function BrokenUxSimulator({ onExit }: BrokenUxSimulatorProps) {
               pushToast("Thanks! Here's another ad.");
               spawnAd(true);
             }}
+            data-cursor="button"
           >
             Accept all
           </button>
@@ -637,6 +671,7 @@ export function BrokenUxSimulator({ onExit }: BrokenUxSimulatorProps) {
             }}
             onClick={() => pushToast("You cannot escape the cookies.")}
             aria-label="Close"
+            data-cursor="button"
           >
             ✕
           </button>
@@ -644,7 +679,12 @@ export function BrokenUxSimulator({ onExit }: BrokenUxSimulatorProps) {
       </div>
 
       {spinnerMessage ? (
-        <div className={styles.spinnerOverlay} data-broken-ux-ignore>
+        <div
+          className={styles.spinnerOverlay}
+          data-broken-ux-ignore
+          data-cursor-surface
+          data-cursor="interactive"
+        >
           <div className={styles.spinnerCard}>
             <div className={styles.spinner} />
             {spinnerMessage}
@@ -653,8 +693,17 @@ export function BrokenUxSimulator({ onExit }: BrokenUxSimulatorProps) {
       ) : null}
 
       {modal ? (
-        <div className={styles.modalBackdrop} data-broken-ux-ignore>
-          <div className={styles.modal} role="dialog" aria-modal="true">
+        <div
+          className={styles.modalBackdrop}
+          data-broken-ux-ignore
+          data-cursor-surface
+        >
+          <div
+            className={styles.modal}
+            role="dialog"
+            aria-modal="true"
+            data-cursor="interactive"
+          >
             <div className={styles.modalTitleBar}>
               <span>Windows Portfolio Experience</span>
             </div>
@@ -667,6 +716,7 @@ export function BrokenUxSimulator({ onExit }: BrokenUxSimulatorProps) {
                   className={`${styles.modalButton} ${styles.runawayNo}`}
                   onMouseEnter={dodgeNoButton}
                   onClick={dodgeNoButton}
+                  data-cursor="button"
                 >
                   No
                 </button>
@@ -674,6 +724,7 @@ export function BrokenUxSimulator({ onExit }: BrokenUxSimulatorProps) {
                   type="button"
                   className={`${styles.modalButton} ${styles.modalButtonPrimary}`}
                   onClick={modal.onConfirm}
+                  data-cursor="button"
                 >
                   Yes
                 </button>

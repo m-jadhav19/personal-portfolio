@@ -67,6 +67,7 @@ export function ProjectDetail({ project, isOpen, onClose }: ProjectDetailProps) 
       aria-modal="true"
       aria-labelledby="project-detail-title"
       onClick={onClose}
+      data-cursor-surface
     >
       <div
         ref={panelRef}

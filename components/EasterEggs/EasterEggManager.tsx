@@ -1,3 +1,6 @@
 "use client";
 
-export { MyspaceThemeProvider } from "./MyspaceThemeProvider";
+export {
+  SystemModeProvider,
+  MyspaceThemeProvider,
+} from "./SystemModeProvider";

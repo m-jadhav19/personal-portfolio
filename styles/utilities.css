@@ -79,3 +79,8 @@ html.lenis body {
 .lenis.lenis-smooth iframe {
   pointer-events: none;
 }
+
+/* All Work / detail overlays: block hero portrait from stealing cursor hits */
+html.catalog-open [data-intro="portrait"] {
+  pointer-events: none !important;
+}

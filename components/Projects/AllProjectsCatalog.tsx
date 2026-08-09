@@ -1,7 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 import { gsap } from "gsap";
 
@@ -28,6 +29,11 @@ export function AllProjectsCatalog({
   const catalogRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useCatalogScroll({
     wrapperRef: scrollRef,
@@ -79,15 +85,16 @@ export function AllProjectsCatalog({
     return () => ctx.revert();
   }, [isReady]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !mounted) return null;
 
-  return (
+  return createPortal(
     <div
       ref={catalogRef}
       className={`${styles.catalog} ${isReady ? styles.catalogOpen : ""}`}
       role="dialog"
       aria-modal="true"
       aria-labelledby="all-projects-title"
+      data-cursor-surface
     >
       <header className={styles.header}>
         <div className={styles.headerMeta}>
@@ -109,11 +116,7 @@ export function AllProjectsCatalog({
       <div ref={scrollRef} className={styles.scrollArea}>
         <div ref={listRef} className={styles.list}>
           {projects.map((project, index) => (
-            <div
-              key={project.id}
-              className={styles.item}
-              data-catalog-item
-            >
+            <div key={project.id} className={styles.item} data-catalog-item>
               <p className={styles.index}>
                 {String(index + 1).padStart(2, "0")}
               </p>
@@ -182,6 +185,7 @@ export function AllProjectsCatalog({
           ))}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

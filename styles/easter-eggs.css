@@ -1,5 +1,6 @@
 /* ─── Easter egg global overrides ─────────────────────────────────────────── */
 
+/* Myspace overlay chrome — transition/overlay state (data-easter-egg) */
 html[data-easter-egg="myspace"] {
   --myspace-cyan: #0bd3d3;
   --myspace-pink: #f890e7;
@@ -13,12 +14,6 @@ html[data-easter-egg="myspace"] {
   --myspace-gray: #d8c4e8;
   --myspace-ink: #1e1238;
 
-  /* Retheme the portfolio — Miami Vice dusk, not black */
-  --accent: var(--myspace-cyan);
-  --surface: var(--myspace-dusk);
-  --background: var(--myspace-twilight);
-  --foreground: var(--myspace-white);
-  --muted: var(--myspace-lavender);
   --border: rgba(11, 211, 211, 0.28);
   --border-color: rgba(248, 144, 231, 0.25);
   --footer-background: linear-gradient(
@@ -37,9 +32,6 @@ html[data-easter-egg="myspace"] {
   --bar-overlay-a: var(--myspace-pink);
   --bar-overlay-b: var(--myspace-cyan);
   --bar-overlay-c: var(--myspace-white);
-
-  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Ctext y='18' font-size='18' fill='%23f890e7'%3E%E2%99%A5%3C/text%3E%3C/svg%3E")
-    12 12, auto;
 }
 
 html[data-easter-egg="myspace"] body {
@@ -66,12 +58,7 @@ html[data-easter-egg="myspace"] body {
   background-attachment: scroll !important;
 }
 
-body.easter-egg-myspace-active.custom-cursor-active,
-body.easter-egg-myspace-active.custom-cursor-active a,
-body.easter-egg-myspace-active.custom-cursor-active button {
-  cursor: auto !important;
-}
-
+/* Custom cursor owns the pointer in VICE — no native ♥ override */
 html[data-easter-egg="broken-ux"] {
   scroll-behavior: auto !important;
 }
@@ -80,8 +67,9 @@ html[data-easter-egg="broken-ux"] * {
   scroll-behavior: auto !important;
 }
 
-body.easter-egg-broken-ux-active,
-body.easter-egg-broken-ux-active * {
+/* Only force wait cursor when custom cursor is NOT active */
+body.easter-egg-broken-ux-active:not(.custom-cursor-active),
+body.easter-egg-broken-ux-active:not(.custom-cursor-active) * {
   cursor: wait !important;
 }
 

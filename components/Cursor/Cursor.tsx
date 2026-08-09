@@ -3,6 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
+import { useSystemMode } from "@/components/EasterEggs/SystemModeProvider";
+import { MODE_CURSOR, type SystemMode } from "@/lib/systemMode";
+
 import styles from "./Cursor.module.css";
 
 type CursorState =
@@ -29,12 +32,14 @@ const SYMBOL: Record<CursorState, string> = {
 };
 
 /** Half-size of the default square reticle (edge to center). */
-const GAP = 10;
+const GAP = 8;
 const FRAME_OUTSET = 6;
 const BRACKET_FOLLOW = 0.45;
 const FRAME_FOLLOW = 0.32;
 const GLITCH_MS = 100;
 const GLITCH_CHANCE = 0.04;
+const KONAMI_INTERRUPT_CHANCE = 0.008;
+const KONAMI_INTERRUPT_MS = 110;
 
 type Point = { x: number; y: number };
 
@@ -56,48 +61,97 @@ const FRAME_STATES = new Set<string>([
   "interactive",
 ]);
 
+function parseCursorTarget(target: HTMLElement): {
+  state: CursorState;
+  frameEl: HTMLElement | null;
+} {
+  const raw = target.getAttribute("data-cursor") || "default";
+  if (raw === "hide") return { state: "default", frameEl: null };
+
+  return {
+    state: raw as CursorState,
+    frameEl: FRAME_STATES.has(raw) ? target : null,
+  };
+}
+
+const SURFACE_SELECTOR = "[data-cursor-surface], [aria-modal='true']";
+
+function isOverlayLocked() {
+  return document.documentElement.classList.contains("catalog-open");
+}
+
+function resolveWithinSurface(
+  surface: HTMLElement,
+  stack: Element[],
+): { state: CursorState; frameEl: HTMLElement | null } {
+  for (const candidate of stack) {
+    if (!(candidate instanceof Element)) continue;
+    if (!surface.contains(candidate)) continue;
+    if (candidate.closest("[data-cursor-root]")) continue;
+
+    const hit = candidate.closest("[data-cursor]");
+    if (hit instanceof HTMLElement && surface.contains(hit)) {
+      return parseCursorTarget(hit);
+    }
+  }
+
+  if (surface.hasAttribute("data-cursor")) {
+    return parseCursorTarget(surface);
+  }
+
+  return { state: "default", frameEl: null };
+}
+
 function resolveFromPoint(
   x: number,
   y: number,
 ): { state: CursorState; frameEl: HTMLElement | null } {
   const stack = document.elementsFromPoint(x, y);
+  const overlayLocked = isOverlayLocked();
 
   for (const el of stack) {
     if (!(el instanceof Element)) continue;
     if (el.closest("[data-cursor-root]")) continue;
 
+    // Full-screen overlays own the pointer — never snap to page beneath.
+    const surface = el.closest(SURFACE_SELECTOR);
+    if (surface instanceof HTMLElement) {
+      return resolveWithinSurface(surface, stack);
+    }
+
     const target = el.closest("[data-cursor]");
     if (!(target instanceof HTMLElement)) continue;
 
-    const raw = target.getAttribute("data-cursor") || "default";
-    if (raw === "hide") return { state: "default", frameEl: null };
+    // Catalog / detail lock: ignore hero + page targets under the modal.
+    if (overlayLocked && !target.closest(SURFACE_SELECTOR)) {
+      continue;
+    }
 
-    const state = raw as CursorState;
-    return {
-      state,
-      frameEl: FRAME_STATES.has(raw) ? target : null,
-    };
+    return parseCursorTarget(target);
   }
 
   // Magnetic wrappers sit above the child — walk for a framed descendant under the pointer.
-  for (const el of stack) {
-    if (!(el instanceof HTMLElement)) continue;
-    if (el.closest("[data-cursor-root]")) continue;
+  if (!overlayLocked) {
+    for (const el of stack) {
+      if (!(el instanceof HTMLElement)) continue;
+      if (el.closest("[data-cursor-root]")) continue;
+      if (el.closest(SURFACE_SELECTOR)) continue;
 
-    const child = el.querySelector<HTMLElement>("[data-cursor]");
-    if (!child) continue;
+      const child = el.querySelector<HTMLElement>("[data-cursor]");
+      if (!child) continue;
 
-    const raw = child.getAttribute("data-cursor") || "default";
-    if (raw === "hide" || !FRAME_STATES.has(raw)) continue;
+      const raw = child.getAttribute("data-cursor") || "default";
+      if (raw === "hide" || !FRAME_STATES.has(raw)) continue;
 
-    const rect = child.getBoundingClientRect();
-    if (
-      x >= rect.left &&
-      x <= rect.right &&
-      y >= rect.top &&
-      y <= rect.bottom
-    ) {
-      return { state: raw as CursorState, frameEl: child };
+      const rect = child.getBoundingClientRect();
+      if (
+        x >= rect.left &&
+        x <= rect.right &&
+        y >= rect.top &&
+        y <= rect.bottom
+      ) {
+        return { state: raw as CursorState, frameEl: child };
+      }
     }
   }
 
@@ -147,7 +201,16 @@ function frameOffsets(rect: DOMRect) {
   };
 }
 
+function resolveIdleGlyph(mode: SystemMode, interruptGlyph: string | null) {
+  if (interruptGlyph) return interruptGlyph;
+  return MODE_CURSOR[mode].glyph;
+}
+
 export function Cursor() {
+  const { mode } = useSystemMode();
+  const modeRef = useRef(mode);
+  modeRef.current = mode;
+
   const cornerRefs = useRef<Record<string, HTMLSpanElement | null>>({});
   const centerRef = useRef<HTMLSpanElement>(null);
   const coordsRef = useRef<HTMLSpanElement>(null);
@@ -165,12 +228,16 @@ export function Cursor() {
   const velocity = useRef(0);
   const lastMouse = useRef({ x: 0, y: 0, t: 0 });
   const glitchUntil = useRef(0);
+  const interruptUntil = useRef(0);
+  const interruptGlyph = useRef<string | null>(null);
 
   const [state, setState] = useState<CursorState>("default");
   const [framed, setFramed] = useState(false);
   const [glitch, setGlitch] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [active, setActive] = useState(false);
+  const [cursorReady, setCursorReady] = useState(false);
+  const [displayGlyph, setDisplayGlyph] = useState(MODE_CURSOR.default.glyph);
 
   useEffect(() => {
     setMounted(true);
@@ -186,7 +253,6 @@ export function Cursor() {
     if (!isFinePointer || prefersReducedMotion) return;
 
     setActive(true);
-    document.body.classList.add("custom-cursor-active");
 
     const onMove = (event: MouseEvent) => {
       const now = performance.now();
@@ -199,15 +265,6 @@ export function Cursor() {
       mouse.current.y = event.clientY;
       lastMouse.current = { x: event.clientX, y: event.clientY, t: now };
 
-      const next = resolveFromPoint(event.clientX, event.clientY);
-      frameEl.current = next.frameEl;
-      const nextFramed = Boolean(next.frameEl);
-      if (framedRef.current !== nextFramed) {
-        framedRef.current = nextFramed;
-        setFramed(nextFramed);
-      }
-      setState((current) => (current === next.state ? current : next.state));
-
       if (
         !glitchUntil.current &&
         velocity.current > 1.2 &&
@@ -218,20 +275,67 @@ export function Cursor() {
       }
     };
 
+    const applyTarget = (next: {
+      state: CursorState;
+      frameEl: HTMLElement | null;
+    }) => {
+      frameEl.current = next.frameEl;
+      const nextFramed = Boolean(next.frameEl);
+      if (framedRef.current !== nextFramed) {
+        framedRef.current = nextFramed;
+        setFramed(nextFramed);
+      }
+      setState((current) => (current === next.state ? current : next.state));
+    };
+
     let frame = 0;
     const animate = () => {
       const now = performance.now();
       const mx = mouse.current.x;
       const my = mouse.current.y;
 
+      // Re-resolve every frame so overlays (All Work) clear stale hero frames
+      // even when the mouse hasn't moved.
+      applyTarget(resolveFromPoint(mx, my));
+
       if (glitchUntil.current && now >= glitchUntil.current) {
         glitchUntil.current = 0;
         setGlitch(false);
       }
 
-      const el = frameEl.current;
-      if (el) {
-        targets.current = frameOffsets(el.getBoundingClientRect());
+      if (interruptUntil.current && now >= interruptUntil.current) {
+        interruptUntil.current = 0;
+        interruptGlyph.current = null;
+      }
+
+      const currentMode = modeRef.current;
+      if (
+        currentMode === "konami" &&
+        !frameEl.current &&
+        !interruptUntil.current &&
+        Math.random() < KONAMI_INTERRUPT_CHANCE
+      ) {
+        const options = MODE_CURSOR.konami.interruptions ?? ["..."];
+        interruptGlyph.current =
+          options[Math.floor(Math.random() * options.length)] ?? "...";
+        interruptUntil.current = now + KONAMI_INTERRUPT_MS;
+      }
+
+      const el =
+        frameEl.current && frameEl.current.isConnected
+          ? frameEl.current
+          : null;
+      if (el && isOverlayLocked() && !el.closest(SURFACE_SELECTOR)) {
+        frameEl.current = null;
+      }
+
+      const frameTarget =
+        frameEl.current && frameEl.current.isConnected
+          ? frameEl.current
+          : null;
+
+      if (frameTarget) {
+        targets.current = frameOffsets(frameTarget.getBoundingClientRect());
       } else if (glitchUntil.current) {
         const scramble = GAP + 3 + Math.random() * 5;
         targets.current = {
@@ -244,7 +348,7 @@ export function Cursor() {
         targets.current = defaultOffsets(mx, my);
       }
 
-      const follow = el ? FRAME_FOLLOW : BRACKET_FOLLOW;
+      const follow = frameTarget ? FRAME_FOLLOW : BRACKET_FOLLOW;
 
       for (const item of CORNERS) {
         const current = corners.current[item.key];
@@ -259,11 +363,10 @@ export function Cursor() {
       }
 
       if (centerRef.current) {
-        // Keep the glyph centered on the pointer while framed.
-        const cx = el
+        const cx = frameTarget
           ? (targets.current.tl.x + targets.current.tr.x) / 2
           : mx;
-        const cy = el
+        const cy = frameTarget
           ? (targets.current.tl.y + targets.current.bl.y) / 2
           : my;
         centerRef.current.style.transform = `translate3d(${cx}px, ${cy}px, 0) translate(-50%, -50%)`;
@@ -285,8 +388,49 @@ export function Cursor() {
       window.removeEventListener("mousemove", onMove);
       document.body.classList.remove("custom-cursor-active");
       setActive(false);
+      setCursorReady(false);
     };
   }, [mounted]);
+
+  // Hide native cursor only after the custom cursor portal is ready.
+  useEffect(() => {
+    if (!active || !cursorReady) return;
+    document.body.classList.add("custom-cursor-active");
+    return () => {
+      document.body.classList.remove("custom-cursor-active");
+    };
+  }, [active, cursorReady]);
+
+  useEffect(() => {
+    if (!active) return;
+    const id = requestAnimationFrame(() => setCursorReady(true));
+    return () => cancelAnimationFrame(id);
+  }, [active]);
+
+  useEffect(() => {
+    if (state !== "default" || framed) {
+      setDisplayGlyph(SYMBOL[state] ?? "·");
+      return;
+    }
+    setDisplayGlyph(
+      resolveIdleGlyph(mode, interruptGlyph.current),
+    );
+  }, [mode, state, framed, glitch]);
+
+  // Keep Konami interrupt glyph visible while active.
+  useEffect(() => {
+    if (!active) return;
+    let frame = 0;
+    const syncGlyph = () => {
+      if (!framedRef.current) {
+        const next = resolveIdleGlyph(modeRef.current, interruptGlyph.current);
+        setDisplayGlyph((current) => (current === next ? current : next));
+      }
+      frame = requestAnimationFrame(syncGlyph);
+    };
+    frame = requestAnimationFrame(syncGlyph);
+    return () => cancelAnimationFrame(frame);
+  }, [active]);
 
   if (!mounted || !active) return null;
 
@@ -295,9 +439,10 @@ export function Cursor() {
   return createPortal(
     <div
       data-cursor-root
+      data-mode={mode}
       className={`${styles.root} ${framed ? styles.rootFramed : ""} ${
         glitch ? styles.rootGlitch : ""
-      }`}
+      } ${styles[`mode_${mode}`] ?? ""}`}
       aria-hidden="true"
     >
       {CORNERS.map(({ key, className }) => (
@@ -310,7 +455,7 @@ export function Cursor() {
         />
       ))}
       <span ref={centerRef} className={styles.center}>
-        {SYMBOL[state] ?? "·"}
+        {displayGlyph}
       </span>
       <span
         ref={coordsRef}

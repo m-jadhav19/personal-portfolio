@@ -1,27 +1,43 @@
-/* ─── Color Tokens ───────────────────────────────────────────────────────── */
+/* ─── Color Tokens — Personal Digital OS ─────────────────────────────────── */
 
-:root {
-  --background: #0e1111;
-  --foreground: #f5f4f0;
+:root,
+html[data-mode="default"] {
+  /* Semantic — black environment; cobalt is interaction only */
+  --bg: #0e1111;
+  --surface: #111f3a;
+  --text: #f4f4f0;
+  --muted: #8fa9b8;
 
-  --muted: #f5f4f0;
-  --border: rgba(200, 218, 255, 0.12);
+  --cobalt: #2457ff;
+  --cobalt-light: #416dff;
 
-  --accent: #3b6fff;
+  /* Dimensional FX — reserved for VICE / intentional glitch; not DEFAULT marquee */
+  --fx-cyan: #16d7d4;
+  --fx-magenta: #d94cff;
+
+  /* Cursor: light glyph + difference blend so it stays visible on cobalt footer */
+  --cursor-fg: var(--text);
+  --cursor-offset-a: transparent;
+  --cursor-offset-b: transparent;
+
+  /* Migration aliases */
+  --background: var(--bg);
+  --foreground: var(--text);
+  --accent: var(--cobalt);
   --success: #22c55e;
 
-  --surface: #111f3a;
+  --border: rgba(200, 218, 255, 0.12);
 
   /* ─── Spacing Scale ──────────────────────────────────────────────────── */
 
-  --space-4: 0.25rem;   /*  4px */
-  --space-8: 0.5rem;    /*  8px */
-  --space-16: 1rem;     /* 16px */
-  --space-24: 1.5rem;   /* 24px */
-  --space-40: 2.5rem;   /* 40px */
-  --space-64: 4rem;     /* 64px */
-  --space-96: 6rem;     /* 96px */
-  --space-160: 10rem;   /* 160px */
+  --space-4: 0.25rem; /*  4px */
+  --space-8: 0.5rem; /*  8px */
+  --space-16: 1rem; /* 16px */
+  --space-24: 1.5rem; /* 24px */
+  --space-40: 2.5rem; /* 40px */
+  --space-64: 4rem; /* 64px */
+  --space-96: 6rem; /* 96px */
+  --space-160: 10rem; /* 160px */
 
   /* ─── Layout ─────────────────────────────────────────────────────────── */
 
@@ -57,11 +73,70 @@
   --bar-overlay-b: var(--background);
   --bar-overlay-c: var(--accent);
 
-  /* Light footer contrast on dark site */
-  --footer-background: #3b6fff;
+  /* Footer contrast */
+  --footer-background: var(--cobalt);
   --footer-foreground: #0e1111;
   --footer-muted: #f5f4f0;
   --footer-border: rgba(10, 20, 40, 0.12);
+}
+
+/* ─── VICE named palette ─────────────────────────────────────────────────── */
+
+html[data-mode="vice"] {
+  --vice-bg: #162a61;
+  --vice-surface: #2d1b4e;
+  --vice-text: #fff5f8;
+  --vice-muted: #c4a1ff;
+  --vice-cyan: #17e0e0;
+  --vice-pink: #ff3fb4;
+  --vice-purple: #8b4dff;
+  --vice-yellow: #ffe45e;
+
+  --bg: var(--vice-bg);
+  --surface: var(--vice-surface);
+  --text: var(--vice-text);
+  --muted: var(--vice-muted);
+  --cobalt: var(--vice-cyan);
+  --cobalt-light: var(--vice-pink);
+
+  --fx-cyan: var(--vice-cyan);
+  --fx-magenta: var(--vice-pink);
+
+  --cursor-fg: var(--vice-cyan);
+  --cursor-offset-a: var(--vice-cyan);
+  --cursor-offset-b: var(--vice-pink);
+
+  --background: var(--bg);
+  --foreground: var(--text);
+  --accent: var(--cobalt);
+}
+
+/* ─── KONAMI named palette ───────────────────────────────────────────────── */
+
+html[data-mode="konami"] {
+  --hack-black: #090909;
+  --hack-white: #f5f5f5;
+  --hack-red: #f10d0d;
+  --hack-blue: #3137ff;
+  --hack-yellow: #ffe600;
+  --hack-green: #00b51a;
+  --hack-orange: #e87800;
+
+  --bg: var(--hack-black);
+  --surface: #1a1a1a;
+  --text: var(--hack-white);
+  --muted: #888888;
+  --cobalt: var(--hack-blue);
+  --cobalt-light: var(--hack-yellow);
+
+  --cursor-fg: var(--hack-white);
+  --cursor-offset-a: transparent;
+  --cursor-offset-b: transparent;
+
+  --background: var(--bg);
+  --foreground: var(--text);
+  --accent: var(--cobalt);
+  --success: var(--hack-green);
 }
 
 html {

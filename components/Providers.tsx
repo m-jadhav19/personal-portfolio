@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { BarOverlay } from "@/components/BarOverlay";
 import { Cursor } from "@/components/Cursor/Cursor";
 import { DynamicFavicon } from "@/components/DynamicFavicon";
-import { MyspaceThemeProvider } from "@/components/EasterEggs/MyspaceThemeProvider";
+import { SystemModeProvider } from "@/components/EasterEggs/SystemModeProvider";
 import { Loader } from "@/components/Loader/Loader";
 import { Navigation } from "@/components/Navigation";
 import { ShapeOverlay } from "@/components/ShapeOverlay";
@@ -22,7 +22,7 @@ export function Providers({ children }: ProvidersProps) {
   useLenis();
 
   return (
-    <MyspaceThemeProvider>
+    <SystemModeProvider>
       {!isResume ? (
         <>
           <ShapeOverlay />
@@ -34,6 +34,6 @@ export function Providers({ children }: ProvidersProps) {
         </>
       ) : null}
       {children}
-    </MyspaceThemeProvider>
+    </SystemModeProvider>
   );
 }

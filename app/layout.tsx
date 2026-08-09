@@ -66,6 +66,7 @@ export default function RootLayout({
       lang="en"
       className={`theme-dark ${orbitron.variable} ${shareTechMono.variable} ${openSans.variable} ${monoton.variable} ${syncopate.variable}`}
       data-theme="dark"
+      data-mode="default"
     >
       <body className={shareTechMono.className}>
         <Providers>{children}</Providers>
