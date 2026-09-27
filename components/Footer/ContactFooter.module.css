@@ -4,13 +4,29 @@
   min-height: 100svh;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  gap: clamp(5rem, 10vw, 10rem);
   padding: clamp(2rem, 4vw, 4rem) var(--grid-padding-inline) var(--space-24);
   overflow: hidden;
   background: var(--footer-background);
   color: var(--footer-foreground);
   border-top: 1px solid var(--footer-border);
+}
+
+/* Hosts the dog-town canvas; every in-flow child stacks above it. */
+.stage {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: clamp(3.5rem, 7vw, 7rem);
+}
+
+.top,
+.main,
+.details,
+.resumeNote {
+  position: relative;
+  z-index: 1;
 }
 
 .top,
@@ -134,7 +150,7 @@
 
 .details {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: var(--space-40);
   padding-top: var(--space-40);
   border-top: 1px solid var(--footer-border);
@@ -145,6 +161,28 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-16);
+}
+
+.clock {
+  font-variant-numeric: tabular-nums;
+}
+
+.clock span {
+  font-family: var(--font-mono);
+  font-size: var(--text-label-size);
+  letter-spacing: var(--text-label-tracking);
+  text-transform: uppercase;
+  color: var(--footer-muted);
+}
+
+.phone {
+  color: var(--footer-foreground);
+  transition: color var(--duration-fast) var(--ease);
+}
+
+.phone:hover,
+.phone:focus-visible {
+  color: var(--footer-muted);
 }
 
 .socials div {
@@ -185,9 +223,11 @@
   transform: translateY(-0.15em);
 }
 
+/* The pixel ground line drawn by the scene doubles as this row's divider. */
 .bottom {
+  position: relative;
+  z-index: 1;
   padding-top: var(--space-24);
-  border-top: 1px solid var(--footer-border);
 }
 
 .bottom a {
@@ -195,9 +235,31 @@
   transition: color var(--duration-fast) var(--ease);
 }
 
+.credit,
+.hud {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0 var(--space-8);
+}
+
+.hud {
+  color: var(--footer-foreground);
+  font-variant-numeric: tabular-nums;
+}
+
+.hud span:first-child {
+  color: var(--footer-muted);
+}
+
+@media (max-width: 1024px) {
+  .details {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 700px) {
-  .footer {
-    gap: var(--space-96);
+  .stage {
+    gap: var(--space-64);
   }
 
   .heading {
@@ -212,6 +274,14 @@
   .bottom {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .credit {
+    flex-direction: column;
+  }
+
+  .creditDivider {
+    display: none;
   }
 }
 

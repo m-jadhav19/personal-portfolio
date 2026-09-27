@@ -1,0 +1,51 @@
+.canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  image-rendering: pixelated;
+}
+
+/* Reserves room for the town; the ground line lands on its bottom edge. */
+.band {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: flex-start;
+  min-height: clamp(180px, 24vh, 250px);
+  pointer-events: none;
+}
+
+.hint {
+  max-width: 22ch;
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-label-size);
+  line-height: 1.5;
+  letter-spacing: var(--text-label-tracking);
+  text-transform: uppercase;
+  color: var(--footer-muted);
+  transition:
+    opacity var(--duration-medium) var(--ease),
+    transform var(--duration-medium) var(--ease);
+}
+
+.hintHidden {
+  opacity: 0;
+  transform: translateY(-0.4rem);
+}
+
+@media (max-width: 700px) {
+  .band {
+    min-height: 180px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hint {
+    transition: none;
+  }
+}

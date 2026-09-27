@@ -132,5 +132,15 @@ export type Portfolio = {
     phone: string;
     cta: string;
     credit: string;
+    /** IANA timezone used for the live footer clock and the town's day/night */
+    timezone: string;
+    /** Short label shown next to the live clock, e.g. "IST · UTC+5:30" */
+    timezoneLabel: string;
+    /** Tech credit shown in the footer bottom row */
+    colophon: string;
+    /** The pixel dog running through the footer town */
+    mascot: {
+      name: string;
+    };
   };
 };
