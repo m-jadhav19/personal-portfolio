@@ -113,113 +113,7 @@
   transform-origin: center;
   overflow: visible;
   background: transparent;
-  cursor: pointer;
-  pointer-events: auto;
-}
-
-/* Shared scale so WebGL sticker + SVG hits stay aligned */
-.stickerStack {
-  position: absolute;
-  inset: 0;
-  transform-origin: center;
-  transition: transform 0.5s var(--ease);
-}
-
-/* Sticker Forge WebGL host — die-cut peelable sticker */
-.stickerHost {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  width: 100%;
-  height: 100%;
-  pointer-events: auto;
-  opacity: 0;
-  transition: opacity 220ms var(--ease);
-}
-
-.stickerHost[data-ready] {
-  opacity: 1;
-}
-
-.stickerHost[data-hidden] {
-  opacity: 0;
   pointer-events: none;
-}
-
-.stickerHost :global(canvas) {
-  display: block;
-  width: 100% !important;
-  height: 100% !important;
-}
-
-.portrait {
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  overflow: visible;
-  background: transparent;
-  /* Transparent areas pass through to Sticker Forge for edge peels. */
-  pointer-events: none;
-}
-
-.portrait :global(svg) {
-  pointer-events: none;
-}
-
-.portrait :global([class*="hit"]) {
-  pointer-events: auto;
-}
-
-.portraitCanvas {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  display: block;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-}
-
-.portraitCutout {
-  position: relative;
-  z-index: 1;
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  object-position: center center;
-  /* Must stay none so empty space reaches the peel canvas. */
-  pointer-events: none;
-  user-select: none;
-  -webkit-user-select: none;
-}
-
-.portraitHint {
-  position: absolute;
-  left: 50%;
-  bottom: -0.35rem;
-  z-index: 4;
-  margin: 0;
-  transform: translate(-50%, 100%);
-  font-family: var(--font-mono);
-  font-size: 0.65rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--muted);
-  white-space: nowrap;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 180ms var(--ease);
-}
-
-.portraitStage:hover .portraitHint,
-.portraitStage:focus-visible .portraitHint {
-  opacity: 0.85;
-}
-
-.portraitStage:hover .stickerStack,
-.portraitStage:focus-visible .stickerStack {
-  transform: scale(1.03);
 }
 
 .footer {
@@ -300,14 +194,5 @@ html.intro-loading [data-intro="portrait"] {
 
   .heroMyspace .track {
     animation: none;
-  }
-
-  .stickerStack {
-    transition: none;
-  }
-
-  .portraitStage:hover .stickerStack,
-  .portraitStage:focus-visible .stickerStack {
-    transform: none;
   }
 }
