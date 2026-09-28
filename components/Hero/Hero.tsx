@@ -8,7 +8,6 @@ import { INTRO_COMPLETE_EVENT } from "@/animations/navigation";
 import { useMyspaceTheme } from "@/components/EasterEggs/MyspaceThemeProvider";
 import { portfolio } from "@/content/portfolio";
 
-import { HeroIdentity } from "./HeroIdentity";
 import { HeroMarquee } from "./HeroMarquee";
 import { HeroMeta } from "./HeroMeta";
 import { HeroPortrait } from "./HeroPortrait";
@@ -62,9 +61,7 @@ export function Hero() {
       ref={heroRef}
       className={`${styles.hero} ${isMyspace ? styles.heroMyspace : ""}`}
     >
-      <HeroIdentity />
-
-      <div className={styles.stage} aria-hidden="true">
+      <div className={styles.stage}>
         <HeroMarquee
           lines={marqueeLines}
           lineRefs={[lineOneRef, lineTwoRef, lineThreeRef]}
@@ -75,6 +72,7 @@ export function Hero() {
       <div className={styles.footer}>
         <HeroMeta />
       </div>
+      <span className={styles.scrollCue}>Scroll to explore</span>
     </section>
   );
 }

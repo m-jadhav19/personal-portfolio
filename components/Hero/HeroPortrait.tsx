@@ -5,7 +5,6 @@ import { useRef, useState } from "react";
 import { portfolio } from "@/content/portfolio";
 
 import { PortraitAsciiFrame } from "./PortraitAsciiFrame";
-import { PortraitRgbCanvas, type PortraitPointer } from "./PortraitRgbCanvas";
 import styles from "./Hero.module.css";
 
 type HeroPortraitProps = {
@@ -14,7 +13,7 @@ type HeroPortraitProps = {
 
 export function HeroPortrait({ portraitRef }: HeroPortraitProps) {
   const localRef = useRef<HTMLDivElement>(null);
-  const pointerRef = useRef<PortraitPointer>({ x: 0.5, y: 0.5, hovered: false });
+  const pointerRef = useRef({ x: 0.5, y: 0.5, hovered: false });
   const [isHovered, setIsHovered] = useState(false);
 
   const setRef = (node: HTMLDivElement | null) => {
@@ -31,8 +30,14 @@ export function HeroPortrait({ portraitRef }: HeroPortraitProps) {
     if (!node) return;
     const rect = node.getBoundingClientRect();
     if (rect.width < 1 || rect.height < 1) return;
-    pointerRef.current.x = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
-    pointerRef.current.y = Math.min(1, Math.max(0, (clientY - rect.top) / rect.height));
+    pointerRef.current.x = Math.min(
+      1,
+      Math.max(0, (clientX - rect.left) / rect.width),
+    );
+    pointerRef.current.y = Math.min(
+      1,
+      Math.max(0, (clientY - rect.top) / rect.height),
+    );
   };
 
   const portraitSrc = portfolio.hero.portrait.src;
@@ -66,11 +71,16 @@ export function HeroPortrait({ portraitRef }: HeroPortraitProps) {
       }}
       onPointerMove={(event) => syncPointer(event.clientX, event.clientY)}
     >
-      <PortraitAsciiFrame
-        isHovered={isHovered}
-        pointerRef={pointerRef}
-      />
-      <PortraitRgbCanvas src={portraitSrc} pointerRef={pointerRef} />
+      <PortraitAsciiFrame isHovered={isHovered} pointerRef={pointerRef} />
+      <div className={styles.portrait}>
+        {/* Clean sticker SVG — no runtime RGB-shift canvas */}
+        <img
+          className={styles.portraitCutout}
+          src={portraitSrc}
+          alt=""
+          draggable={false}
+        />
+      </div>
     </div>
   );
 }

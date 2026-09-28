@@ -36,7 +36,7 @@ export const portfolio: Portfolio = {
     pitch:
       "I build responsive, high-craft interfaces with React, Next.js, TypeScript, motion, and WebGL.",
     portrait: {
-      src: "/portrait.png",
+      src: "/images/mandar-portrait.svg",
     },
     location: "Mumbai, India",
     availability: true,
