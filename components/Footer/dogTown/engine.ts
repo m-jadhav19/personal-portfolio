@@ -752,16 +752,19 @@ export class DogTownEngine {
   private rebuildStatic() {
     if (this.width === 0 || this.height === 0) return;
     const rng = mulberry32(this.seed);
-    const segment = Math.max(this.worldWidth, 420);
+    // Different loop lengths so the three seams never land on the same frame.
+    const farLen = Math.max(Math.round(this.worldWidth * 2.75), 780);
+    const nearLen = Math.max(Math.round(this.worldWidth * 3.4), 1040);
+    const groundLen = Math.max(Math.round(this.worldWidth * 1.85), 560);
 
     this.layers = {
-      far: this.buildFarLayer(rng, segment),
-      near: this.buildNearLayer(rng, segment),
-      ground: this.buildGroundLayer(rng, segment),
+      far: this.buildFarLayer(rng, farLen),
+      near: this.buildNearLayer(rng, nearLen),
+      ground: this.buildGroundLayer(rng, groundLen),
     };
 
     if (this.clouds.length === 0) {
-      const count = this.worldWidth > 420 ? 5 : 3;
+      const count = this.worldWidth > 420 ? 6 : 4;
       for (let i = 0; i < count; i += 1) {
         this.clouds.push({
           sprite: rng() > 0.5 ? CLOUD_LARGE : CLOUD_SMALL,
@@ -773,7 +776,7 @@ export class DogTownEngine {
     }
 
     this.stars = [];
-    const starCount = Math.round(this.worldWidth / 14);
+    const starCount = Math.round(this.worldWidth / 12);
     for (let i = 0; i < starCount; i += 1) {
       this.stars.push({
         x: rng() * this.worldWidth,
@@ -797,40 +800,80 @@ export class DogTownEngine {
     return { canvas, ctx, width, height, parallax };
   }
 
+  /**
+   * Draw a rect that wraps across the left/right edges of a looping strip so
+   * the join between tiles has continuous buildings instead of a hard cut.
+   */
+  private wrapFill(
+    ctx: CanvasRenderingContext2D,
+    segment: number,
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    color: string,
+    alpha: number,
+  ) {
+    if (w <= 0 || h <= 0) return;
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = color;
+    let cursor = ((x % segment) + segment) % segment;
+    let remaining = w;
+    while (remaining > 0) {
+      const slice = Math.min(remaining, segment - cursor);
+      ctx.fillRect(cursor, y, slice, h);
+      remaining -= slice;
+      cursor = 0;
+    }
+  }
+
   private buildFarLayer(rng: () => number, segment: number): Layer {
     const layer = this.createLayer(segment, BAND_HEIGHT, 0.22);
     const { ctx } = layer;
     const ground = BAND_HEIGHT;
     const windowAlpha = this.night ? 0.55 : 0.26;
+    const ink = this.palette.ink;
+    const paper = this.palette.paper;
 
-    let x = 0;
-    while (x < segment - 8) {
-      const width = Math.min(segment - x, 12 + Math.floor(rng() * 28));
+    // Walk a full loop so the last building can straddle the seam into x=0.
+    let covered = 0;
+    let x = Math.floor(rng() * 18);
+    while (covered < segment) {
+      const width = 12 + Math.floor(rng() * 28);
       const height = 20 + Math.floor(rng() * 46);
       const top = ground - height;
+      const gap = Math.floor(rng() * 4);
 
-      ctx.globalAlpha = 0.16;
-      ctx.fillStyle = this.palette.ink;
-      ctx.fillRect(x, top, width, height);
+      this.wrapFill(ctx, segment, x, top, width, height, ink, 0.16);
 
       const feature = rng();
       if (feature < 0.22) {
-        ctx.fillRect(x + Math.floor(width / 2), top - 6, 1, 6);
+        this.wrapFill(
+          ctx,
+          segment,
+          x + Math.floor(width / 2),
+          top - 6,
+          1,
+          6,
+          ink,
+          0.16,
+        );
       } else if (feature < 0.36 && width > 16) {
-        ctx.fillRect(x + 3, top - 5, 6, 4);
-        ctx.fillRect(x + 4, top - 1, 1, 1);
-        ctx.fillRect(x + 7, top - 1, 1, 1);
+        this.wrapFill(ctx, segment, x + 3, top - 5, 6, 4, ink, 0.16);
+        this.wrapFill(ctx, segment, x + 4, top - 1, 1, 1, ink, 0.16);
+        this.wrapFill(ctx, segment, x + 7, top - 1, 1, 1, ink, 0.16);
       }
 
-      ctx.globalAlpha = windowAlpha;
-      ctx.fillStyle = this.palette.paper;
       for (let row = top + 3; row + 2 <= ground - 3; row += 4) {
-        for (let col = x + 2; col + 2 <= x + width - 2; col += 4) {
-          if (rng() < 0.42) ctx.fillRect(col, row, 2, 2);
+        for (let col = 2; col + 2 <= width - 2; col += 4) {
+          if (rng() < 0.42) {
+            this.wrapFill(ctx, segment, x + col, row, 2, 2, paper, windowAlpha);
+          }
         }
       }
 
-      x += width + Math.floor(rng() * 4);
+      x += width + gap;
+      covered += width + gap;
     }
 
     ctx.globalAlpha = 1;
@@ -854,9 +897,7 @@ export class DogTownEngine {
       rw: number,
       rh: number,
     ) => {
-      ctx.globalAlpha = alpha;
-      ctx.fillStyle = color;
-      ctx.fillRect(rx, ry, rw, rh);
+      this.wrapFill(ctx, segment, rx, ry, rw, rh, color, alpha);
     };
 
     const drawHouse = (x: number) => {
@@ -868,7 +909,14 @@ export class DogTownEngine {
       const roofRows = Math.min(10, Math.floor(width / 4));
       for (let i = 0; i < roofRows; i += 1) {
         const inset = Math.round((i * (width / 2 + 1)) / roofRows);
-        fill(ink, INK_ALPHA, x - 1 + inset, wallTop - 1 - i, width + 2 - inset * 2, 1);
+        fill(
+          ink,
+          INK_ALPHA,
+          x - 1 + inset,
+          wallTop - 1 - i,
+          width + 2 - inset * 2,
+          1,
+        );
       }
       fill(ink, INK_ALPHA, x + width - 7, wallTop - roofRows + 1, 3, roofRows - 2);
 
@@ -887,7 +935,16 @@ export class DogTownEngine {
       fill(paper, PAPER_ALPHA * 0.8, x + 3, top + 3, width - 6, 3);
       fill(paper, PAPER_ALPHA * 0.7, x + 2, ground - 11, width - 4, 8);
       for (let col = 0; col * 3 < width - 4; col += 1) {
-        if (col % 2 === 0) fill(paper, PAPER_ALPHA, x + 2 + col * 3, ground - 13, Math.min(3, width - 4 - col * 3), 2);
+        if (col % 2 === 0) {
+          fill(
+            paper,
+            PAPER_ALPHA,
+            x + 2 + col * 3,
+            ground - 13,
+            Math.min(3, width - 4 - col * 3),
+            2,
+          );
+        }
       }
       return width;
     };
@@ -909,12 +966,24 @@ export class DogTownEngine {
       fill(ink, INK_ALPHA + 0.1, x, ground - 26, 6, 1);
       fill(paper, this.night ? 0.9 : PAPER_ALPHA, x + 4, ground - 26, 4, 3);
       if (this.night) {
-        const gradient = ctx.createRadialGradient(x + 6, ground - 24, 1, x + 6, ground - 24, 14);
-        gradient.addColorStop(0, paper);
-        gradient.addColorStop(1, "rgba(255,255,255,0)");
-        ctx.globalAlpha = 0.22;
-        ctx.fillStyle = gradient;
-        ctx.fillRect(x - 8, ground - 38, 28, 38);
+        // Soft lamp glow — clipped to the strip; wrapping the radial fill
+        // looks muddy, so only draw when the lamp is comfortably inside.
+        const localX = ((x % segment) + segment) % segment;
+        if (localX > 10 && localX < segment - 18) {
+          const gradient = ctx.createRadialGradient(
+            localX + 6,
+            ground - 24,
+            1,
+            localX + 6,
+            ground - 24,
+            14,
+          );
+          gradient.addColorStop(0, paper);
+          gradient.addColorStop(1, "rgba(255,255,255,0)");
+          ctx.globalAlpha = 0.22;
+          ctx.fillStyle = gradient;
+          ctx.fillRect(localX - 8, ground - 38, 28, 38);
+        }
       }
       return 8;
     };
@@ -925,17 +994,23 @@ export class DogTownEngine {
       return 6;
     };
 
-    let x = 4;
-    while (x < segment - 20) {
+    // Bridge the seam with a tree so the join never looks like a blank gap.
+    drawTree(-6);
+
+    let covered = 0;
+    let x = 10 + Math.floor(rng() * 16);
+    while (covered < segment) {
       const roll = rng();
       let width: number;
-      if (roll < 0.28) width = drawHouse(x);
-      else if (roll < 0.46) width = drawShop(x);
-      else if (roll < 0.7) width = drawTree(x);
-      else if (roll < 0.84) width = drawLamp(x);
-      else if (roll < 0.92) width = drawMailbox(x);
+      if (roll < 0.26) width = drawHouse(x);
+      else if (roll < 0.44) width = drawShop(x);
+      else if (roll < 0.66) width = drawTree(x);
+      else if (roll < 0.8) width = drawLamp(x);
+      else if (roll < 0.9) width = drawMailbox(x);
       else width = 6 + Math.floor(rng() * 12);
-      x += width + 4 + Math.floor(rng() * 12);
+      const gap = 4 + Math.floor(rng() * 12);
+      x += width + gap;
+      covered += width + gap;
     }
 
     ctx.globalAlpha = 1;
@@ -950,9 +1025,18 @@ export class DogTownEngine {
     ctx.fillRect(0, 0, segment, 1);
 
     ctx.globalAlpha = 0.5;
-    const pebbles = Math.floor(segment / 9);
+    const pebbles = Math.floor(segment / 7);
     for (let i = 0; i < pebbles; i += 1) {
-      ctx.fillRect(Math.floor(rng() * segment), 2 + Math.floor(rng() * 4), 1 + Math.floor(rng() * 2), 1);
+      this.wrapFill(
+        ctx,
+        segment,
+        Math.floor(rng() * segment),
+        2 + Math.floor(rng() * 4),
+        1 + Math.floor(rng() * 2),
+        1,
+        this.palette.ink,
+        0.5,
+      );
     }
     ctx.globalAlpha = 1;
     return layer;
@@ -1006,12 +1090,16 @@ export class DogTownEngine {
     const groundY = this.groundY;
     const orbX = Math.round(this.worldWidth * 0.78);
     const orbY = groundY - 96;
+    const width = this.worldWidth;
 
     if (this.night) {
       const t = this.elapsed;
+      // Stars crawl slowly so the sky feels continuous with the looping town.
+      const drift = (this.scroll * 0.04) % width;
       for (const star of this.stars) {
         const twinkle = 0.35 + 0.35 * Math.sin(t * 1.6 + star.phase);
-        this.fillRect(star.x, star.y, 1, 1, this.palette.paper, twinkle);
+        const x = (((star.x - drift) % width) + width) % width;
+        this.fillRect(x, star.y, 1, 1, this.palette.paper, twinkle);
       }
       this.drawSprite(MOON, orbX, orbY, 0.7, 2);
     } else {
@@ -1021,7 +1109,9 @@ export class DogTownEngine {
 
   private drawLayer(layer: Layer, topY: number) {
     const { ctx, px } = this;
-    const offset = -((this.scroll * layer.parallax) % layer.width);
+    // Positive modulo so the strip always starts in (-width, 0] and tiles cleanly.
+    const scrolled = this.scroll * layer.parallax;
+    const offset = -((((scrolled % layer.width) + layer.width) % layer.width));
     const destWidth = layer.width * px;
     const destHeight = layer.height * px;
     const y = Math.round(topY * px);
