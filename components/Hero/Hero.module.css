@@ -179,9 +179,32 @@
   height: 100%;
   object-fit: contain;
   object-position: center center;
-  pointer-events: none;
+  pointer-events: auto;
   user-select: none;
   -webkit-user-select: none;
+}
+
+.portraitHint {
+  position: absolute;
+  left: 50%;
+  bottom: -0.35rem;
+  z-index: 4;
+  margin: 0;
+  transform: translate(-50%, 100%);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 180ms var(--ease);
+}
+
+.portraitStage:hover .portraitHint,
+.portraitStage:focus-visible .portraitHint {
+  opacity: 0.85;
 }
 
 .portraitStage:hover .portrait,
