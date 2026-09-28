@@ -117,48 +117,57 @@
   pointer-events: auto;
 }
 
-/* ─── Minimal scrambled character field around portrait ─────────────────── */
-
-.portraitBackdrop {
+/* Shared scale so WebGL sticker + SVG hits stay aligned */
+.stickerStack {
   position: absolute;
-  inset: -18%;
-  z-index: 0;
-  pointer-events: none;
-  opacity: 1;
+  inset: 0;
   transform-origin: center;
+  transition: transform 0.5s var(--ease);
 }
 
-.asciiMatrix {
+/* Sticker Forge WebGL host — die-cut peelable sticker */
+.stickerHost {
   position: absolute;
-  inset: -6%;
-  display: grid;
-  grid-template-columns: repeat(22, 1fr);
-  grid-template-rows: repeat(16, 1fr);
-  font-family: var(--font-mono);
-  font-size: clamp(0.74rem, 1.65vw, 1.15rem);
-  font-weight: 400;
-  line-height: 1;
-  letter-spacing: 0.08em;
-  color: rgba(200, 218, 255, 0.72);
-  overflow: visible;
-  will-change: transform;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  pointer-events: auto;
+  opacity: 0;
+  transition: opacity 220ms var(--ease);
 }
 
-.asciiCell {
-  display: grid;
-  place-items: center;
-  opacity: 0.45;
-  user-select: none;
-  transform: translate3d(0, 0, 0);
+.stickerHost[data-ready] {
+  opacity: 1;
+}
+
+.stickerHost[data-hidden] {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.stickerHost :global(canvas) {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
 }
 
 .portrait {
   position: absolute;
   inset: 0;
-  z-index: 1;
+  z-index: 2;
   overflow: visible;
   background: transparent;
-  transition: transform 0.5s var(--ease);
+  /* Transparent areas pass through to Sticker Forge for edge peels. */
+  pointer-events: none;
+}
+
+.portrait :global(svg) {
+  pointer-events: none;
+}
+
+.portrait :global([class*="hit"]) {
+  pointer-events: auto;
 }
 
 .portraitCanvas {
@@ -179,7 +188,8 @@
   height: 100%;
   object-fit: contain;
   object-position: center center;
-  pointer-events: auto;
+  /* Must stay none so empty space reaches the peel canvas. */
+  pointer-events: none;
   user-select: none;
   -webkit-user-select: none;
 }
@@ -207,8 +217,8 @@
   opacity: 0.85;
 }
 
-.portraitStage:hover .portrait,
-.portraitStage:focus-visible .portrait {
+.portraitStage:hover .stickerStack,
+.portraitStage:focus-visible .stickerStack {
   transform: scale(1.03);
 }
 
@@ -258,10 +268,6 @@ html.intro-loading [data-intro="portrait"] {
     0.1em 0.12em 0 color-mix(in srgb, var(--myspace-pink, #f890e7) 55%, transparent);
 }
 
-.heroMyspace .asciiMatrix {
-  color: rgba(11, 211, 211, 0.55);
-}
-
 .heroMyspace .scrollCue {
   font-family: var(--font-easter-myspace-body);
   color: var(--myspace-lavender, #c4a1ff);
@@ -296,12 +302,12 @@ html.intro-loading [data-intro="portrait"] {
     animation: none;
   }
 
-  .portrait {
+  .stickerStack {
     transition: none;
   }
 
-  .portraitStage:hover .portrait,
-  .portraitStage:focus-visible .portrait {
+  .portraitStage:hover .stickerStack,
+  .portraitStage:focus-visible .stickerStack {
     transform: none;
   }
 }

@@ -17,6 +17,8 @@ export type PortraitPart =
 
 type PortraitAvatarProps = {
   src: string;
+  /** `full` draws the sticker art; `overlay` is hit-targets + motion only (Sticker Forge draws the art). */
+  variant?: "full" | "overlay";
   pointer: { x: number; y: number };
   hovered: boolean;
   activePart: PortraitPart | null;
@@ -27,11 +29,12 @@ type PortraitAvatarProps = {
 };
 
 /**
- * High-fidelity sticker image + layered SVG hit targets / motion overlays
- * so each feature can react without redrawing the whole portrait.
+ * Sticker portrait with layered SVG hit targets / motion overlays so each
+ * feature can react. When Sticker Forge owns the die-cut art, use `overlay`.
  */
 export function PortraitAvatar({
   src,
+  variant = "full",
   pointer,
   hovered,
   activePart,
@@ -78,17 +81,20 @@ export function PortraitAvatar({
 
   return (
     <div
-      className={`${styles.wrap} ${className ?? ""}`}
+      className={`${styles.wrap} ${variant === "overlay" ? styles.overlayOnly : ""} ${className ?? ""}`}
       style={style}
       data-active={activePart ?? undefined}
+      data-variant={variant}
     >
-      <img
-        className={styles.sticker}
-        src={src}
-        alt=""
-        draggable={false}
-        aria-hidden="true"
-      />
+      {variant === "full" ? (
+        <img
+          className={styles.sticker}
+          src={src}
+          alt=""
+          draggable={false}
+          aria-hidden="true"
+        />
+      ) : null}
 
       <svg
         className={styles.overlay}
@@ -118,7 +124,11 @@ export function PortraitAvatar({
         </g>
 
         {/* Eyes that follow the pointer (drawn over the sticker pupils) */}
-        <g className={styles.eyes} style={{ pointerEvents: "none" }}>
+        <g
+          className={`${styles.eyes} ${hovered ? styles.eyesLive : ""}`}
+          style={{ pointerEvents: "none" }}
+          aria-hidden="true"
+        >
           <g className={styles.eyeLeft}>
             <circle cx="188" cy="198" r="5.5" className={styles.pupil} />
             <circle cx="190" cy="196" r="1.5" className={styles.glint} />
