@@ -55,6 +55,12 @@ export const portfolio: Portfolio = {
     phone: "+91-8956193777",
     cta: "Let's build something interesting.",
     credit: "Designed & Developed by Mandar",
+    timezone: "Asia/Kolkata",
+    timezoneLabel: "IST · UTC+5:30",
+    colophon: "Built with Next.js, GSAP & Three.js",
+    mascot: {
+      name: "Pixel",
+    },
   },
   resumeUrl: "/resume",
   projects: [
