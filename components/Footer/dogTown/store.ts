@@ -7,7 +7,13 @@ export type DogTownState = HudState & {
   live: boolean;
 };
 
-const INITIAL_STATE: DogTownState = { meters: 0, bones: 0, live: false };
+const INITIAL_STATE: DogTownState = {
+  mode: "roam",
+  meters: 0,
+  bones: 0,
+  best: 0,
+  live: false,
+};
 
 let state: DogTownState = INITIAL_STATE;
 const listeners = new Set<() => void>();
@@ -25,7 +31,7 @@ export function setDogTownState(patch: Partial<DogTownState>) {
 }
 
 export function resetDogTownState() {
-  setDogTownState(INITIAL_STATE);
+  setDogTownState({ ...INITIAL_STATE });
 }
 
 /** Lets the footer HUD (outside the canvas stage) read the engine's counters. */

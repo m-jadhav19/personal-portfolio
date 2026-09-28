@@ -1,15 +1,24 @@
 import {
+  BARREL,
   BENCH,
   BIRD_FRAMES,
   BONE,
+  CACTUS,
   CAT,
   CLOUD_LARGE,
   CLOUD_SMALL,
+  CONE,
+  CRATE,
   DOG_LEAP,
   DOG_RUN_FRAMES,
   FENCE,
+  GO,
   HYDRANT,
   MOON,
+  PLUS_ONE,
+  ROCK,
+  SCOOTER,
+  SIGNPOST,
   SUN,
   TRASH_CAN,
   WOOF,
@@ -22,9 +31,13 @@ export type Palette = {
   collar: string;
 };
 
+export type PlayMode = "roam" | "play";
+
 export type HudState = {
+  mode: PlayMode;
   meters: number;
   bones: number;
+  best: number;
 };
 
 export type EngineOptions = {
@@ -41,9 +54,10 @@ const JUMP_HEIGHT = 32;
 const AIR_TIME = 0.7;
 const GRAVITY = (8 * JUMP_HEIGHT) / (AIR_TIME * AIR_TIME);
 const JUMP_VELOCITY = (GRAVITY * AIR_TIME) / 2;
-const BASE_SPEED = 110;
-const MAX_SPEED = 190;
-const ACCELERATION = 1.1;
+const ROAM_SPEED = 88;
+const PLAY_BASE_SPEED = 120;
+const PLAY_MAX_SPEED = 210;
+const PLAY_ACCELERATION = 1.6;
 const CLEARANCE = 3;
 const BAND_HEIGHT = 150;
 const GROUND_MARGIN = 4;
@@ -51,6 +65,7 @@ const GROUND_LAYER_HEIGHT = 7;
 const DOG_HITBOX = { left: 6, right: 26, height: 13 };
 const STUMBLE_TIME = 0.75;
 const INVULNERABLE_TIME = 1.1;
+const BEST_SCORE_KEY = "dog-town-best-meters";
 
 type Obstacle = {
   sprite: Sprite;
@@ -104,12 +119,29 @@ type Layer = {
   parallax: number;
 };
 
-const OBSTACLES: { sprite: Sprite; weight: number }[] = [
+/** Sparse set used while the dog is just roaming the footer. */
+const ROAM_OBSTACLES: { sprite: Sprite; weight: number }[] = [
+  { sprite: HYDRANT, weight: 3 },
+  { sprite: CAT, weight: 2 },
+  { sprite: ROCK, weight: 2 },
+  { sprite: CONE, weight: 2 },
+  { sprite: TRASH_CAN, weight: 1 },
+];
+
+/** Denser, more varied set once the scored run starts. */
+const PLAY_OBSTACLES: { sprite: Sprite; weight: number }[] = [
   { sprite: HYDRANT, weight: 3 },
   { sprite: TRASH_CAN, weight: 3 },
   { sprite: CAT, weight: 2 },
   { sprite: FENCE, weight: 2 },
   { sprite: BENCH, weight: 2 },
+  { sprite: ROCK, weight: 3 },
+  { sprite: CONE, weight: 3 },
+  { sprite: CRATE, weight: 2 },
+  { sprite: BARREL, weight: 2 },
+  { sprite: SCOOTER, weight: 2 },
+  { sprite: CACTUS, weight: 2 },
+  { sprite: SIGNPOST, weight: 2 },
 ];
 
 function mulberry32(seed: number) {
@@ -125,6 +157,26 @@ function mulberry32(seed: number) {
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
+}
+
+function readBestMeters() {
+  if (typeof window === "undefined") return 0;
+  try {
+    const raw = window.localStorage.getItem(BEST_SCORE_KEY);
+    const value = Number(raw);
+    return Number.isFinite(value) && value > 0 ? Math.floor(value) : 0;
+  } catch {
+    return 0;
+  }
+}
+
+function writeBestMeters(meters: number) {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(BEST_SCORE_KEY, String(meters));
+  } catch {
+    // private mode / blocked storage — ignore
+  }
 }
 
 /** Times (rising / falling) at which a fresh jump passes `height`. */
@@ -151,8 +203,10 @@ export class DogTownEngine {
   private rng: () => number;
   private seed: number;
 
+  private mode: PlayMode = "roam";
   private scroll = 0;
-  private speed = BASE_SPEED;
+  private playScroll = 0;
+  private speed = ROAM_SPEED;
   private elapsed = 0;
   private dogHeight = 0;
   private dogVelocity = 0;
@@ -170,11 +224,13 @@ export class DogTownEngine {
   private clouds: Cloud[] = [];
   private stars: Star[] = [];
   private nextGap = 0;
-  private nextBoneIn = 3;
+  private nextBoneIn = 4;
   private nextBirdIn = 5;
 
   private bonesCollected = 0;
+  private bestMeters = 0;
   private lastMeters = -1;
+  private lastMode: PlayMode = "roam";
   private hudClock = 0;
 
   private readonly onHud?: (hud: HudState) => void;
@@ -191,6 +247,7 @@ export class DogTownEngine {
     this.seed = options.seed ?? Math.floor(Math.random() * 0xffffffff);
     this.rng = mulberry32(this.seed);
     this.night = this.isNight();
+    this.bestMeters = readBestMeters();
   }
 
   /* ─── Public API ───────────────────────────────────────────────────────── */
@@ -210,6 +267,7 @@ export class DogTownEngine {
     this.spriteCache.clear();
     this.rebuildStatic();
     this.draw();
+    this.publishHud(0, true);
   }
 
   setPalette(palette: Palette) {
@@ -234,15 +292,42 @@ export class DogTownEngine {
     this.draw();
   }
 
+  getMode() {
+    return this.mode;
+  }
+
   /**
-   * User interaction: the dog always barks back, and jumps if it is on the
-   * ground. Returns false only when the scene is static (reduced motion).
+   * User interaction. First tap starts the scored run; later taps jump.
+   * Returns false only when the scene is static (reduced motion).
    */
   poke() {
     if (this.reducedMotion) return false;
+
+    if (this.mode === "roam") {
+      this.startPlay();
+      return true;
+    }
+
     this.spawnWoof();
     this.jump();
     return true;
+  }
+
+  private startPlay() {
+    this.mode = "play";
+    this.elapsed = 0;
+    this.playScroll = 0;
+    this.bonesCollected = 0;
+    this.speed = PLAY_BASE_SPEED;
+    this.lastMeters = -1;
+    this.obstacles = [];
+    this.bones = [];
+    this.nextGap = this.worldWidth * 0.55;
+    this.nextBoneIn = 1.6;
+    this.spawnGo();
+    this.spawnWoof();
+    this.jump();
+    this.publishHud(0, true);
   }
 
   private jump() {
@@ -283,7 +368,17 @@ export class DogTownEngine {
 
   private update(dt: number) {
     this.elapsed += dt;
-    this.speed = Math.min(MAX_SPEED, BASE_SPEED + this.elapsed * ACCELERATION);
+
+    if (this.mode === "play") {
+      this.speed = Math.min(
+        PLAY_MAX_SPEED,
+        PLAY_BASE_SPEED + this.elapsed * PLAY_ACCELERATION,
+      );
+      this.playScroll += this.speed * dt;
+    } else {
+      this.speed = ROAM_SPEED;
+    }
+
     this.scroll += this.speed * dt;
 
     // Dog physics
@@ -297,7 +392,7 @@ export class DogTownEngine {
         this.autoSlack = 0.03 + this.rng() * 0.09;
       }
     } else {
-      this.runClock += dt * (this.speed / BASE_SPEED);
+      this.runClock += dt * (this.speed / ROAM_SPEED);
       if (this.runClock >= 0.085) {
         this.runClock = 0;
         this.runFrame = (this.runFrame + 1) % DOG_RUN_FRAMES.length;
@@ -313,7 +408,8 @@ export class DogTownEngine {
     this.updateClouds(dt);
     this.updateParticles(dt);
 
-    if (this.grounded) this.autopilot();
+    // Autopilot only while roaming — once you start, you own the jumps.
+    if (this.mode === "roam" && this.grounded) this.autopilot();
     this.checkCollisions();
     this.publishHud(dt);
   }
@@ -332,19 +428,32 @@ export class DogTownEngine {
     const spawnEdge = this.worldWidth + 12;
 
     if (!last || last.x < spawnEdge - this.nextGap) {
-      const sprite = this.pickObstacle();
-      if (sprite) {
-        this.obstacles.push({ sprite, x: spawnEdge, knocked: false, knockedFor: 0 });
+      const pack = this.pickObstaclePack();
+      let offset = 0;
+      for (const sprite of pack) {
+        this.obstacles.push({
+          sprite,
+          x: spawnEdge + offset,
+          knocked: false,
+          knockedFor: 0,
+        });
+        offset += sprite.width + 4;
       }
-      // Leave enough room to land and jump again, plus a random breather.
-      const minGap = this.speed * (AIR_TIME + 0.4);
-      this.nextGap = minGap + this.rng() * this.speed * 1.6;
+
+      if (this.mode === "play") {
+        const minGap = this.speed * (AIR_TIME + 0.22);
+        this.nextGap = minGap + this.rng() * this.speed * 0.9;
+      } else {
+        const minGap = this.speed * (AIR_TIME + 0.9);
+        this.nextGap = minGap + this.rng() * this.speed * 2.4;
+      }
     }
   }
 
   private pickObstacle(): Sprite | null {
+    const pool = this.mode === "play" ? PLAY_OBSTACLES : ROAM_OBSTACLES;
     const dogWidth = DOG_RUN_FRAMES[0].width;
-    const candidates = OBSTACLES.filter(({ sprite }) => {
+    const candidates = pool.filter(({ sprite }) => {
       const window = jumpWindow(sprite.height + CLEARANCE);
       if (!window) return false;
       const airborneSpan = (sprite.width + dogWidth) / this.speed;
@@ -361,6 +470,26 @@ export class DogTownEngine {
     return candidates[candidates.length - 1].sprite;
   }
 
+  /** Sometimes spawn a tight pair in play mode for denser runs. */
+  private pickObstaclePack(): Sprite[] {
+    const first = this.pickObstacle();
+    if (!first) return [];
+
+    if (this.mode !== "play" || this.rng() > 0.28) return [first];
+
+    const second = this.pickObstacle();
+    if (!second) return [first];
+
+    const packWidth = first.width + 4 + second.width;
+    const dogWidth = DOG_RUN_FRAMES[0].width;
+    const window = jumpWindow(Math.max(first.height, second.height) + CLEARANCE);
+    if (!window) return [first];
+
+    const airborneSpan = (packWidth + dogWidth) / this.speed;
+    if (window.fall - window.rise - airborneSpan <= 0.08) return [first];
+    return [first, second];
+  }
+
   private updateBones(dt: number) {
     const shift = this.speed * dt;
     for (const bone of this.bones) {
@@ -369,9 +498,12 @@ export class DogTownEngine {
     }
     this.bones = this.bones.filter((bone) => bone.x + BONE.width > 0);
 
+    // Bones only appear once the scored run has started.
+    if (this.mode !== "play") return;
+
     this.nextBoneIn -= dt;
     if (this.nextBoneIn <= 0 && this.bones.length === 0) {
-      this.nextBoneIn = 3 + this.rng() * 4;
+      this.nextBoneIn = 2 + this.rng() * 3.2;
       this.bones.push({
         x: this.worldWidth + 20,
         lift: 22 + Math.floor(this.rng() * 7),
@@ -462,14 +594,17 @@ export class DogTownEngine {
     const dogBottom = this.dogHeight;
     const dogTop = this.dogHeight + DOG_RUN_FRAMES[0].height;
 
-    for (const bone of this.bones) {
-      const overlapsX = bone.x < dogRight && bone.x + BONE.width > dogLeft;
-      const overlapsY = bone.lift < dogTop && bone.lift + BONE.height > dogBottom;
-      if (overlapsX && overlapsY) {
-        bone.x = -100;
-        this.bonesCollected += 1;
-        this.spawnCollect(bone);
-        this.publishHud(0, true);
+    if (this.mode === "play") {
+      for (const bone of this.bones) {
+        const overlapsX = bone.x < dogRight && bone.x + BONE.width > dogLeft;
+        const overlapsY =
+          bone.lift < dogTop && bone.lift + BONE.height > dogBottom;
+        if (overlapsX && overlapsY) {
+          bone.x = -100;
+          this.bonesCollected += 1;
+          this.spawnCollect(bone);
+          this.publishHud(0, true);
+        }
       }
     }
 
@@ -485,6 +620,7 @@ export class DogTownEngine {
         this.stumble = STUMBLE_TIME;
         this.invulnerable = INVULNERABLE_TIME;
         this.spawnDust(x + sprite.width / 2);
+        if (this.mode === "play") this.commitBest();
         break;
       }
     }
@@ -493,11 +629,44 @@ export class DogTownEngine {
   private publishHud(dt: number, force = false) {
     if (!this.onHud) return;
     this.hudClock += dt;
-    const meters = Math.floor(this.scroll / ART_PX_PER_METER);
-    if (!force && (this.hudClock < 0.2 || meters === this.lastMeters)) return;
+    const meters =
+      this.mode === "play"
+        ? Math.floor(this.playScroll / ART_PX_PER_METER)
+        : 0;
+
+    if (
+      !force &&
+      this.hudClock < 0.2 &&
+      meters === this.lastMeters &&
+      this.mode === this.lastMode
+    ) {
+      return;
+    }
+
     this.hudClock = 0;
     this.lastMeters = meters;
-    this.onHud({ meters, bones: this.bonesCollected });
+    this.lastMode = this.mode;
+
+    if (this.mode === "play" && meters > this.bestMeters) {
+      this.bestMeters = meters;
+      writeBestMeters(meters);
+    }
+
+    this.onHud({
+      mode: this.mode,
+      meters,
+      bones: this.bonesCollected,
+      best: this.bestMeters,
+    });
+  }
+
+  private commitBest() {
+    const meters = Math.floor(this.playScroll / ART_PX_PER_METER);
+    if (meters > this.bestMeters) {
+      this.bestMeters = meters;
+      writeBestMeters(meters);
+      this.publishHud(0, true);
+    }
   }
 
   /* ─── Spawners ─────────────────────────────────────────────────────────── */
@@ -522,6 +691,21 @@ export class DogTownEngine {
     });
   }
 
+  private spawnGo() {
+    const dog = DOG_RUN_FRAMES[0];
+    this.particles.push({
+      sprite: GO,
+      x: this.dogX + dog.width - 2,
+      y: this.groundY - dog.height - GO.height - 10,
+      vx: 2,
+      vy: -14,
+      life: 0,
+      maxLife: 1.1,
+      alpha: 1,
+      scale: 1.2,
+    });
+  }
+
   private spawnCollect(bone: Bone) {
     this.particles.push({
       sprite: BONE,
@@ -532,6 +716,17 @@ export class DogTownEngine {
       life: 0,
       maxLife: 0.6,
       alpha: 0.9,
+      scale: 1,
+    });
+    this.particles.push({
+      sprite: PLUS_ONE,
+      x: this.dogX + 16,
+      y: this.groundY - bone.lift - PLUS_ONE.height - 4,
+      vx: 0,
+      vy: -18,
+      life: 0,
+      maxLife: 0.7,
+      alpha: 1,
       scale: 1,
     });
   }
