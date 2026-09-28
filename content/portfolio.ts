@@ -33,6 +33,8 @@ export const portfolio: Portfolio = {
       "CREATIVE DEVELOPER",
       "INTERACTION / WEBGL",
     ],
+    pitch:
+      "I build responsive, high-craft interfaces with React, Next.js, TypeScript, motion, and WebGL.",
     portrait: {
       src: "/portrait.png",
     },
@@ -73,7 +75,7 @@ export const portfolio: Portfolio = {
       status: "Completed",
       description: "Spotify-powered cassette browser with motion-led discovery",
       impact:
-        "Client-side Spotify OAuth + playback UI with Framer Motion browse transitions",
+        "Spotify playback experience with cassette-style browse and motion-led discovery",
       contribution:
         "Built the full React app end-to-end: Spotify auth and playback wiring, cassette-style browse/search flows, and motion states that keep discovery feeling physical instead of like a generic media player. Owned layout, interaction timing, and API error/empty states.",
       imageSrc: projectThumbnailSrc("retro-cassette"),
@@ -91,7 +93,7 @@ export const portfolio: Portfolio = {
       status: "Completed",
       description: "Production-minded component library with Storybook coverage",
       impact:
-        "40+ documented primitives — tokens, variants, and composition patterns in Storybook",
+        "Component system with 40+ documented primitives for reusable product UI",
       contribution:
         "Designed and engineered a Next.js + Tailwind component system with typed props, consistent spacing/type tokens, and Storybook stories for each primitive. Focused on reusable architecture (composition over one-offs) so the library works as a real UI kit, not a visual demo.",
       imageSrc: projectThumbnailSrc("brutalist-ui"),
@@ -109,7 +111,7 @@ export const portfolio: Portfolio = {
       status: "Completed",
       description: "Canvas workspace with GSAP-driven spatial interaction",
       impact:
-        "Canvas + GSAP interaction layer targeting 60fps pan, drag, and settle motion",
+        "Interactive workspace built for fast drag, pan, and settle interactions",
       contribution:
         "Implemented a React + Canvas workspace where cards and surfaces respond to drag, inertia, and scroll-linked GSAP timelines. Tuned transform/compositing paths so motion stays smooth under load, and structured the UI so interaction logic stays separate from presentational components.",
       imageSrc: projectThumbnailSrc("ply-digital-workspace"),
@@ -127,7 +129,7 @@ export const portfolio: Portfolio = {
       status: "Completed",
       description: "Multi-timezone dashboard with Luxon-accurate scrubbing",
       impact:
-        "Luxon timezone engine + Radix UI controls for live multi-city time scrubbing",
+        "Multi-city world timer with a scrubbable timeline for comparing offsets",
       contribution:
         "Shipped a Next.js world-time dashboard with Luxon for DST-safe conversions and a scrubbable timeline for comparing cities. Used Radix primitives for accessible controls, and kept the time-travel metaphor readable so operators can scan offsets without losing precision.",
       imageSrc: projectThumbnailSrc("epoch-world-timer"),
@@ -145,7 +147,7 @@ export const portfolio: Portfolio = {
       status: "Completed",
       description: "Browser AR try-on with landmark-locked 3D overlays",
       impact:
-        "MediaPipe face mesh → Three.js accessory overlays at camera frame rate",
+        "In-browser AR try-on that keeps accessories locked to the face in real time",
       contribution:
         "Built a React webcam pipeline that feeds MediaPipe landmarks into Three.js meshes so accessories stay locked to the face in real time. Handled calibration, occlusion-friendly layering, and performance so the try-on feels product-ready in a browser tab — no native app required.",
       imageSrc: projectThumbnailSrc("auratry-virtual-try-on"),
@@ -163,7 +165,7 @@ export const portfolio: Portfolio = {
       status: "Completed",
       description: "Live GLSL dithering editor with tunable image pipelines",
       impact:
-        "Fragment-shader dither pipeline with live threshold, palette, and grain controls",
+        "Live dithering editor for tuning image pipelines with instant GPU feedback",
       contribution:
         "Engineered a Next.js + Three.js tool where GLSL shaders run the dither pipeline on the GPU. Exposed threshold, palette, and grain as live uniforms so artists get instant feedback, and structured the UI around a clear process: upload → tune → export.",
       imageSrc: projectThumbnailSrc("ditherboy"),
@@ -181,7 +183,7 @@ export const portfolio: Portfolio = {
       status: "In Progress",
       description: "R3F scene with GSAP-orchestrated camera navigation",
       impact:
-        "React Three Fiber scene graph + GSAP camera paths for spatial project browsing",
+        "Spatial portfolio scene with camera paths for browsing projects in 3D",
       contribution:
         "Prototyping a navigable 3D portfolio in React Three Fiber: scene composition, lighting, and GSAP-driven camera transitions between project nodes. Goal is intentional spatial browsing — clear wayfinding and readable hierarchy — not a gimmick flythrough.",
       imageSrc: projectThumbnailSrc("3d-portfolio-website"),

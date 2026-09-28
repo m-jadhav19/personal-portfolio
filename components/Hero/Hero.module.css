@@ -1,11 +1,99 @@
 .hero {
   position: relative;
   display: grid;
-  grid-template-rows: 1fr auto;
+  grid-template-rows: auto 1fr auto;
   min-height: 100vh;
   min-height: 100dvh;
   padding-top: var(--nav-height);
   overflow: hidden;
+}
+
+/* Level 1 — clear professional proposition above the spectacle */
+.identity {
+  position: relative;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-16);
+  max-width: 42rem;
+  padding: clamp(1.25rem, 3vh, 2.5rem) var(--grid-padding-inline) 0;
+}
+
+.brand {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(2.4rem, 6.5vw, 4.5rem);
+  font-weight: 500;
+  line-height: 0.9;
+  letter-spacing: -0.04em;
+  text-transform: uppercase;
+  color: var(--foreground);
+}
+
+.role {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-label-size, 0.75rem);
+  font-weight: 400;
+  letter-spacing: var(--text-label-tracking, 0.12em);
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.pitch {
+  margin: 0;
+  max-width: 36ch;
+  font-family: var(--font-description);
+  font-size: clamp(1rem, 1.5vw, 1.2rem);
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.ctas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-16);
+  margin-top: var(--space-8);
+}
+
+.ctaPrimary,
+.ctaSecondary {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  padding: 0.7rem 1.15rem;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  transition:
+    color var(--duration-fast) var(--ease),
+    background-color var(--duration-fast) var(--ease),
+    border-color var(--duration-fast) var(--ease);
+}
+
+.ctaPrimary {
+  background: var(--accent);
+  color: var(--background);
+  border: 1px solid var(--accent);
+}
+
+.ctaPrimary:hover,
+.ctaPrimary:focus-visible {
+  background: var(--cobalt-light, var(--accent));
+  border-color: var(--cobalt-light, var(--accent));
+}
+
+.ctaSecondary {
+  background: transparent;
+  color: var(--foreground);
+  border: 1px solid color-mix(in srgb, var(--foreground) 35%, transparent);
+}
+
+.ctaSecondary:hover,
+.ctaSecondary:focus-visible {
+  border-color: var(--foreground);
 }
 
 .stage {
@@ -196,22 +284,6 @@
   padding-bottom: clamp(1.25rem, 2.5vh, 2rem);
 }
 
-.scrollCue {
-  position: absolute;
-  bottom: clamp(1.25rem, 2.5vh, 2rem);
-  left: 50%;
-  z-index: 2;
-  transform: translateX(-50%);
-  font-family: var(--font-mono);
-  font-size: 0.7rem;
-  font-weight: 400;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--muted);
-  opacity: 0.55;
-  pointer-events: none;
-}
-
 html.intro-loading [data-intro="marquee-line"],
 html.intro-loading [data-intro="portrait"] {
   clip-path: inset(100% 0 0 0);
@@ -219,11 +291,24 @@ html.intro-loading [data-intro="portrait"] {
 
 /* ─── PIMPMYRIDE — OG hero layout, MySpace palette + fonts only ─────────── */
 
+.heroMyspace .identity,
 .heroMyspace .stage,
-.heroMyspace .footer,
-.heroMyspace .scrollCue {
+.heroMyspace .footer {
   position: relative;
   z-index: 2;
+}
+
+.heroMyspace .brand {
+  font-family: var(--font-easter-myspace-display);
+}
+
+.heroMyspace .role {
+  color: var(--myspace-cyan, var(--accent));
+}
+
+.heroMyspace .pitch {
+  font-family: var(--font-easter-myspace-body, var(--font-description));
+  color: var(--myspace-lavender, var(--muted));
 }
 
 .heroMyspace .track {
@@ -259,8 +344,27 @@ html.intro-loading [data-intro="portrait"] {
     --portrait-w: clamp(200px, 56vw, 320px);
   }
 
-  .scrollCue {
-    display: none;
+  .identity {
+    gap: var(--space-8);
+    max-width: none;
+    padding-top: var(--space-16);
+  }
+
+  .brand {
+    font-size: clamp(2rem, 12vw, 3rem);
+  }
+
+  .pitch {
+    max-width: 34ch;
+  }
+
+  .ctaPrimary,
+  .ctaSecondary {
+    min-height: 3rem;
+  }
+
+  .marquee {
+    opacity: 0.55;
   }
 }
 
@@ -280,5 +384,10 @@ html.intro-loading [data-intro="portrait"] {
   .portraitStage:hover .portrait,
   .portraitStage:focus-visible .portrait {
     transform: none;
+  }
+
+  .ctaPrimary,
+  .ctaSecondary {
+    transition: none;
   }
 }

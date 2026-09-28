@@ -63,7 +63,7 @@ export function ProjectSlide({
               rel="noopener noreferrer"
               className={styles.hoverLink}
             >
-              View project →
+              Live Demo <span aria-hidden="true">↗</span>
             </a>
           </Magnetic>
           {onOpenDetail ? (
@@ -73,7 +73,7 @@ export function ProjectSlide({
                 className={styles.hoverLink}
                 onClick={() => onOpenDetail(project)}
               >
-                Details →
+                Case Study <span aria-hidden="true">→</span>
               </button>
             </Magnetic>
           ) : null}

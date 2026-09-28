@@ -38,7 +38,13 @@ export function LocalTime({ timezone, label, className }: LocalTimeProps) {
 
   return (
     <p className={className}>
-      <time suppressHydrationWarning>{time ?? "--:--:--"}</time>{" "}
+      {time ? (
+        <>
+          <time dateTime={time} suppressHydrationWarning>
+            {time}
+          </time>{" "}
+        </>
+      ) : null}
       <span>{label}</span>
     </p>
   );
