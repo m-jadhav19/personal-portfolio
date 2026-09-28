@@ -2,7 +2,12 @@ import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 import { INTRO_DURATION } from "@/lib/motion";
-import { getLenis, resetScrollToTop } from "@/lib/lenis";
+import {
+  ensureScrollTop,
+  getLenis,
+  resetScrollToTop,
+  smoothScrollToTop,
+} from "@/lib/lenis";
 
 const NUM_POINTS = 10;
 const DELAY_POINTS_MAX = 0.3;
@@ -62,10 +67,20 @@ export function prefersReducedShapeMotion() {
 
 function getScrollTop() {
   const lenis = getLenis();
+  // On touch devices Lenis mirrors native scrolling and can lag behind the
+  // real position, so trust whichever value says we are further down.
   if (lenis && typeof lenis.scroll === "number") {
-    return lenis.scroll;
+    return Math.max(lenis.scroll, window.scrollY);
   }
   return window.scrollY;
+}
+
+function isTouchPrimary() {
+  if (typeof window === "undefined") return false;
+  return (
+    window.matchMedia("(pointer: coarse)").matches ||
+    window.matchMedia("(hover: none)").matches
+  );
 }
 
 function scrollToTopImmediate() {
@@ -79,6 +94,13 @@ export async function playScrollToTop() {
   }
 
   if (getScrollTop() <= SCROLL_TOP_THRESHOLD) {
+    return;
+  }
+
+  // Touch browsers drop programmatic scrolls while the root is overflow-
+  // clipped by a stopped Lenis, so skip the overlay hand-off and glide up.
+  if (isTouchPrimary()) {
+    await smoothScrollToTop(1);
     return;
   }
 
@@ -97,6 +119,7 @@ export async function playScrollToTop() {
     await playReveal();
   } finally {
     lenis?.start();
+    await ensureScrollTop(SCROLL_TOP_THRESHOLD);
   }
 }
 
