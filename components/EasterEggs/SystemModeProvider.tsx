@@ -40,6 +40,7 @@ import { Y2kMySpace } from "./Y2kMySpace";
 
 type SystemModeContextValue = {
   mode: SystemMode;
+  activeEgg: EasterEggId | null;
   isEasterEggActive: boolean;
   isTransitioning: boolean;
   /** @deprecated Prefer `mode === "vice"` — kept for migration */
@@ -240,12 +241,20 @@ export function SystemModeProvider({ children }: SystemModeProviderProps) {
   const value = useMemo(
     () => ({
       mode,
+      activeEgg,
       isEasterEggActive,
       isTransitioning,
       isMyspace,
       toggleMyspace,
     }),
-    [mode, isEasterEggActive, isTransitioning, isMyspace, toggleMyspace],
+    [
+      mode,
+      activeEgg,
+      isEasterEggActive,
+      isTransitioning,
+      isMyspace,
+      toggleMyspace,
+    ],
   );
 
   return (

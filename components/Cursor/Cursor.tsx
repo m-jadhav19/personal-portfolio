@@ -33,13 +33,17 @@ const SYMBOL: Record<CursorState, string> = {
 
 /** Half-size of the default square reticle (edge to center). */
 const GAP = 8;
+/** Tighter aim reticle while DESTROY is active. */
+const DESTROY_GAP = 5;
 const FRAME_OUTSET = 6;
 const BRACKET_FOLLOW = 0.45;
 const FRAME_FOLLOW = 0.32;
+const DESTROY_FOLLOW = 0.85;
 const GLITCH_MS = 100;
 const GLITCH_CHANCE = 0.04;
 const KONAMI_INTERRUPT_CHANCE = 0.008;
 const KONAMI_INTERRUPT_MS = 110;
+const DESTROY_GLYPH = "×";
 
 type Point = { x: number; y: number };
 
@@ -158,12 +162,12 @@ function resolveFromPoint(
   return { state: "default", frameEl: null };
 }
 
-function defaultOffsets(mx: number, my: number) {
+function defaultOffsets(mx: number, my: number, gap = GAP) {
   return {
-    tl: { x: mx - GAP, y: my - GAP },
-    tr: { x: mx + GAP, y: my - GAP },
-    bl: { x: mx - GAP, y: my + GAP },
-    br: { x: mx + GAP, y: my + GAP },
+    tl: { x: mx - gap, y: my - gap },
+    tr: { x: mx + gap, y: my - gap },
+    bl: { x: mx - gap, y: my + gap },
+    br: { x: mx + gap, y: my + gap },
   };
 }
 
@@ -207,9 +211,11 @@ function resolveIdleGlyph(mode: SystemMode, interruptGlyph: string | null) {
 }
 
 export function Cursor() {
-  const { mode } = useSystemMode();
+  const { mode, activeEgg } = useSystemMode();
   const modeRef = useRef(mode);
   modeRef.current = mode;
+  const destroyRef = useRef(activeEgg === "destroy");
+  destroyRef.current = activeEgg === "destroy";
 
   const cornerRefs = useRef<Record<string, HTMLSpanElement | null>>({});
   const centerRef = useRef<HTMLSpanElement>(null);
@@ -265,7 +271,9 @@ export function Cursor() {
       mouse.current.y = event.clientY;
       lastMouse.current = { x: event.clientX, y: event.clientY, t: now };
 
+      // No glitch scramble while aiming in destroy mode.
       if (
+        !destroyRef.current &&
         !glitchUntil.current &&
         velocity.current > 1.2 &&
         Math.random() < GLITCH_CHANCE
@@ -279,6 +287,17 @@ export function Cursor() {
       state: CursorState;
       frameEl: HTMLElement | null;
     }) => {
+      // Destroy mode: free-aim reticle only — never snap/frame to UI.
+      if (destroyRef.current) {
+        frameEl.current = null;
+        if (framedRef.current) {
+          framedRef.current = false;
+          setFramed(false);
+        }
+        setState((current) => (current === "default" ? current : "default"));
+        return;
+      }
+
       frameEl.current = next.frameEl;
       const nextFramed = Boolean(next.frameEl);
       if (framedRef.current !== nextFramed) {
@@ -293,6 +312,7 @@ export function Cursor() {
       const now = performance.now();
       const mx = mouse.current.x;
       const my = mouse.current.y;
+      const inDestroy = destroyRef.current;
 
       // Re-resolve every frame so overlays (All Work) clear stale hero frames
       // even when the mouse hasn't moved.
@@ -310,6 +330,7 @@ export function Cursor() {
 
       const currentMode = modeRef.current;
       if (
+        !inDestroy &&
         currentMode === "konami" &&
         !frameEl.current &&
         !interruptUntil.current &&
@@ -330,13 +351,13 @@ export function Cursor() {
       }
 
       const frameTarget =
-        frameEl.current && frameEl.current.isConnected
+        !inDestroy && frameEl.current && frameEl.current.isConnected
           ? frameEl.current
           : null;
 
       if (frameTarget) {
         targets.current = frameOffsets(frameTarget.getBoundingClientRect());
-      } else if (glitchUntil.current) {
+      } else if (!inDestroy && glitchUntil.current) {
         const scramble = GAP + 3 + Math.random() * 5;
         targets.current = {
           tl: { x: mx - scramble, y: my - scramble },
@@ -345,10 +366,18 @@ export function Cursor() {
           br: { x: mx + scramble, y: my + scramble },
         };
       } else {
-        targets.current = defaultOffsets(mx, my);
+        targets.current = defaultOffsets(
+          mx,
+          my,
+          inDestroy ? DESTROY_GAP : GAP,
+        );
       }
 
-      const follow = frameTarget ? FRAME_FOLLOW : BRACKET_FOLLOW;
+      const follow = frameTarget
+        ? FRAME_FOLLOW
+        : inDestroy
+          ? DESTROY_FOLLOW
+          : BRACKET_FOLLOW;
 
       for (const item of CORNERS) {
         const current = corners.current[item.key];
@@ -407,7 +436,22 @@ export function Cursor() {
     return () => cancelAnimationFrame(id);
   }, [active]);
 
+  // Entering destroy: drop any leftover frame snap immediately.
   useEffect(() => {
+    if (activeEgg !== "destroy") return;
+    frameEl.current = null;
+    framedRef.current = false;
+    setFramed(false);
+    setState("default");
+    setGlitch(false);
+    glitchUntil.current = 0;
+  }, [activeEgg]);
+
+  useEffect(() => {
+    if (activeEgg === "destroy") {
+      setDisplayGlyph(DESTROY_GLYPH);
+      return;
+    }
     if (state !== "default" || framed) {
       setDisplayGlyph(SYMBOL[state] ?? "·");
       return;
@@ -415,14 +459,18 @@ export function Cursor() {
     setDisplayGlyph(
       resolveIdleGlyph(mode, interruptGlyph.current),
     );
-  }, [mode, state, framed, glitch]);
+  }, [mode, state, framed, glitch, activeEgg]);
 
   // Keep Konami interrupt glyph visible while active.
   useEffect(() => {
     if (!active) return;
     let frame = 0;
     const syncGlyph = () => {
-      if (!framedRef.current) {
+      if (destroyRef.current) {
+        setDisplayGlyph((current) =>
+          current === DESTROY_GLYPH ? current : DESTROY_GLYPH,
+        );
+      } else if (!framedRef.current) {
         const next = resolveIdleGlyph(modeRef.current, interruptGlyph.current);
         setDisplayGlyph((current) => (current === next ? current : next));
       }
@@ -436,13 +484,18 @@ export function Cursor() {
 
   const showCoords = state === "lab";
 
+  const destroyActive = activeEgg === "destroy";
+
   return createPortal(
     <div
       data-cursor-root
       data-mode={mode}
-      className={`${styles.root} ${framed ? styles.rootFramed : ""} ${
-        glitch ? styles.rootGlitch : ""
-      } ${styles[`mode_${mode}`] ?? ""}`}
+      data-destroy-cursor={destroyActive ? "true" : undefined}
+      className={`${styles.root} ${framed && !destroyActive ? styles.rootFramed : ""} ${
+        glitch && !destroyActive ? styles.rootGlitch : ""
+      } ${styles[`mode_${mode}`] ?? ""} ${
+        destroyActive ? styles.mode_destroy : ""
+      }`}
       aria-hidden="true"
     >
       {CORNERS.map(({ key, className }) => (

@@ -132,7 +132,7 @@ export function DestroySiteSimulator({ onExit }: DestroySiteSimulatorProps) {
         className={styles.hud}
         data-destroy-ignore
         data-cursor-surface
-        data-cursor="interactive"
+        data-cursor="hide"
       >
         <div className={styles.brand}>
           <p className={styles.title}>Destroy mode</p>
@@ -151,7 +151,6 @@ export function DestroySiteSimulator({ onExit }: DestroySiteSimulatorProps) {
               aria-pressed={index === weaponIndex}
               aria-label={WEAPON_LABELS[id]}
               title={`${index + 1}: ${WEAPON_LABELS[id]}`}
-              data-cursor="button"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
@@ -168,19 +167,13 @@ export function DestroySiteSimulator({ onExit }: DestroySiteSimulatorProps) {
         </div>
 
         <div className={styles.actions}>
-          <button
-            type="button"
-            className={styles.btn}
-            onClick={toggleMute}
-            data-cursor="button"
-          >
+          <button type="button" className={styles.btn} onClick={toggleMute}>
             Sound {muted ? "Off" : "On"}
           </button>
           <button
             type="button"
             className={`${styles.btn} ${styles.btnPrimary}`}
             onClick={togglePause}
-            data-cursor="button"
           >
             Pause
           </button>
@@ -211,7 +204,6 @@ export function DestroySiteSimulator({ onExit }: DestroySiteSimulatorProps) {
                 type="button"
                 className={styles.pauseBtn}
                 onClick={togglePause}
-                data-cursor="button"
                 autoFocus
               >
                 Resume
@@ -220,7 +212,6 @@ export function DestroySiteSimulator({ onExit }: DestroySiteSimulatorProps) {
                 type="button"
                 className={styles.pauseBtn}
                 onClick={repair}
-                data-cursor="button"
               >
                 Repair site
               </button>
@@ -228,7 +219,6 @@ export function DestroySiteSimulator({ onExit }: DestroySiteSimulatorProps) {
                 type="button"
                 className={styles.pauseBtn}
                 onClick={leaveMode}
-                data-cursor="button"
               >
                 Leave mode
               </button>
@@ -236,7 +226,6 @@ export function DestroySiteSimulator({ onExit }: DestroySiteSimulatorProps) {
                 type="button"
                 className={`${styles.pauseBtn} ${styles.pauseBtnDanger}`}
                 onClick={hardExit}
-                data-cursor="button"
               >
                 Exit (reload)
               </button>
