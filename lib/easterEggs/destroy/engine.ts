@@ -468,6 +468,10 @@ export function createDestroyEngine(
   function onPointerDown(event: PointerEvent) {
     if (isHudTarget(event.target)) return;
 
+    // Keep aim synced even when the first interaction is a click (no prior move).
+    pointer.x = event.clientX;
+    pointer.y = event.clientY;
+
     // Right-click drag repositions the character.
     if (event.button === 2) {
       event.preventDefault();
