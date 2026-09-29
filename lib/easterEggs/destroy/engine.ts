@@ -1,5 +1,9 @@
 import { createDestroyAudio } from "./audio";
 import {
+  loadDestroySpriteAtlas,
+  type DestroySpriteAtlas,
+} from "./spriteAtlas";
+import {
   createTargetRegistry,
   type TargetRegistry,
 } from "./targets";
@@ -106,6 +110,7 @@ export function createDestroyEngine(
   const reducedMotion = prefersReducedMotionFlag(options.reducedMotion);
   const audio = createDestroyAudio(options.initialMuted ?? false);
   const targets: TargetRegistry = createTargetRegistry();
+  const atlas: DestroySpriteAtlas = loadDestroySpriteAtlas();
 
   let weaponIndex = 0;
   let paused = false;
@@ -115,7 +120,12 @@ export function createDestroyEngine(
   let hidden = false;
 
   const pointer: Vec = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
-  const character: Vec = { x: pointer.x - 40, y: pointer.y };
+  // Sit slightly behind the cursor so clicks hit page content, not the sprite.
+  const CHARACTER_OFFSET = { x: -36, y: 28 };
+  const character: Vec = {
+    x: pointer.x + CHARACTER_OFFSET.x,
+    y: pointer.y + CHARACTER_OFFSET.y,
+  };
   let facing: 1 | -1 = 1;
   let walkPhase = 0;
 
@@ -193,7 +203,9 @@ export function createDestroyEngine(
 
     if (id === "blaster") {
       if (countKind("blaster") >= cfg.maxLive) return;
-      const speed = 900;
+      const speed = 1100;
+      // Instant bite at the click point so hero text dies on click, not only along the bolt path.
+      damageAt(pointer.x, pointer.y, 0, 1);
       projectiles.push({
         kind: "blaster",
         x: character.x + Math.cos(aim) * 28,
@@ -305,11 +317,15 @@ export function createDestroyEngine(
   }
 
   function update(dt: number) {
-    const dx = pointer.x - character.x;
-    const dy = pointer.y - character.y;
+    const targetX = pointer.x + CHARACTER_OFFSET.x;
+    const targetY = pointer.y + CHARACTER_OFFSET.y;
+    const dx = targetX - character.x;
+    const dy = targetY - character.y;
     character.x += dx * LERP;
     character.y += dy * LERP;
-    if (Math.abs(dx) > 1) facing = dx >= 0 ? 1 : -1;
+    if (Math.abs(pointer.x - character.x) > 1) {
+      facing = pointer.x >= character.x ? 1 : -1;
+    }
     const speed = Math.hypot(dx, dy);
     walkPhase += dt * (speed > 8 ? 12 : 3);
 
@@ -401,24 +417,26 @@ export function createDestroyEngine(
     ctx.clearRect(0, 0, w, h);
 
     for (const p of particles) drawDebris(ctx, p);
-    for (const e of explosions) drawExplosion(ctx, e.x, e.y, e.life, e.maxLife);
+    for (const e of explosions) {
+      drawExplosion(ctx, e.x, e.y, e.life, e.maxLife, atlas);
+    }
 
     for (const p of projectiles) {
       if (p.kind === "blaster") {
-        drawBlasterBolt(ctx, p.x, p.y, Math.atan2(p.vy, p.vx));
+        drawBlasterBolt(ctx, p.x, p.y, Math.atan2(p.vy, p.vx), atlas);
       } else if (p.kind === "missile") {
-        drawMissile(ctx, p.x, p.y);
+        drawMissile(ctx, p.x, p.y, atlas);
       } else if (p.kind === "bomb") {
-        drawBomb(ctx, p.x, p.y, p.fuse);
+        drawBomb(ctx, p.x, p.y, p.fuse, atlas);
       }
     }
 
     for (const r of roaches) {
-      drawRoach(ctx, r.x, r.y, r.facing, walkPhase + r.x * 0.05);
+      drawRoach(ctx, r.x, r.y, r.facing, walkPhase + r.x * 0.05, atlas);
     }
 
     const aim = Math.atan2(pointer.y - character.y, pointer.x - character.x);
-    drawCharacter(ctx, character.x, character.y, facing, aim, walkPhase);
+    drawCharacter(ctx, character.x, character.y, facing, aim, walkPhase, atlas);
   }
 
   function frame(ts: number) {

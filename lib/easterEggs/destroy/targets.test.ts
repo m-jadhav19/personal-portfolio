@@ -19,6 +19,15 @@ test("matchesDestroyIgnore detects canvas ancestors", () => {
   );
 });
 
+test("matchesDestroyIgnore detects cursor root", () => {
+  assert.equal(
+    matchesDestroyIgnore((sel) =>
+      sel === "[data-cursor-root]" ? {} : null,
+    ),
+    true,
+  );
+});
+
 test("matchesDestroyIgnore allows normal content", () => {
   assert.equal(
     matchesDestroyIgnore(() => null),
