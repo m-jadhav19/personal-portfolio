@@ -141,66 +141,99 @@ export function drawBlasterBolt(
   ctx.restore();
 }
 
-export function drawMissile(
+export function drawRocket(
   ctx: CanvasRenderingContext2D,
   x: number,
   y: number,
+  angle = -Math.PI / 2,
   atlas?: DestroySpriteAtlas | null,
 ) {
-  if (drawSprite(ctx, atlas?.get("missile") ?? null, x, y, { scale: 1 })) {
-    return;
-  }
-  const ox = Math.round(x);
-  const oy = Math.round(y);
-  drawPixelRect(ctx, ox - 3, oy - 10, 6, 16, "#64748b");
-  drawPixelRect(ctx, ox - 2, oy - 14, 4, 5, "#ef4444");
-  drawPixelRect(ctx, ox - 4, oy + 4, 3, 4, "#f97316");
-  drawPixelRect(ctx, ox + 1, oy + 4, 3, 4, "#f97316");
-}
-
-export function drawBomb(
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  fuse: number,
-  atlas?: DestroySpriteAtlas | null,
-) {
-  if (drawSprite(ctx, atlas?.get("bomb") ?? null, x, y, { scale: 1 })) {
-    if (Math.floor(fuse * 10) % 2 === 0) {
-      drawPixelRect(ctx, x - 2, y - 18, 4, 4, "#fbbf24");
-    }
-    return;
-  }
-  const ox = Math.round(x);
-  const oy = Math.round(y);
-  drawPixelRect(ctx, ox - 6, oy - 6, 12, 12, "#1e293b");
-  drawPixelRect(ctx, ox - 1, oy - 10, 2, 5, "#a3a3a3");
-  if (Math.floor(fuse * 10) % 2 === 0) {
-    drawPixelRect(ctx, ox - 2, oy - 14, 3, 3, "#fbbf24");
-  }
-}
-
-export function drawRoach(
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  facing: 1 | -1,
-  phase: number,
-  atlas?: DestroySpriteAtlas | null,
-) {
-  const bob = Math.sin(phase) * 1;
   if (
-    drawSprite(ctx, atlas?.get("roach") ?? null, x, y + bob, {
-      facing,
+    drawSprite(ctx, atlas?.get("rocket") ?? null, x, y, {
+      rotation: angle + Math.PI / 2,
       scale: 1,
     })
   ) {
     return;
   }
   const ox = Math.round(x);
-  const oy = Math.round(y + bob);
-  drawPixelRect(ctx, ox - 5, oy - 2, 10, 5, "#78350f");
-  drawPixelRect(ctx, ox + (facing > 0 ? 3 : -6), oy - 3, 3, 3, "#451a03");
+  const oy = Math.round(y);
+  ctx.save();
+  ctx.translate(ox, oy);
+  ctx.rotate(angle);
+  drawPixelRect(ctx, -3, -12, 6, 20, "#94a3b8");
+  drawPixelRect(ctx, -2, -16, 4, 5, "#ef4444");
+  drawPixelRect(ctx, -4, 6, 3, 5, "#f97316");
+  drawPixelRect(ctx, 1, 6, 3, 5, "#f97316");
+  drawPixelRect(ctx, -1, 8, 2, 4, "#fde047");
+  ctx.restore();
+}
+
+export function drawVortex(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  life: number,
+  atlas?: DestroySpriteAtlas | null,
+) {
+  const pulse = 0.85 + Math.sin(life * 14) * 0.15;
+  if (
+    drawSprite(ctx, atlas?.get("vortex") ?? null, x, y, {
+      scale: pulse,
+      rotation: life * 6,
+    })
+  ) {
+    return;
+  }
+  const ox = Math.round(x);
+  const oy = Math.round(y);
+  const r = 10 * pulse;
+  ctx.save();
+  ctx.translate(ox, oy);
+  ctx.rotate(life * 6);
+  ctx.strokeStyle = "#c084fc";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(0, 0, r, 0, Math.PI * 1.6);
+  ctx.stroke();
+  ctx.strokeStyle = "#67e8f9";
+  ctx.beginPath();
+  ctx.arc(0, 0, r * 0.55, Math.PI * 0.4, Math.PI * 2);
+  ctx.stroke();
+  drawPixelRect(ctx, -2, -2, 4, 4, "#f5d0fe");
+  ctx.restore();
+}
+
+export function drawZapArc(
+  ctx: CanvasRenderingContext2D,
+  x0: number,
+  y0: number,
+  x1: number,
+  y1: number,
+  life: number,
+  maxLife: number,
+) {
+  const alpha = Math.max(0, life / maxLife);
+  const midX = (x0 + x1) / 2 + Math.sin(life * 40) * 10;
+  const midY = (y0 + y1) / 2 + Math.cos(life * 37) * 8;
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.strokeStyle = "#e0f2fe";
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.moveTo(x0, y0);
+  ctx.lineTo(midX, midY);
+  ctx.lineTo(x1, y1);
+  ctx.stroke();
+  ctx.strokeStyle = "#38bdf8";
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.moveTo(x0, y0);
+  ctx.lineTo(midX + 3, midY - 4);
+  ctx.lineTo(x1, y1);
+  ctx.stroke();
+  drawPixelRect(ctx, x1 - 2, y1 - 2, 4, 4, "#fef08a");
+  ctx.restore();
 }
 
 export function drawExplosion(
