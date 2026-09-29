@@ -199,14 +199,14 @@ ICON_BLASTER = [
 
 ICON_ROCKET = [
     "..............",
-    ".....rrr......",
-    "....rsssr.....",
-    "...rsssssr....",
-    "..kkssssssk...",
-    "..kksswwssk...",
-    "...ksssssk....",
-    "....kfffk.....",
-    "....f.y.f.....",
+    "..............",
+    "..kkkkkkkkkr..",
+    ".ksssssssssrr.",
+    "ksswwssssssrrW",
+    ".ksssssssssr..",
+    "..kk..ff.ff...",
+    "......fy.yf...",
+    "..............",
     "..............",
 ]
 
