@@ -35,8 +35,8 @@ function isNightIn(timezone: string) {
 
 /**
  * Chrome-offline-dino style backdrop for the footer: a pixel dog trots through
- * a parallax town on its own, auto-jumping obstacles and grabbing bones.
- * Tap/click the footer or press Space to make it bark and jump early.
+ * a parallax town on its own. Tap/click or press Space to start a scored run —
+ * then you jump the obstacles yourself.
  *
  * Renders as a fragment: the canvas is absolutely positioned against the
  * footer stage (its parent), while the band reserves in-flow room for the town.
@@ -44,7 +44,7 @@ function isNightIn(timezone: string) {
 export function DogTownScene({ dogName, timezone }: DogTownSceneProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const bandRef = useRef<HTMLDivElement>(null);
-  const [interacted, setInteracted] = useState(false);
+  const [playing, setPlaying] = useState(false);
   const [isLive, setIsLive] = useState(false);
 
   useEffect(() => {
@@ -57,10 +57,13 @@ export function DogTownScene({ dogName, timezone }: DogTownSceneProps) {
       "(prefers-reduced-motion: reduce)",
     ).matches;
     setIsLive(!reducedMotion);
-    setDogTownState({ live: !reducedMotion });
+    setDogTownState({ live: !reducedMotion, mode: "roam" });
 
     const engine = new DogTownEngine(canvas, {
-      onHud: setDogTownState,
+      onHud: (hud) => {
+        setDogTownState(hud);
+        if (hud.mode === "play") setPlaying(true);
+      },
       reducedMotion,
       isNight: () => isNightIn(timezone),
     });
@@ -120,10 +123,12 @@ export function DogTownScene({ dogName, timezone }: DogTownSceneProps) {
     viewObserver.observe(band);
 
     const poke = () => {
-      if (engine.poke()) setInteracted(true);
+      if (!engine.poke()) return;
+      if (engine.getMode() === "play") setPlaying(true);
     };
 
-    const onClick = (event: MouseEvent) => {
+    const onPointerDown = (event: PointerEvent) => {
+      if (event.button !== 0) return;
       const target = event.target as HTMLElement | null;
       if (target?.closest(IGNORED_TARGETS)) return;
       poke();
@@ -144,7 +149,7 @@ export function DogTownScene({ dogName, timezone }: DogTownSceneProps) {
       poke();
     };
 
-    stage.addEventListener("click", onClick);
+    stage.addEventListener("pointerdown", onPointerDown);
     window.addEventListener("keydown", onKeyDown);
 
     return () => {
@@ -153,7 +158,7 @@ export function DogTownScene({ dogName, timezone }: DogTownSceneProps) {
       resizeObserver.disconnect();
       paletteObserver.disconnect();
       viewObserver.disconnect();
-      stage.removeEventListener("click", onClick);
+      stage.removeEventListener("pointerdown", onPointerDown);
       window.removeEventListener("keydown", onKeyDown);
       engine.destroy();
       resetDogTownState();
@@ -166,10 +171,12 @@ export function DogTownScene({ dogName, timezone }: DogTownSceneProps) {
       <div ref={bandRef} className={styles.band}>
         {isLive && (
           <p
-            className={`${styles.hint} ${interacted ? styles.hintHidden : ""}`}
-            aria-hidden={interacted}
+            className={`${styles.hint} ${playing ? styles.hintHidden : ""}`}
+            aria-hidden={playing}
           >
-            Tap anywhere or press space — {dogName} jumps
+            {playing
+              ? `Space / tap to jump — ${dogName} is yours`
+              : `${dogName} is roaming — tap or press space to play`}
           </p>
         )}
       </div>
