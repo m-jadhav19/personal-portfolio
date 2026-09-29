@@ -370,10 +370,37 @@ export function createDestroyEngine(
     );
   }
 
+  function beginDrag(clientX: number, clientY: number) {
+    if (paused) return;
+    dragging = true;
+    dragOffset.x = clientX - character.x;
+    dragOffset.y = clientY - character.y;
+    // Far from the sprite — pick him up under the cursor.
+    if (Math.hypot(dragOffset.x, dragOffset.y) > 64) {
+      dragOffset.x = 0;
+      dragOffset.y = 0;
+      clampCharacter(clientX, clientY);
+    }
+  }
+
   function onPointerMove(event: PointerEvent) {
     pointer.x = event.clientX;
     pointer.y = event.clientY;
-    if (dragging && !paused) {
+
+    // Bitmask is more reliable than button events alone across browsers.
+    const rightHeld = (event.buttons & 2) !== 0;
+    if (rightHeld && !paused && !isHudTarget(event.target)) {
+      if (!dragging) beginDrag(pointer.x, pointer.y);
+      clampCharacter(pointer.x - dragOffset.x, pointer.y - dragOffset.y);
+      walkPhase += 0.45;
+      return;
+    }
+
+    if (dragging) {
+      if (!rightHeld) {
+        dragging = false;
+        return;
+      }
       clampCharacter(pointer.x - dragOffset.x, pointer.y - dragOffset.y);
       walkPhase += 0.45;
     }
@@ -385,27 +412,31 @@ export function createDestroyEngine(
     // Right-click drag repositions the character.
     if (event.button === 2) {
       event.preventDefault();
-      if (paused) return;
-      dragging = true;
-      dragOffset.x = pointer.x - character.x;
-      dragOffset.y = pointer.y - character.y;
-      // If the grab was far from the sprite, pick him up under the cursor.
-      if (Math.hypot(dragOffset.x, dragOffset.y) > 64) {
-        dragOffset.x = 0;
-        dragOffset.y = 0;
-        clampCharacter(pointer.x, pointer.y);
+      beginDrag(event.clientX, event.clientY);
+      try {
+        canvas.setPointerCapture(event.pointerId);
+      } catch {
+        // ignore — capture is best-effort
       }
       return;
     }
 
     if (event.button !== 0) return;
+    if (dragging) return;
     event.preventDefault();
     fire();
   }
 
   function onPointerUp(event: PointerEvent) {
-    if (event.button === 2 || event.button === 0) {
+    if (event.button === 2) {
       dragging = false;
+      try {
+        if (canvas.hasPointerCapture(event.pointerId)) {
+          canvas.releasePointerCapture(event.pointerId);
+        }
+      } catch {
+        // ignore
+      }
     }
   }
 
