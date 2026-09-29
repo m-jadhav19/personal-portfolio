@@ -10,6 +10,7 @@ const INTERVAL_MS: Record<FaviconMode, number> = {
   default: 700,
   "broken-ux": 110,
   myspace: 160,
+  destroy: 700,
 };
 
 export function DynamicFavicon() {

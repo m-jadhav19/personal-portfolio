@@ -63,6 +63,17 @@ html[data-easter-egg="broken-ux"] {
   scroll-behavior: auto !important;
 }
 
+html[data-easter-egg="destroy"] {
+  scroll-behavior: auto !important;
+  overflow: hidden;
+}
+
+html[data-easter-egg="destroy"] body {
+  user-select: none;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
 html[data-easter-egg="broken-ux"] * {
   scroll-behavior: auto !important;
 }

@@ -21,14 +21,20 @@ import type { ThemeTransitionDirection } from "@/components/Loader/themeLoaderMe
 import { useCheatCode } from "@/hooks/useCheatCode";
 import { useKeySequence } from "@/hooks/useKeySequence";
 import {
+  DESTROY_CHEAT_CODE,
   KONAMI_CODE,
   MYSPACE_CHEAT_CODE,
   type EasterEggId,
 } from "@/lib/easterEggs/codes";
+import { isDestroyDesktop } from "@/lib/easterEggs/destroy/desktop";
 import { resetScrollToTop } from "@/lib/lenis";
 import { eggToMode, type SystemMode } from "@/lib/systemMode";
 
 import { BrokenUxSimulator } from "./BrokenUxSimulator";
+import {
+  DestroyDesktopToast,
+  DestroySiteSimulator,
+} from "./DestroySiteSimulator";
 import { EasterEggPrompts } from "./EasterEggPrompts";
 import { Y2kMySpace } from "./Y2kMySpace";
 
@@ -77,6 +83,7 @@ export function SystemModeProvider({ children }: SystemModeProviderProps) {
   const [activeEgg, setActiveEgg] = useState<EasterEggId | null>(null);
   const [transitionDirection, setTransitionDirection] =
     useState<ThemeTransitionDirection | null>(null);
+  const [destroyToast, setDestroyToast] = useState<string | null>(null);
   const isTransitioningRef = useRef(false);
 
   const mode = eggToMode(activeEgg);
@@ -100,8 +107,39 @@ export function SystemModeProvider({ children }: SystemModeProviderProps) {
   }, []);
 
   const toggleBrokenUx = useCallback(() => {
-    setActiveEgg((current) => (current === "broken-ux" ? null : "broken-ux"));
-  }, []);
+    setActiveEgg((current) => {
+      if (current === "broken-ux") return null;
+      if (current === "myspace") {
+        applyMyspaceDom(false);
+        clearOverlayTheme();
+      }
+      return "broken-ux";
+    });
+  }, [applyMyspaceDom]);
+
+  const activateDestroy = useCallback(() => {
+    if (!isDestroyDesktop()) {
+      setDestroyToast(
+        "Destroy mode is desktop-only — grab a mouse and try again.",
+      );
+      return;
+    }
+
+    // Don't start mid Myspace loader — midpoint would clobber destroy.
+    if (isTransitioningRef.current || isShapeOverlayAnimating()) {
+      setDestroyToast("Hold on — theme transition in progress. Try again.");
+      return;
+    }
+
+    setActiveEgg((current) => {
+      if (current === "destroy") return current;
+      if (current === "myspace") {
+        applyMyspaceDom(false);
+        clearOverlayTheme();
+      }
+      return "destroy";
+    });
+  }, [applyMyspaceDom]);
 
   const toggleMyspace = useCallback(() => {
     if (isTransitioningRef.current || isShapeOverlayAnimating()) return;
@@ -129,14 +167,17 @@ export function SystemModeProvider({ children }: SystemModeProviderProps) {
 
     if (transitionDirection === "enter-myspace") {
       applyMyspaceDom(true);
-      setActiveEgg("myspace");
+      setActiveEgg((current) =>
+        // Preserve destroy if it won a race against the loader.
+        current === "destroy" ? current : "myspace",
+      );
       return;
     }
 
     if (transitionDirection === "exit-myspace") {
       applyMyspaceDom(false);
-      setActiveEgg(null);
       clearOverlayTheme();
+      setActiveEgg((current) => (current === "destroy" ? current : null));
     }
   }, [applyMyspaceDom, transitionDirection]);
 
@@ -152,12 +193,17 @@ export function SystemModeProvider({ children }: SystemModeProviderProps) {
     },
   });
 
+  useCheatCode({
+    code: DESTROY_CHEAT_CODE,
+    onMatch: activateDestroy,
+  });
+
   // Keep data-mode / data-easter-egg in sync for non-Myspace eggs and idle default.
   useEffect(() => {
     applyModeDom(eggToMode(activeEgg));
 
-    if (activeEgg === "broken-ux") {
-      applyEasterEggDom("broken-ux");
+    if (activeEgg === "broken-ux" || activeEgg === "destroy") {
+      applyEasterEggDom(activeEgg);
       return () => {
         applyEasterEggDom(null);
       };
@@ -174,6 +220,8 @@ export function SystemModeProvider({ children }: SystemModeProviderProps) {
 
   useEffect(() => {
     if (!activeEgg) return;
+    // Destroy owns Escape for its pause menu.
+    if (activeEgg === "destroy") return;
 
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
@@ -216,6 +264,15 @@ export function SystemModeProvider({ children }: SystemModeProviderProps) {
       ) : null}
       {activeEgg === "myspace" ? (
         <Y2kMySpace onExit={toggleMyspace} />
+      ) : null}
+      {activeEgg === "destroy" ? (
+        <DestroySiteSimulator onExit={() => setActiveEgg(null)} />
+      ) : null}
+      {destroyToast ? (
+        <DestroyDesktopToast
+          message={destroyToast}
+          onDismiss={() => setDestroyToast(null)}
+        />
       ) : null}
     </SystemModeContext.Provider>
   );
