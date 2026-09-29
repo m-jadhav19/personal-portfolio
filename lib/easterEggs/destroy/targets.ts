@@ -12,11 +12,13 @@ const TARGET_SELECTOR = [
   "article",
   "figure",
   "figcaption",
-  "span",
   "strong",
   "em",
   "label",
 ].join(",");
+
+/** Refresh candidate cache at most this often (ms). */
+const CACHE_TTL_MS = 250;
 
 export type TargetSnapshot = {
   element: HTMLElement;
@@ -38,7 +40,7 @@ function isVisible(el: HTMLElement): boolean {
   if (style.display === "none" || style.visibility === "hidden") return false;
   if (Number(style.opacity) === 0) return false;
   const rect = el.getBoundingClientRect();
-  return rect.width >= 8 && rect.height >= 8;
+  return rect.width >= 12 && rect.height >= 12;
 }
 
 /** Pure helper for unit tests — true when closest marks the node ignorable. */
@@ -81,31 +83,53 @@ export type TargetRegistry = {
   collect(): HTMLElement[];
   applyDamage(x: number, y: number, radius: number, maxHits: number): DamagedTarget[];
   restoreAll(): void;
+  invalidate(): void;
+  dispose(): void;
   damagedCount(): number;
 };
 
 export function createTargetRegistry(): TargetRegistry {
   const damaged = new Map<HTMLElement, TargetSnapshot>();
+  let cache: HTMLElement[] = [];
+  let cacheAt = 0;
+  const pendingTimers = new Set<number>();
 
-  function collect(): HTMLElement[] {
+  function rebuildCache(): HTMLElement[] {
     const nodes = document.querySelectorAll<HTMLElement>(TARGET_SELECTOR);
     const out: HTMLElement[] = [];
     for (const el of nodes) {
       if (isIgnorable(el)) continue;
       if (damaged.has(el)) continue;
       if (!isVisible(el)) continue;
-      // Prefer leaf-ish content: skip if a damaged ancestor exists
-      let skip = false;
-      for (const d of damaged.keys()) {
-        if (d.contains(el) && d !== el) {
-          skip = true;
+      // Skip nodes nested inside another candidate (prefer outer blocks)
+      let nested = false;
+      for (const other of out) {
+        if (other.contains(el)) {
+          nested = true;
           break;
         }
       }
-      if (skip) continue;
+      if (nested) continue;
       out.push(el);
     }
+    cache = out;
+    cacheAt = performance.now();
     return out;
+  }
+
+  function collect(): HTMLElement[] {
+    const now = performance.now();
+    if (now - cacheAt > CACHE_TTL_MS || cache.length === 0) {
+      return rebuildCache();
+    }
+    // Drop disconnected / newly damaged entries cheaply
+    cache = cache.filter((el) => el.isConnected && !damaged.has(el));
+    return cache;
+  }
+
+  function invalidate() {
+    cache = [];
+    cacheAt = 0;
   }
 
   function applyDamage(
@@ -122,11 +146,9 @@ export function createTargetRegistry(): TargetRegistry {
       const cx = box.left + box.width / 2;
       const cy = box.top + box.height / 2;
       const dist = Math.hypot(cx - x, cy - y);
-      const hitRadius = radius > 0 ? radius : Math.max(box.width, box.height) * 0.35;
-      const threshold = radius > 0 ? radius : hitRadius;
       // Point-in-expanded-box for blaster; circle for AoE
       if (radius <= 0) {
-        const pad = 4;
+        const pad = 6;
         if (
           x >= box.left - pad &&
           x <= box.right + pad &&
@@ -135,7 +157,7 @@ export function createTargetRegistry(): TargetRegistry {
         ) {
           scored.push({ el, dist, box });
         }
-      } else if (dist <= threshold) {
+      } else if (dist <= radius) {
         scored.push({ el, dist, box });
       }
     }
@@ -149,7 +171,8 @@ export function createTargetRegistry(): TargetRegistry {
       const snap = snapshotElement(el);
       damaged.set(el, snap);
       el.setAttribute("data-destroy-damaged", "true");
-      el.style.transition = "opacity 120ms ease, filter 120ms ease, transform 120ms ease";
+      el.style.transition =
+        "opacity 120ms ease, filter 120ms ease, transform 120ms ease";
       el.style.opacity = "0";
       el.style.visibility = "hidden";
       el.style.pointerEvents = "none";
@@ -159,6 +182,10 @@ export function createTargetRegistry(): TargetRegistry {
         snapshot: snap,
         box: new DOMRect(box.x, box.y, box.width, box.height),
       });
+    }
+
+    if (result.length > 0) {
+      invalidate();
     }
 
     return result;
@@ -173,20 +200,38 @@ export function createTargetRegistry(): TargetRegistry {
       snap.element.style.visibility = "visible";
       snap.element.style.pointerEvents = snap.pointerEvents;
       requestAnimationFrame(() => {
+        if (!snap.element.isConnected) return;
         snap.element.style.opacity = snap.opacity || "1";
         snap.element.style.filter = snap.filter;
         snap.element.style.transform = snap.transform;
-        window.setTimeout(() => {
+        const timer = window.setTimeout(() => {
+          pendingTimers.delete(timer);
+          if (!snap.element.isConnected) return;
           snap.element.style.transition = snap.transition;
         }, 300);
+        pendingTimers.add(timer);
       });
     }
     damaged.clear();
+    invalidate();
+  }
+
+  function dispose() {
+    for (const timer of pendingTimers) {
+      window.clearTimeout(timer);
+    }
+    pendingTimers.clear();
+    // Instant restore without flash timers
+    for (const snap of damaged.values()) {
+      restoreSnapshot(snap);
+    }
+    damaged.clear();
+    invalidate();
   }
 
   function damagedCount() {
     return damaged.size;
   }
 
-  return { collect, applyDamage, restoreAll, damagedCount };
+  return { collect, applyDamage, restoreAll, invalidate, dispose, damagedCount };
 }

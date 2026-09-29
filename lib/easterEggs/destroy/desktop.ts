@@ -5,6 +5,10 @@ export function isDestroyDesktop(): boolean {
   }
 
   const coarse = matchMedia("(pointer: coarse)").matches;
+  const fine = matchMedia("(pointer: fine)").matches;
   const canHover = matchMedia("(hover: hover)").matches;
-  return canHover && !coarse;
+
+  // Prefer hover+non-coarse; also accept fine pointer (trackpads / some VMs).
+  if (coarse && !fine) return false;
+  return canHover || fine;
 }

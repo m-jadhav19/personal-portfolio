@@ -8,7 +8,7 @@ import {
   WEAPONS,
   type WeaponId,
 } from "@/lib/easterEggs/destroy/weapons";
-import { lockPageScroll, unlockPageScroll } from "@/lib/scrollLock";
+import { getLenis } from "@/lib/lenis";
 
 import styles from "./DestroySiteSimulator.module.css";
 
@@ -52,11 +52,14 @@ export function DestroySiteSimulator({ onExit }: DestroySiteSimulatorProps) {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    lockPageScroll();
+    const lenis = getLenis();
+    lenis?.stop();
 
     const reducedMotion =
       typeof matchMedia === "function" &&
       matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    let shakeTimer = 0;
 
     const engine = createDestroyEngine({
       canvas,
@@ -66,7 +69,8 @@ export function DestroySiteSimulator({ onExit }: DestroySiteSimulatorProps) {
       onShake: () => {
         if (reducedMotion) return;
         setShaking(true);
-        window.setTimeout(() => setShaking(false), 180);
+        window.clearTimeout(shakeTimer);
+        shakeTimer = window.setTimeout(() => setShaking(false), 180);
       },
     });
 
@@ -88,9 +92,10 @@ export function DestroySiteSimulator({ onExit }: DestroySiteSimulatorProps) {
 
     return () => {
       window.removeEventListener("keydown", onKeyDown, true);
+      window.clearTimeout(shakeTimer);
       engine.destroy();
       engineRef.current = null;
-      unlockPageScroll();
+      getLenis()?.start();
     };
   }, []);
 
@@ -195,6 +200,7 @@ export function DestroySiteSimulator({ onExit }: DestroySiteSimulatorProps) {
                 className={styles.pauseBtn}
                 onClick={togglePause}
                 data-cursor="button"
+                autoFocus
               >
                 Resume
               </button>

@@ -133,6 +133,7 @@ export function createDestroyEngine(
     canvas.style.width = `${w}px`;
     canvas.style.height = `${h}px`;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    targets.invalidate();
   }
 
   function currentWeapon(): WeaponId {
@@ -140,9 +141,25 @@ export function createDestroyEngine(
   }
 
   function setWeapon(index: number) {
-    weaponIndex = clampWeaponIndex(index);
+    const next = clampWeaponIndex(index);
+    if (next === weaponIndex) {
+      options.onWeaponChange?.(weaponIndex, currentWeapon());
+      return;
+    }
+    weaponIndex = next;
     options.onWeaponChange?.(weaponIndex, currentWeapon());
     audio.play("ui");
+  }
+
+  function isTypingTarget(target: EventTarget | null) {
+    if (!(target instanceof HTMLElement)) return false;
+    const tag = target.tagName;
+    return (
+      tag === "INPUT" ||
+      tag === "TEXTAREA" ||
+      tag === "SELECT" ||
+      target.isContentEditable
+    );
   }
 
   function damageAt(x: number, y: number, radius: number, hits: number) {
@@ -253,6 +270,7 @@ export function createDestroyEngine(
   }
 
   function onKeyDown(event: KeyboardEvent) {
+    if (isTypingTarget(event.target)) return;
     if (event.code >= "Digit1" && event.code <= "Digit4") {
       setWeapon(Number(event.code.slice(-1)) - 1);
     }
@@ -260,6 +278,7 @@ export function createDestroyEngine(
 
   function onWheel(event: WheelEvent) {
     if (paused) return;
+    if (isTypingTarget(event.target)) return;
     const target = event.target;
     if (target instanceof Element && target.closest("[data-destroy-ignore]")) {
       return;
@@ -269,10 +288,19 @@ export function createDestroyEngine(
     setWeapon(cycleWeaponIndex(weaponIndex, delta));
   }
 
+  function onContextMenu(event: MouseEvent) {
+    const target = event.target;
+    if (target instanceof Element && target.closest("[data-destroy-ignore]")) {
+      return;
+    }
+    event.preventDefault();
+  }
+
   function onVisibility() {
     hidden = document.visibilityState === "hidden";
     if (!hidden && running && !paused) {
       lastTs = performance.now();
+      targets.invalidate();
     }
   }
 
@@ -342,9 +370,10 @@ export function createDestroyEngine(
       if (r.x < 8 || r.x > window.innerWidth - 8) r.vx *= -1;
       if (r.y < 8 || r.y > window.innerHeight - 8) r.vy *= -1;
       if (r.nibbleTimer <= 0) {
-        damageAt(r.x, r.y, WEAPON_CONFIG.swarm.radius, 1);
+        const nibbled = damageAt(r.x, r.y, WEAPON_CONFIG.swarm.radius, 1);
         r.nibbleTimer = 0.35 + Math.random() * 0.4;
-        audio.play("roach");
+        // Only blip when something actually got chewed — avoids swarm audio spam.
+        if (nibbled > 0) audio.play("roach");
       }
       if (r.life <= 0) roaches.splice(i, 1);
     }
@@ -415,6 +444,7 @@ export function createDestroyEngine(
     window.addEventListener("pointerdown", onPointerDown);
     window.addEventListener("keydown", onKeyDown);
     window.addEventListener("wheel", onWheel, { passive: false });
+    window.addEventListener("contextmenu", onContextMenu);
     window.addEventListener("resize", resize);
     document.addEventListener("visibilitychange", onVisibility);
     raf = requestAnimationFrame(frame);
@@ -427,6 +457,7 @@ export function createDestroyEngine(
     window.removeEventListener("pointerdown", onPointerDown);
     window.removeEventListener("keydown", onKeyDown);
     window.removeEventListener("wheel", onWheel);
+    window.removeEventListener("contextmenu", onContextMenu);
     window.removeEventListener("resize", resize);
     document.removeEventListener("visibilitychange", onVisibility);
   }
@@ -447,7 +478,8 @@ export function createDestroyEngine(
   function destroy() {
     stop();
     clearFx();
-    targets.restoreAll();
+    // Instant restore + clear pending rebuild timers (no flash on unmount).
+    targets.dispose();
     audio.dispose();
     ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
   }

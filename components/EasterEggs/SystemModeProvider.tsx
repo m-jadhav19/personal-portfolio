@@ -125,6 +125,12 @@ export function SystemModeProvider({ children }: SystemModeProviderProps) {
       return;
     }
 
+    // Don't start mid Myspace loader — midpoint would clobber destroy.
+    if (isTransitioningRef.current || isShapeOverlayAnimating()) {
+      setDestroyToast("Hold on — theme transition in progress. Try again.");
+      return;
+    }
+
     setActiveEgg((current) => {
       if (current === "destroy") return current;
       if (current === "myspace") {
@@ -161,14 +167,17 @@ export function SystemModeProvider({ children }: SystemModeProviderProps) {
 
     if (transitionDirection === "enter-myspace") {
       applyMyspaceDom(true);
-      setActiveEgg("myspace");
+      setActiveEgg((current) =>
+        // Preserve destroy if it won a race against the loader.
+        current === "destroy" ? current : "myspace",
+      );
       return;
     }
 
     if (transitionDirection === "exit-myspace") {
       applyMyspaceDom(false);
-      setActiveEgg(null);
       clearOverlayTheme();
+      setActiveEgg((current) => (current === "destroy" ? current : null));
     }
   }, [applyMyspaceDom, transitionDirection]);
 
