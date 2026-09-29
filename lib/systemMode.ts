@@ -5,6 +5,7 @@ export type SystemMode = "default" | "vice" | "konami";
 export function eggToMode(egg: EasterEggId | null): SystemMode {
   if (egg === "myspace") return "vice";
   if (egg === "broken-ux") return "konami";
+  // destroy is overlay-only — keeps DEFAULT tokens/chrome
   return "default";
 }
 
