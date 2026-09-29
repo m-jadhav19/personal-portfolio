@@ -92,8 +92,8 @@ export type DestroyEngine = {
 
 const MAX_PARTICLES = 180;
 const MAX_ROACHES = 18;
-const MAX_HOLES = 120;
-const LERP = 0.18;
+const MAX_HOLES = 160;
+const CHAR_MARGIN = 28;
 
 function prefersReducedMotionFlag(explicit?: boolean) {
   if (typeof explicit === "boolean") return explicit;
@@ -124,14 +124,15 @@ export function createDestroyEngine(
   let hidden = false;
 
   const pointer: Vec = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
-  // Sit slightly behind the cursor so clicks hit page content, not the sprite.
-  const CHARACTER_OFFSET = { x: -36, y: 28 };
+  // Fixed stance — only moves when right-click dragged.
   const character: Vec = {
-    x: pointer.x + CHARACTER_OFFSET.x,
-    y: pointer.y + CHARACTER_OFFSET.y,
+    x: Math.min(120, window.innerWidth * 0.18),
+    y: window.innerHeight * 0.55,
   };
   let facing: 1 | -1 = 1;
   let walkPhase = 0;
+  let dragging = false;
+  const dragOffset: Vec = { x: 0, y: 0 };
 
   const projectiles: Projectile[] = [];
   const roaches: Roach[] = [];
@@ -177,6 +178,17 @@ export function createDestroyEngine(
     );
   }
 
+  function clampCharacter(x: number, y: number) {
+    character.x = Math.min(
+      window.innerWidth - CHAR_MARGIN,
+      Math.max(CHAR_MARGIN, x),
+    );
+    character.y = Math.min(
+      window.innerHeight - CHAR_MARGIN,
+      Math.max(CHAR_MARGIN, y),
+    );
+  }
+
   function punchHole(
     x: number,
     y: number,
@@ -215,10 +227,58 @@ export function createDestroyEngine(
     return damaged.length;
   }
 
+  /** Always leave a hole. Destroy DOM if present; otherwise scar the “surface”. */
+  function impactAt(
+    x: number,
+    y: number,
+    opts?: { holeScale?: number; radius?: number; hits?: number },
+  ) {
+    const radius = opts?.radius ?? 0;
+    const hits = opts?.hits ?? 1;
+    const destroyed = damageAt(x, y, radius, hits);
+
+    punchHole(x, y, {
+      scale: opts?.holeScale ?? 0.9 + Math.random() * 0.45,
+      crack: true,
+      silent: true,
+    });
+
+    if (destroyed === 0) {
+      // Empty space — surface crater + sparks
+      const sparkCount = reducedMotion ? 4 : 10;
+      const sparks = spawnDebris(
+        { left: x - 6, top: y - 6, width: 12, height: 12 },
+        sparkCount,
+        ["#a1a1aa", "#52525b", "#fde047", "#fdba74"],
+      );
+      particles = particles.concat(sparks).slice(-MAX_PARTICLES);
+      explosions.push({ x, y, life: 0.14, maxLife: 0.14 });
+      if (!reducedMotion && Math.random() < 0.55) {
+        punchHole(x + (Math.random() * 10 - 5), y + (Math.random() * 10 - 5), {
+          scale: 0.45 + Math.random() * 0.3,
+          crack: false,
+          silent: true,
+        });
+      }
+    }
+
+    audio.play("hit");
+    return destroyed;
+  }
+
   function boom(x: number, y: number, radius: number, hits: number) {
     explosions.push({ x, y, life: 0.35, maxLife: 0.35 });
-    damageAt(x, y, radius, hits);
-    scatterHoles(x, y, radius * 0.85, Math.round(radius / 14));
+    const destroyed = damageAt(x, y, radius, hits);
+    scatterHoles(x, y, radius * 0.85, Math.max(4, Math.round(radius / 12)));
+    // Empty-space blast still scars the surface.
+    if (destroyed === 0) {
+      const sparks = spawnDebris(
+        { left: x - radius * 0.3, top: y - radius * 0.3, width: radius * 0.6, height: radius * 0.6 },
+        reducedMotion ? 8 : 18,
+        ["#a1a1aa", "#52525b", "#f97316", "#fde047"],
+      );
+      particles = particles.concat(sparks).slice(-MAX_PARTICLES);
+    }
     audio.play("boom");
     if (!reducedMotion) {
       options.onShake?.(Math.min(1, radius / 100));
@@ -230,24 +290,26 @@ export function createDestroyEngine(
   }
 
   function fire() {
-    if (paused || hidden) return;
+    if (paused || hidden || dragging) return;
     const id = currentWeapon();
     const cfg = WEAPON_CONFIG[id];
     const aim = Math.atan2(pointer.y - character.y, pointer.x - character.x);
+    const tx = pointer.x;
+    const ty = pointer.y;
 
     if (id === "blaster") {
       if (countKind("blaster") >= cfg.maxLive) return;
-      const speed = 1100;
-      // Punch a visible hole + damage at the click point.
-      punchHole(pointer.x, pointer.y);
-      damageAt(pointer.x, pointer.y, 0, 1);
+      const speed = 1200;
+      // Hole + destroy/surface at the aim point immediately.
+      impactAt(tx, ty);
+      const dist = Math.hypot(tx - character.x, ty - character.y);
       projectiles.push({
         kind: "blaster",
         x: character.x + Math.cos(aim) * 28,
-        y: character.y + Math.sin(aim) * 10,
+        y: character.y + Math.sin(aim) * 8,
         vx: Math.cos(aim) * speed,
         vy: Math.sin(aim) * speed,
-        life: 0.9,
+        life: Math.max(0.08, dist / speed + 0.04),
       });
       audio.play("shoot");
       return;
@@ -257,10 +319,10 @@ export function createDestroyEngine(
       if (countKind("missile") >= cfg.maxLive) return;
       projectiles.push({
         kind: "missile",
-        x: pointer.x + (Math.random() * 40 - 20),
+        x: tx + (Math.random() * 40 - 20),
         y: -24,
-        tx: pointer.x,
-        ty: pointer.y,
+        tx,
+        ty,
         life: 2.5,
       });
       audio.play("missile");
@@ -282,15 +344,16 @@ export function createDestroyEngine(
       return;
     }
 
-    // swarm
+    // swarm — chew at aim point + leave a mark even on empty floor
     if (roaches.length >= MAX_ROACHES) return;
+    impactAt(tx, ty, { holeScale: 0.55, radius: 24, hits: 2 });
     const spawnCount = reducedMotion ? 3 : 6;
     for (let i = 0; i < spawnCount; i++) {
       if (roaches.length >= MAX_ROACHES) break;
       const angle = Math.random() * Math.PI * 2;
       roaches.push({
-        x: pointer.x + Math.cos(angle) * 12,
-        y: pointer.y + Math.sin(angle) * 12,
+        x: tx + Math.cos(angle) * 12,
+        y: ty + Math.sin(angle) * 12,
         vx: Math.cos(angle) * (40 + Math.random() * 80),
         vy: Math.sin(angle) * (40 + Math.random() * 80),
         life: 2.4 + Math.random() * 0.8,
@@ -301,19 +364,49 @@ export function createDestroyEngine(
     audio.play("roach");
   }
 
+  function isHudTarget(target: EventTarget | null) {
+    return (
+      target instanceof Element && Boolean(target.closest("[data-destroy-ignore]"))
+    );
+  }
+
   function onPointerMove(event: PointerEvent) {
     pointer.x = event.clientX;
     pointer.y = event.clientY;
+    if (dragging && !paused) {
+      clampCharacter(pointer.x - dragOffset.x, pointer.y - dragOffset.y);
+      walkPhase += 0.45;
+    }
   }
 
   function onPointerDown(event: PointerEvent) {
-    if (event.button !== 0) return;
-    const target = event.target;
-    if (target instanceof Element && target.closest("[data-destroy-ignore]")) {
+    if (isHudTarget(event.target)) return;
+
+    // Right-click drag repositions the character.
+    if (event.button === 2) {
+      event.preventDefault();
+      if (paused) return;
+      dragging = true;
+      dragOffset.x = pointer.x - character.x;
+      dragOffset.y = pointer.y - character.y;
+      // If the grab was far from the sprite, pick him up under the cursor.
+      if (Math.hypot(dragOffset.x, dragOffset.y) > 64) {
+        dragOffset.x = 0;
+        dragOffset.y = 0;
+        clampCharacter(pointer.x, pointer.y);
+      }
       return;
     }
+
+    if (event.button !== 0) return;
     event.preventDefault();
     fire();
+  }
+
+  function onPointerUp(event: PointerEvent) {
+    if (event.button === 2 || event.button === 0) {
+      dragging = false;
+    }
   }
 
   function onKeyDown(event: KeyboardEvent) {
@@ -352,32 +445,25 @@ export function createDestroyEngine(
   }
 
   function update(dt: number) {
-    const targetX = pointer.x + CHARACTER_OFFSET.x;
-    const targetY = pointer.y + CHARACTER_OFFSET.y;
-    const dx = targetX - character.x;
-    const dy = targetY - character.y;
-    character.x += dx * LERP;
-    character.y += dy * LERP;
+    // Face the aim point; walk frames only while dragging.
     if (Math.abs(pointer.x - character.x) > 1) {
       facing = pointer.x >= character.x ? 1 : -1;
     }
-    const speed = Math.hypot(dx, dy);
-    walkPhase += dt * (speed > 8 ? 12 : 3);
+    if (dragging) {
+      walkPhase += dt * 14;
+    } else {
+      walkPhase += dt * 2.2;
+    }
 
-    // Projectiles
+    // Projectiles — blaster bolts are visual tracers (impact already applied).
     for (let i = projectiles.length - 1; i >= 0; i--) {
       const p = projectiles[i];
       if (p.kind === "blaster") {
         p.x += p.vx * dt;
         p.y += p.vy * dt;
         p.life -= dt;
-        const hit = damageAt(p.x, p.y, 0, 1);
-        if (hit > 0) {
-          punchHole(p.x, p.y, { scale: 0.75 + Math.random() * 0.4 });
-          projectiles.splice(i, 1);
-        } else if (p.life <= 0) {
-          projectiles.splice(i, 1);
-        } else if (
+        if (
+          p.life <= 0 ||
           p.x < -40 ||
           p.y < -40 ||
           p.x > window.innerWidth + 40 ||
@@ -507,9 +593,12 @@ export function createDestroyEngine(
     if (running) return;
     running = true;
     resize();
+    clampCharacter(character.x, character.y);
     lastTs = performance.now();
     window.addEventListener("pointermove", onPointerMove);
     window.addEventListener("pointerdown", onPointerDown);
+    window.addEventListener("pointerup", onPointerUp);
+    window.addEventListener("pointercancel", onPointerUp);
     window.addEventListener("keydown", onKeyDown);
     window.addEventListener("wheel", onWheel, { passive: false });
     window.addEventListener("contextmenu", onContextMenu);
@@ -520,9 +609,12 @@ export function createDestroyEngine(
 
   function stop() {
     running = false;
+    dragging = false;
     cancelAnimationFrame(raf);
     window.removeEventListener("pointermove", onPointerMove);
     window.removeEventListener("pointerdown", onPointerDown);
+    window.removeEventListener("pointerup", onPointerUp);
+    window.removeEventListener("pointercancel", onPointerUp);
     window.removeEventListener("keydown", onKeyDown);
     window.removeEventListener("wheel", onWheel);
     window.removeEventListener("contextmenu", onContextMenu);
@@ -563,6 +655,7 @@ export function createDestroyEngine(
     stop,
     setPaused(next) {
       paused = next;
+      if (next) dragging = false;
       if (!next) lastTs = performance.now();
     },
     isPaused: () => paused,
