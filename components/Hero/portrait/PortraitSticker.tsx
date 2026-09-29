@@ -686,7 +686,6 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
         onPointerCancel={endDrag}
         onPointerLeave={onStickerPointerLeave}
         onClick={onPartClick("boop")}
-        data-cursor="interactive"
       >
         <div ref={maskRef} className={styles.peelMask}>
           <div ref={moveRef} className={styles.peelMove}>
