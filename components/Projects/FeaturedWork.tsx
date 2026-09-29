@@ -137,14 +137,14 @@ export function FeaturedWork() {
   return (
     <>
       <section id="projects" ref={sectionRef} className={styles.featuredWork}>
-        <div className={styles.stickyHeading} data-featured-heading-wrap>
+        <div className={styles.headingBlock}>
           <h2 className={styles.headingTitle} data-featured-heading>
             Selected Work
           </h2>
           <span className={styles.headingCue}>[Scroll to explore more]</span>
         </div>
 
-        <div className={styles.projects} data-featured-projects>
+        <div className={styles.projects}>
           {projects.map((project, index) => (
             <ProjectSlide
               key={project.id}
