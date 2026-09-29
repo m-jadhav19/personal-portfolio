@@ -30,10 +30,6 @@
   --portrait-h: var(--portrait-w);
 }
 
-.marqueeRow:hover .track {
-  animation-play-state: paused;
-}
-
 .marqueeRow {
   position: relative;
   overflow: hidden;
@@ -66,8 +62,8 @@
   text-shadow:
     0.05em 0.06em 0 var(--accent),
     0.1em 0.12em 0 color-mix(in srgb, var(--accent) 40%, transparent);
+  opacity: 0.8;
   animation: marquee-left 24s linear infinite;
-  animation-play-state: running;
 }
 
 .track span {
