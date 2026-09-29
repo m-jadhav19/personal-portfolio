@@ -26,7 +26,7 @@
   align-content: center;
   width: 100%;
   cursor: default;
-  --portrait-w: clamp(260px, 34vw, 480px);
+  --portrait-w: clamp(320px, min(50vw, 80vh), 760px);
   --portrait-h: var(--portrait-w);
 }
 
@@ -174,12 +174,8 @@ html.intro-loading [data-intro="portrait"] {
     line-height: 0.92;
   }
 
-  .portraitStage {
-    width: clamp(200px, 56vw, 320px);
-  }
-
   .marquee {
-    --portrait-w: clamp(200px, 56vw, 320px);
+    --portrait-w: clamp(260px, min(92vw, 62vh), 460px);
   }
 
   .scrollCue {
