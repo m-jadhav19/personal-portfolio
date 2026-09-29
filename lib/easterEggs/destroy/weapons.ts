@@ -14,6 +14,13 @@ export const WEAPON_LABELS: Record<WeaponId, string> = {
   swarm: "Roaches",
 };
 
+export const WEAPON_ICON_SRC: Record<WeaponId, string> = {
+  blaster: "/destroy/sprites/icon-blaster.png",
+  missile: "/destroy/sprites/icon-missile.png",
+  bomb: "/destroy/sprites/icon-bomb.png",
+  swarm: "/destroy/sprites/icon-roach.png",
+};
+
 export function clampWeaponIndex(index: number): number {
   if (!Number.isFinite(index)) return 0;
   const max = WEAPONS.length - 1;

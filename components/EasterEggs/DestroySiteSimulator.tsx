@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { createDestroyEngine, type DestroyEngine } from "@/lib/easterEggs/destroy/engine";
 import {
+  WEAPON_ICON_SRC,
   WEAPON_LABELS,
   WEAPONS,
   type WeaponId,
@@ -148,9 +149,20 @@ export function DestroySiteSimulator({ onExit }: DestroySiteSimulatorProps) {
               }`}
               onClick={() => selectWeapon(index)}
               aria-pressed={index === weaponIndex}
+              aria-label={WEAPON_LABELS[id]}
+              title={`${index + 1}: ${WEAPON_LABELS[id]}`}
               data-cursor="button"
             >
-              {index + 1}:{WEAPON_LABELS[id]}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={WEAPON_ICON_SRC[id]}
+                alt=""
+                width={22}
+                height={22}
+                className={styles.weaponIcon}
+                draggable={false}
+              />
+              <span className={styles.weaponKey}>{index + 1}</span>
             </button>
           ))}
         </div>

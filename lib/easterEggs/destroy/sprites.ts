@@ -1,4 +1,7 @@
-/** Tiny procedural 8-bit draw helpers for destroy mode. */
+import {
+  drawSprite,
+  type DestroySpriteAtlas,
+} from "./spriteAtlas";
 
 export function drawPixelRect(
   ctx: CanvasRenderingContext2D,
@@ -20,52 +23,82 @@ export function drawCharacter(
   facing: 1 | -1,
   aimAngle: number,
   walkPhase: number,
-  scale = 2,
+  atlas?: DestroySpriteAtlas | null,
 ) {
-  const s = scale;
   const ox = Math.round(x);
   const oy = Math.round(y);
 
   // Shadow
   ctx.fillStyle = "rgba(0,0,0,0.25)";
   ctx.beginPath();
-  ctx.ellipse(ox, oy + 14 * s, 10 * s, 3 * s, 0, 0, Math.PI * 2);
+  ctx.ellipse(ox, oy + 28, 18, 5, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  const body = "#e85d04";
-  const dark = "#9a3412";
-  const skin = "#fdba74";
-  const boot = "#431407";
+  const moving = Math.abs(Math.sin(walkPhase)) > 0.2;
+  const frame =
+    !moving
+      ? "characterIdle"
+      : Math.floor(walkPhase * 2) % 2 === 0
+        ? "characterWalkA"
+        : "characterWalkB";
 
-  // Legs (walk)
-  const legSwing = Math.sin(walkPhase) * 3 * s;
-  drawPixelRect(ctx, ox - 4 * s + (facing > 0 ? -legSwing : legSwing) * 0.2, oy + 4 * s, 3 * s, 8 * s, dark);
-  drawPixelRect(ctx, ox + 1 * s + (facing > 0 ? legSwing : -legSwing) * 0.2, oy + 4 * s, 3 * s, 8 * s, dark);
-  drawPixelRect(ctx, ox - 4 * s, oy + 11 * s, 4 * s, 2 * s, boot);
-  drawPixelRect(ctx, ox + 1 * s, oy + 11 * s, 4 * s, 2 * s, boot);
+  const body = atlas?.get(frame) ?? null;
+  const drewBody = drawSprite(ctx, body, ox, oy, { facing, scale: 1 });
 
-  // Torso
-  drawPixelRect(ctx, ox - 5 * s, oy - 6 * s, 10 * s, 11 * s, body);
-  drawPixelRect(ctx, ox - 4 * s, oy - 4 * s, 8 * s, 2 * s, dark);
+  if (!drewBody) {
+    // Procedural fallback
+    const s = 2;
+    const bodyC = "#e85d04";
+    const dark = "#9a3412";
+    const skin = "#fdba74";
+    const boot = "#431407";
+    const legSwing = Math.sin(walkPhase) * 3 * s;
+    drawPixelRect(
+      ctx,
+      ox - 4 * s + (facing > 0 ? -legSwing : legSwing) * 0.2,
+      oy + 4 * s,
+      3 * s,
+      8 * s,
+      dark,
+    );
+    drawPixelRect(
+      ctx,
+      ox + 1 * s + (facing > 0 ? legSwing : -legSwing) * 0.2,
+      oy + 4 * s,
+      3 * s,
+      8 * s,
+      dark,
+    );
+    drawPixelRect(ctx, ox - 4 * s, oy + 11 * s, 4 * s, 2 * s, boot);
+    drawPixelRect(ctx, ox + 1 * s, oy + 11 * s, 4 * s, 2 * s, boot);
+    drawPixelRect(ctx, ox - 5 * s, oy - 6 * s, 10 * s, 11 * s, bodyC);
+    drawPixelRect(ctx, ox - 4 * s, oy - 14 * s, 8 * s, 8 * s, skin);
+    drawPixelRect(
+      ctx,
+      ox + (facing > 0 ? 1 : -3) * s,
+      oy - 11 * s,
+      2 * s,
+      2 * s,
+      "#111",
+    );
+  }
 
-  // Head
-  drawPixelRect(ctx, ox - 4 * s, oy - 14 * s, 8 * s, 8 * s, skin);
-  drawPixelRect(ctx, ox - 4 * s, oy - 15 * s, 8 * s, 2 * s, body);
-  // Eyes
-  drawPixelRect(ctx, ox + (facing > 0 ? 1 : -3) * s, oy - 11 * s, 2 * s, 2 * s, "#111");
-  drawPixelRect(ctx, ox + (facing > 0 ? 1 : -3) * s, oy - 11 * s, 1 * s, 1 * s, "#fff");
+  const gun = atlas?.get("gun") ?? null;
+  const gx = ox + Math.cos(aimAngle) * 18;
+  const gy = oy + Math.sin(aimAngle) * 6;
+  const drewGun = drawSprite(ctx, gun, gx, gy, {
+    rotation: aimAngle,
+    scale: 1,
+  });
 
-  // Gun arm toward aim
-  const gunLen = 14 * s;
-  const gx = ox + Math.cos(aimAngle) * (6 * s);
-  const gy = oy - 2 * s + Math.sin(aimAngle) * (4 * s);
-  ctx.save();
-  ctx.translate(gx, gy);
-  ctx.rotate(aimAngle);
-  drawPixelRect(ctx, 0, -1.5 * s, gunLen, 3 * s, "#38bdf8");
-  drawPixelRect(ctx, gunLen - 2 * s, -2.5 * s, 4 * s, 5 * s, "#e0f2fe");
-  drawPixelRect(ctx, 2 * s, 1 * s, 3 * s, 3 * s, dark);
-  ctx.restore();
+  if (!drewGun) {
+    ctx.save();
+    ctx.translate(gx, gy);
+    ctx.rotate(aimAngle);
+    drawPixelRect(ctx, 0, -3, 28, 6, "#38bdf8");
+    drawPixelRect(ctx, 24, -5, 8, 10, "#e0f2fe");
+    ctx.restore();
+  }
 }
 
 export function drawBlasterBolt(
@@ -73,7 +106,16 @@ export function drawBlasterBolt(
   x: number,
   y: number,
   angle: number,
+  atlas?: DestroySpriteAtlas | null,
 ) {
+  if (
+    drawSprite(ctx, atlas?.get("blasterBolt") ?? null, x, y, {
+      rotation: angle,
+      scale: 1,
+    })
+  ) {
+    return;
+  }
   ctx.save();
   ctx.translate(Math.round(x), Math.round(y));
   ctx.rotate(angle);
@@ -86,7 +128,11 @@ export function drawMissile(
   ctx: CanvasRenderingContext2D,
   x: number,
   y: number,
+  atlas?: DestroySpriteAtlas | null,
 ) {
+  if (drawSprite(ctx, atlas?.get("missile") ?? null, x, y, { scale: 1 })) {
+    return;
+  }
   const ox = Math.round(x);
   const oy = Math.round(y);
   drawPixelRect(ctx, ox - 3, oy - 10, 6, 16, "#64748b");
@@ -100,11 +146,17 @@ export function drawBomb(
   x: number,
   y: number,
   fuse: number,
+  atlas?: DestroySpriteAtlas | null,
 ) {
+  if (drawSprite(ctx, atlas?.get("bomb") ?? null, x, y, { scale: 1 })) {
+    if (Math.floor(fuse * 10) % 2 === 0) {
+      drawPixelRect(ctx, x - 2, y - 18, 4, 4, "#fbbf24");
+    }
+    return;
+  }
   const ox = Math.round(x);
   const oy = Math.round(y);
   drawPixelRect(ctx, ox - 6, oy - 6, 12, 12, "#1e293b");
-  drawPixelRect(ctx, ox - 4, oy - 4, 8, 8, "#334155");
   drawPixelRect(ctx, ox - 1, oy - 10, 2, 5, "#a3a3a3");
   if (Math.floor(fuse * 10) % 2 === 0) {
     drawPixelRect(ctx, ox - 2, oy - 14, 3, 3, "#fbbf24");
@@ -117,16 +169,21 @@ export function drawRoach(
   y: number,
   facing: 1 | -1,
   phase: number,
+  atlas?: DestroySpriteAtlas | null,
 ) {
-  const ox = Math.round(x);
-  const oy = Math.round(y);
   const bob = Math.sin(phase) * 1;
-  drawPixelRect(ctx, ox - 5, oy - 2 + bob, 10, 5, "#78350f");
-  drawPixelRect(ctx, ox + (facing > 0 ? 3 : -6), oy - 3 + bob, 3, 3, "#451a03");
-  // Legs
-  const kick = Math.sin(phase * 2) * 2;
-  drawPixelRect(ctx, ox - 6, oy + 2 + kick, 2, 3, "#451a03");
-  drawPixelRect(ctx, ox + 4, oy + 2 - kick, 2, 3, "#451a03");
+  if (
+    drawSprite(ctx, atlas?.get("roach") ?? null, x, y + bob, {
+      facing,
+      scale: 1,
+    })
+  ) {
+    return;
+  }
+  const ox = Math.round(x);
+  const oy = Math.round(y + bob);
+  drawPixelRect(ctx, ox - 5, oy - 2, 10, 5, "#78350f");
+  drawPixelRect(ctx, ox + (facing > 0 ? 3 : -6), oy - 3, 3, 3, "#451a03");
 }
 
 export function drawExplosion(
@@ -135,24 +192,27 @@ export function drawExplosion(
   y: number,
   life: number,
   maxLife: number,
+  atlas?: DestroySpriteAtlas | null,
 ) {
   const t = 1 - life / maxLife;
-  const r = 8 + t * 28;
+  const scale = 0.6 + t * 1.4;
   const alpha = Math.max(0, 1 - t);
   ctx.save();
   ctx.globalAlpha = alpha;
-  ctx.fillStyle = "#fbbf24";
-  ctx.beginPath();
-  ctx.arc(x, y, r, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = "#ef4444";
-  ctx.beginPath();
-  ctx.arc(x, y, r * 0.55, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = "#fff7ed";
-  ctx.beginPath();
-  ctx.arc(x, y, r * 0.25, 0, Math.PI * 2);
-  ctx.fill();
+  const drew = drawSprite(ctx, atlas?.get("explosion") ?? null, x, y, {
+    scale,
+  });
+  if (!drew) {
+    const r = 8 + t * 28;
+    ctx.fillStyle = "#fbbf24";
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#ef4444";
+    ctx.beginPath();
+    ctx.arc(x, y, r * 0.55, 0, Math.PI * 2);
+    ctx.fill();
+  }
   ctx.restore();
 }
 

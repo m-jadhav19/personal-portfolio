@@ -1,24 +1,55 @@
-const TARGET_SELECTOR = [
+/** Elements that should never be destroyed. */
+const IGNORE_SELECTOR = "[data-destroy-ignore], canvas, [data-cursor-root]";
+
+/** Prefer these when walking elementsFromPoint / AoE scans. */
+const TARGET_TAGS = new Set([
+  "H1",
+  "H2",
+  "H3",
+  "H4",
+  "H5",
+  "H6",
+  "P",
+  "LI",
+  "IMG",
+  "A",
+  "BUTTON",
+  "SPAN",
+  "STRONG",
+  "EM",
+  "LABEL",
+  "FIGURE",
+  "FIGCAPTION",
+  "ARTICLE",
+  "SECTION",
+  "DIV",
+]);
+
+const AOE_SELECTOR = [
   "h1",
   "h2",
   "h3",
   "h4",
+  "h5",
+  "h6",
   "p",
   "li",
   "img",
   "a",
   "button",
   "[role='button']",
-  "article",
-  "figure",
-  "figcaption",
+  "span",
   "strong",
   "em",
   "label",
+  "figure",
+  "figcaption",
+  "[data-intro]",
+  "[data-destroy-target]",
 ].join(",");
 
-/** Refresh candidate cache at most this often (ms). */
-const CACHE_TTL_MS = 250;
+const CACHE_TTL_MS = 200;
+const MIN_SIZE = 10;
 
 export type TargetSnapshot = {
   element: HTMLElement;
@@ -40,19 +71,79 @@ function isVisible(el: HTMLElement): boolean {
   if (style.display === "none" || style.visibility === "hidden") return false;
   if (Number(style.opacity) === 0) return false;
   const rect = el.getBoundingClientRect();
-  return rect.width >= 12 && rect.height >= 12;
+  return rect.width >= MIN_SIZE && rect.height >= MIN_SIZE;
 }
 
 /** Pure helper for unit tests — true when closest marks the node ignorable. */
 export function matchesDestroyIgnore(
   closest: (selector: string) => unknown,
 ): boolean {
-  return Boolean(closest("[data-destroy-ignore]") || closest("canvas"));
+  return Boolean(
+    closest("[data-destroy-ignore]") ||
+      closest("canvas") ||
+      closest("[data-cursor-root]"),
+  );
 }
 
 export function isIgnorable(el: Element | null): boolean {
   if (!el || !(el instanceof Element)) return true;
   return matchesDestroyIgnore((selector) => el.closest(selector));
+}
+
+function hasMeaningfulContent(el: HTMLElement): boolean {
+  if (el.matches("img, svg, canvas, video")) return true;
+  const text = (el.innerText || el.textContent || "").trim();
+  if (text.length >= 1) return true;
+  // Decorative / media blocks without text
+  if (el.querySelector("img, svg, video")) return true;
+  return false;
+}
+
+function isDestroyable(el: HTMLElement): boolean {
+  if (isIgnorable(el)) return false;
+  if (!TARGET_TAGS.has(el.tagName) && !el.hasAttribute("data-intro")) {
+    return false;
+  }
+  // Skip giant page shells
+  if (el === document.body || el === document.documentElement) return false;
+  if (el.dataset.destroyDamaged === "true") return false;
+  if (!isVisible(el)) return false;
+  if (!hasMeaningfulContent(el)) return false;
+
+  const rect = el.getBoundingClientRect();
+  // Avoid wiping the entire viewport in one shot (huge wrappers)
+  if (rect.width * rect.height > window.innerWidth * window.innerHeight * 0.55) {
+    return false;
+  }
+  return true;
+}
+
+function pickBestFromPoint(x: number, y: number): HTMLElement | null {
+  const stack = document.elementsFromPoint(x, y);
+  let best: HTMLElement | null = null;
+  let bestArea = Number.POSITIVE_INFINITY;
+
+  for (const el of stack) {
+    if (!(el instanceof HTMLElement)) continue;
+    if (el.closest(IGNORE_SELECTOR)) continue;
+    // Walk up a few ancestors to find a sensible destroyable node
+    let cur: HTMLElement | null = el;
+    for (let depth = 0; depth < 5 && cur; depth += 1) {
+      if (isDestroyable(cur)) {
+        const area =
+          cur.getBoundingClientRect().width * cur.getBoundingClientRect().height;
+        // Prefer smaller leaf-ish targets so letters/rows die instead of whole page
+        if (area < bestArea) {
+          best = cur;
+          bestArea = area;
+        }
+        break;
+      }
+      cur = cur.parentElement;
+    }
+  }
+
+  return best;
 }
 
 function snapshotElement(element: HTMLElement): TargetSnapshot {
@@ -79,6 +170,17 @@ function restoreSnapshot(snapshot: TargetSnapshot) {
   element.removeAttribute("data-destroy-damaged");
 }
 
+function hideElement(el: HTMLElement) {
+  el.setAttribute("data-destroy-damaged", "true");
+  el.style.transition =
+    "opacity 120ms ease, filter 120ms ease, transform 120ms ease";
+  el.style.opacity = "0";
+  el.style.visibility = "hidden";
+  el.style.pointerEvents = "none";
+  el.style.filter = "blur(2px)";
+  el.style.transform = "scale(0.96) rotate(-1deg)";
+}
+
 export type TargetRegistry = {
   collect(): HTMLElement[];
   applyDamage(x: number, y: number, radius: number, maxHits: number): DamagedTarget[];
@@ -95,22 +197,23 @@ export function createTargetRegistry(): TargetRegistry {
   const pendingTimers = new Set<number>();
 
   function rebuildCache(): HTMLElement[] {
-    const nodes = document.querySelectorAll<HTMLElement>(TARGET_SELECTOR);
+    const nodes = document.querySelectorAll<HTMLElement>(AOE_SELECTOR);
     const out: HTMLElement[] = [];
     for (const el of nodes) {
-      if (isIgnorable(el)) continue;
-      if (damaged.has(el)) continue;
-      if (!isVisible(el)) continue;
-      // Skip nodes nested inside another candidate (prefer outer blocks)
-      let nested = false;
-      for (const other of out) {
-        if (other.contains(el)) {
-          nested = true;
+      if (!isDestroyable(el)) continue;
+      // Prefer leaves: skip if already covered by a smaller child candidate
+      let covered = false;
+      for (let i = out.length - 1; i >= 0; i -= 1) {
+        const other = out[i];
+        if (el.contains(other)) {
+          covered = true;
           break;
         }
+        if (other.contains(el)) {
+          out.splice(i, 1);
+        }
       }
-      if (nested) continue;
-      out.push(el);
+      if (!covered) out.push(el);
     }
     cache = out;
     cacheAt = performance.now();
@@ -122,7 +225,6 @@ export function createTargetRegistry(): TargetRegistry {
     if (now - cacheAt > CACHE_TTL_MS || cache.length === 0) {
       return rebuildCache();
     }
-    // Drop disconnected / newly damaged entries cheaply
     cache = cache.filter((el) => el.isConnected && !damaged.has(el));
     return cache;
   }
@@ -132,69 +234,81 @@ export function createTargetRegistry(): TargetRegistry {
     cacheAt = 0;
   }
 
+  function damageElement(el: HTMLElement): DamagedTarget | null {
+    if (damaged.has(el) || !el.isConnected) return null;
+    const box = el.getBoundingClientRect();
+    const snap = snapshotElement(el);
+    damaged.set(el, snap);
+    hideElement(el);
+    return {
+      snapshot: snap,
+      box: new DOMRect(box.x, box.y, box.width, box.height),
+    };
+  }
+
   function applyDamage(
     x: number,
     y: number,
     radius: number,
     maxHits: number,
   ): DamagedTarget[] {
-    const candidates = collect();
-    const scored: { el: HTMLElement; dist: number; box: DOMRect }[] = [];
+    const result: DamagedTarget[] = [];
+    const hits = Math.max(1, maxHits);
 
+    if (radius <= 0) {
+      // Point weapon — use real stacking order under the cursor/bolt
+      const el = pickBestFromPoint(x, y);
+      if (el) {
+        const d = damageElement(el);
+        if (d) result.push(d);
+      }
+      if (result.length > 0) invalidate();
+      return result;
+    }
+
+    // AoE — score cached candidates by distance to blast center
+    const candidates = collect();
+    const scored: { el: HTMLElement; dist: number }[] = [];
     for (const el of candidates) {
+      if (damaged.has(el)) continue;
       const box = el.getBoundingClientRect();
       const cx = box.left + box.width / 2;
       const cy = box.top + box.height / 2;
       const dist = Math.hypot(cx - x, cy - y);
-      // Point-in-expanded-box for blaster; circle for AoE
-      if (radius <= 0) {
-        const pad = 6;
-        if (
-          x >= box.left - pad &&
-          x <= box.right + pad &&
-          y >= box.top - pad &&
-          y <= box.bottom + pad
-        ) {
-          scored.push({ el, dist, box });
-        }
-      } else if (dist <= radius) {
-        scored.push({ el, dist, box });
+      if (dist <= radius) scored.push({ el, dist });
+    }
+    scored.sort((a, b) => a.dist - b.dist);
+
+    for (const { el } of scored.slice(0, hits)) {
+      const d = damageElement(el);
+      if (d) result.push(d);
+    }
+
+    // Also sample a few points inside the blast for elementsFromPoint coverage
+    if (result.length < hits) {
+      const samples = [
+        [x, y],
+        [x - radius * 0.4, y],
+        [x + radius * 0.4, y],
+        [x, y - radius * 0.4],
+        [x, y + radius * 0.4],
+      ] as const;
+      for (const [sx, sy] of samples) {
+        if (result.length >= hits) break;
+        const el = pickBestFromPoint(sx, sy);
+        if (!el || damaged.has(el)) continue;
+        const d = damageElement(el);
+        if (d) result.push(d);
       }
     }
 
-    scored.sort((a, b) => a.dist - b.dist);
-    const hits = scored.slice(0, Math.max(1, maxHits));
-    const result: DamagedTarget[] = [];
-
-    for (const { el, box } of hits) {
-      if (damaged.has(el)) continue;
-      const snap = snapshotElement(el);
-      damaged.set(el, snap);
-      el.setAttribute("data-destroy-damaged", "true");
-      el.style.transition =
-        "opacity 120ms ease, filter 120ms ease, transform 120ms ease";
-      el.style.opacity = "0";
-      el.style.visibility = "hidden";
-      el.style.pointerEvents = "none";
-      el.style.filter = "blur(2px)";
-      el.style.transform = "scale(0.96) rotate(-1deg)";
-      result.push({
-        snapshot: snap,
-        box: new DOMRect(box.x, box.y, box.width, box.height),
-      });
-    }
-
-    if (result.length > 0) {
-      invalidate();
-    }
-
+    if (result.length > 0) invalidate();
     return result;
   }
 
   function restoreAll() {
     for (const snap of damaged.values()) {
       restoreSnapshot(snap);
-      // Rebuild flash
       snap.element.style.transition = "opacity 280ms ease, filter 280ms ease";
       snap.element.style.opacity = "0";
       snap.element.style.visibility = "visible";
@@ -221,7 +335,6 @@ export function createTargetRegistry(): TargetRegistry {
       window.clearTimeout(timer);
     }
     pendingTimers.clear();
-    // Instant restore without flash timers
     for (const snap of damaged.values()) {
       restoreSnapshot(snap);
     }
