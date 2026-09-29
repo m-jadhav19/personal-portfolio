@@ -155,7 +155,10 @@ export function createTargetRegistry(): TargetRegistry {
       el.style.pointerEvents = "none";
       el.style.filter = "blur(2px)";
       el.style.transform = "scale(0.96) rotate(-1deg)";
-      result.push({ snapshot: snap, box: DOMRect.fromRect(box) });
+      result.push({
+        snapshot: snap,
+        box: new DOMRect(box.x, box.y, box.width, box.height),
+      });
     }
 
     return result;

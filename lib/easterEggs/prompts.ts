@@ -79,6 +79,12 @@ export const easterEggPrompts: EasterEggPrompt[] = [
     text: "The best cheat codes never needed a pause menu.",
     weight: 2,
   },
+  {
+    id: "whisper-destroy",
+    kind: "whisper",
+    text: "Some words undo a page the way Flash used to.",
+    weight: 2,
+  },
 
   // Facts — general web, gaming, and internet trivia
   {
