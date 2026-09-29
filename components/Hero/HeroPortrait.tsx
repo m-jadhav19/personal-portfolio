@@ -15,7 +15,7 @@ export function HeroPortrait({ portraitRef }: HeroPortraitProps) {
       ref={portraitRef}
       className={styles.portraitStage}
       data-intro="portrait"
-      data-cursor="image"
+      data-cursor="hide"
     >
       <PortraitSticker
         label={`Sticker portrait of ${portfolio.headerTaglineTwo}. Peel it from an edge, or poke the brackets, glasses, hair and sparks.`}
