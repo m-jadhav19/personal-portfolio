@@ -9,10 +9,11 @@ import {
 } from "@/animations/navigation";
 import { navigation } from "@/content/navigation";
 import { useActiveSection } from "@/hooks/useActiveSection";
-import { useHeaderScroll } from "@/hooks/useHeaderScroll";
+import { useHeroDocked } from "@/hooks/useHeroDocked";
 import { useMagneticHover } from "@/hooks/useMagneticHover";
 import { useSmoothScroll } from "@/hooks/useSmoothScroll";
 
+import { HeaderSticker } from "./HeaderSticker";
 import { Logo } from "./Logo";
 import { MobileMenu } from "./MobileMenu";
 import { MobileNav } from "./MobileNav";
@@ -22,7 +23,7 @@ import styles from "./Navigation.module.css";
 export function Navigation() {
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { isHidden } = useHeaderScroll();
+  const stickerDocked = useHeroDocked(pathname);
   const scrollToSection = useSmoothScroll();
   const activeSection = useActiveSection(navigation.map((item) => item.id));
 
@@ -80,7 +81,7 @@ export function Navigation() {
 
   const headerClassName = [
     styles.header,
-    isHidden && !isMobileMenuOpen ? styles.headerHidden : "",
+    stickerDocked ? styles.headerDocked : "",
   ]
     .filter(Boolean)
     .join(" ");
@@ -122,6 +123,12 @@ export function Navigation() {
           />
         </div>
       </header>
+
+      {/* Outside the header so its difference blend doesn't invert the sticker. */}
+      <HeaderSticker
+        docked={stickerDocked}
+        onClick={() => scrollToSection("top")}
+      />
 
       <MobileMenu
         isOpen={isMobileMenuOpen}
