@@ -136,7 +136,9 @@ export function DestroySiteSimulator({ onExit }: DestroySiteSimulatorProps) {
       >
         <div className={styles.brand}>
           <p className={styles.title}>Destroy mode</p>
-          <p className={styles.hint}>1–4 switch · click fire · Esc pause</p>
+          <p className={styles.hint}>
+            click fire · RMB drag · 1–4 · Esc
+          </p>
         </div>
 
         <div className={styles.weapons} role="group" aria-label="Weapons">
