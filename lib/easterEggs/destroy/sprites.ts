@@ -12,6 +12,12 @@ export type BulletHole = {
   rotation: number;
   scale: number;
   crack: boolean;
+  /** Seconds remaining before the scar is fully covered */
+  life: number;
+  /** Full lifetime (hold + fade) */
+  maxLife: number;
+  /** Seconds of full opacity before fade/cover begins */
+  hold: number;
 };
 
 export function drawPixelRect(
@@ -276,10 +282,22 @@ export function drawDebris(
 export function createBulletHole(
   x: number,
   y: number,
-  opts?: { scale?: number; crack?: boolean },
+  opts?: {
+    scale?: number;
+    crack?: boolean;
+    /** Total lifetime in seconds (hold + fade). Default ~2s. */
+    life?: number;
+    /** Full-opacity hold before cover-up fade. Default ~55% of life. */
+    hold?: number;
+  },
 ): BulletHole {
   const variant =
     HOLE_VARIANTS[Math.floor(Math.random() * HOLE_VARIANTS.length)];
+  const maxLife = Math.max(0.2, opts?.life ?? 2);
+  const hold = Math.min(
+    maxLife,
+    Math.max(0, opts?.hold ?? maxLife * 0.55),
+  );
   return {
     x,
     y,
@@ -287,7 +305,20 @@ export function createBulletHole(
     rotation: Math.random() * Math.PI * 2,
     scale: opts?.scale ?? 0.85 + Math.random() * 0.55,
     crack: opts?.crack ?? Math.random() < 0.55,
+    life: maxLife,
+    maxLife,
+    hold,
   };
+}
+
+/** 1 while holding, then ease out as the surface covers the scar. */
+export function holeCoverAlpha(hole: BulletHole): number {
+  const fadeSpan = Math.max(0.001, hole.maxLife - hole.hold);
+  const age = hole.maxLife - hole.life;
+  if (age <= hole.hold) return 1;
+  const t = Math.min(1, (age - hole.hold) / fadeSpan);
+  // Ease-in cover so the close happens a bit faster at the end.
+  return Math.max(0, 1 - t * t);
 }
 
 export function drawBulletHole(
@@ -295,20 +326,27 @@ export function drawBulletHole(
   hole: BulletHole,
   atlas?: DestroySpriteAtlas | null,
 ) {
+  const cover = holeCoverAlpha(hole);
+  if (cover <= 0.01) return;
+
+  // Shrink slightly while covering so it reads as the surface closing over.
+  const scale = hole.scale * (0.72 + 0.28 * cover);
   const img = atlas?.get(hole.variant) ?? null;
   const drew = drawSprite(ctx, img, hole.x, hole.y, {
     rotation: hole.rotation,
-    scale: hole.scale,
+    scale,
+    alpha: cover,
   });
 
   if (!drew) {
     // Procedural jagged hole fallback
     ctx.save();
+    ctx.globalAlpha = cover;
     ctx.translate(Math.round(hole.x), Math.round(hole.y));
     ctx.rotate(hole.rotation);
     ctx.fillStyle = "#0a0a0a";
     ctx.beginPath();
-    const r = 7 * hole.scale;
+    const r = 7 * scale;
     for (let i = 0; i < 8; i++) {
       const a = (i / 8) * Math.PI * 2;
       const jitter = r * (0.65 + Math.random() * 0.45);
@@ -329,8 +367,8 @@ export function drawBulletHole(
     const crack = atlas?.get("crack") ?? null;
     drawSprite(ctx, crack, hole.x + 6, hole.y - 4, {
       rotation: hole.rotation + 0.4,
-      scale: hole.scale * 0.9,
-      alpha: 0.85,
+      scale: scale * 0.9,
+      alpha: 0.85 * cover,
     });
   }
 }

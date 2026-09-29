@@ -26,6 +26,8 @@ import {
   WEAPONS,
   clampWeaponIndex,
   cycleWeaponIndex,
+  weaponHoleLife,
+  type WeaponConfig,
   type WeaponId,
 } from "./weapons";
 
@@ -189,12 +191,34 @@ export function createDestroyEngine(
     );
   }
 
+  function holeTiming(cfg: WeaponConfig) {
+    const lifeScale = reducedMotion ? 0.7 : 1;
+    return {
+      life: weaponHoleLife(cfg) * lifeScale,
+      hold: cfg.holeHold * lifeScale,
+      scaleMul: cfg.holeScale,
+    };
+  }
+
   function punchHole(
     x: number,
     y: number,
-    opts?: { scale?: number; crack?: boolean; silent?: boolean },
+    opts?: {
+      scale?: number;
+      crack?: boolean;
+      silent?: boolean;
+      life?: number;
+      hold?: number;
+    },
   ) {
-    holes.push(createBulletHole(x, y, opts));
+    holes.push(
+      createBulletHole(x, y, {
+        scale: opts?.scale,
+        crack: opts?.crack,
+        life: opts?.life,
+        hold: opts?.hold,
+      }),
+    );
     if (holes.length > MAX_HOLES) {
       holes.splice(0, holes.length - MAX_HOLES);
     }
@@ -203,15 +227,24 @@ export function createDestroyEngine(
     }
   }
 
-  function scatterHoles(x: number, y: number, radius: number, count: number) {
+  function scatterHoles(
+    x: number,
+    y: number,
+    radius: number,
+    count: number,
+    cfg: WeaponConfig,
+  ) {
+    const timing = holeTiming(cfg);
     const n = reducedMotion ? Math.max(2, Math.floor(count / 2)) : count;
     for (let i = 0; i < n; i++) {
       const angle = Math.random() * Math.PI * 2;
       const dist = Math.random() * radius;
       punchHole(x + Math.cos(angle) * dist, y + Math.sin(angle) * dist, {
-        scale: 0.7 + Math.random() * 0.9,
+        scale: (0.7 + Math.random() * 0.9) * timing.scaleMul,
         crack: true,
         silent: true,
+        life: timing.life * (0.85 + Math.random() * 0.25),
+        hold: timing.hold,
       });
     }
     audio.play("hit");
@@ -231,23 +264,34 @@ export function createDestroyEngine(
   function impactAt(
     x: number,
     y: number,
+    cfg: WeaponConfig,
     opts?: { holeScale?: number; radius?: number; hits?: number },
   ) {
-    const radius = opts?.radius ?? 0;
-    const hits = opts?.hits ?? 1;
+    const radius = opts?.radius ?? cfg.radius;
+    const hits = opts?.hits ?? cfg.hits;
+    const timing = holeTiming(cfg);
     const destroyed = damageAt(x, y, radius, hits);
 
     punchHole(x, y, {
-      scale: opts?.holeScale ?? 0.9 + Math.random() * 0.45,
+      scale:
+        (opts?.holeScale ?? 0.9 + Math.random() * 0.45) * timing.scaleMul,
       crack: true,
       silent: true,
+      life: timing.life,
+      hold: timing.hold,
     });
 
     if (destroyed === 0) {
       // Empty space — surface crater + sparks
       const sparkCount = reducedMotion ? 4 : 10;
+      const crater = Math.max(8, radius * 0.35);
       const sparks = spawnDebris(
-        { left: x - 6, top: y - 6, width: 12, height: 12 },
+        {
+          left: x - crater,
+          top: y - crater,
+          width: crater * 2,
+          height: crater * 2,
+        },
         sparkCount,
         ["#a1a1aa", "#52525b", "#fde047", "#fdba74"],
       );
@@ -255,9 +299,11 @@ export function createDestroyEngine(
       explosions.push({ x, y, life: 0.14, maxLife: 0.14 });
       if (!reducedMotion && Math.random() < 0.55) {
         punchHole(x + (Math.random() * 10 - 5), y + (Math.random() * 10 - 5), {
-          scale: 0.45 + Math.random() * 0.3,
+          scale: (0.45 + Math.random() * 0.3) * timing.scaleMul,
           crack: false,
           silent: true,
+          life: timing.life * 0.75,
+          hold: timing.hold * 0.7,
         });
       }
     }
@@ -266,14 +312,27 @@ export function createDestroyEngine(
     return destroyed;
   }
 
-  function boom(x: number, y: number, radius: number, hits: number) {
+  function boom(x: number, y: number, cfg: WeaponConfig) {
+    const radius = cfg.radius;
+    const hits = cfg.hits;
     explosions.push({ x, y, life: 0.35, maxLife: 0.35 });
     const destroyed = damageAt(x, y, radius, hits);
-    scatterHoles(x, y, radius * 0.85, Math.max(4, Math.round(radius / 12)));
+    scatterHoles(
+      x,
+      y,
+      radius * 0.85,
+      Math.max(4, Math.round(radius / 12)),
+      cfg,
+    );
     // Empty-space blast still scars the surface.
     if (destroyed === 0) {
       const sparks = spawnDebris(
-        { left: x - radius * 0.3, top: y - radius * 0.3, width: radius * 0.6, height: radius * 0.6 },
+        {
+          left: x - radius * 0.3,
+          top: y - radius * 0.3,
+          width: radius * 0.6,
+          height: radius * 0.6,
+        },
         reducedMotion ? 8 : 18,
         ["#a1a1aa", "#52525b", "#f97316", "#fde047"],
       );
@@ -301,7 +360,7 @@ export function createDestroyEngine(
       if (countKind("blaster") >= cfg.maxLive) return;
       const speed = 1200;
       // Hole + destroy/surface at the aim point immediately.
-      impactAt(tx, ty);
+      impactAt(tx, ty, cfg);
       const dist = Math.hypot(tx - character.x, ty - character.y);
       projectiles.push({
         kind: "blaster",
@@ -346,7 +405,7 @@ export function createDestroyEngine(
 
     // swarm — chew at aim point + leave a mark even on empty floor
     if (roaches.length >= MAX_ROACHES) return;
-    impactAt(tx, ty, { holeScale: 0.55, radius: 24, hits: 2 });
+    impactAt(tx, ty, cfg, { holeScale: 0.55, radius: cfg.radius * 0.6, hits: 2 });
     const spawnCount = reducedMotion ? 3 : 6;
     for (let i = 0; i < spawnCount; i++) {
       if (roaches.length >= MAX_ROACHES) break;
@@ -506,7 +565,7 @@ export function createDestroyEngine(
         const dist = Math.hypot(p.tx - p.x, p.ty - p.y);
         const step = 520 * dt;
         if (dist <= step || p.y >= p.ty) {
-          boom(p.tx, p.ty, WEAPON_CONFIG.missile.radius, WEAPON_CONFIG.missile.hits);
+          boom(p.tx, p.ty, WEAPON_CONFIG.missile);
           projectiles.splice(i, 1);
         } else {
           p.x += ((p.tx - p.x) / dist) * step * 0.35;
@@ -520,7 +579,7 @@ export function createDestroyEngine(
         p.y += p.vy * dt;
         p.fuse -= dt;
         if (p.fuse <= 0) {
-          boom(p.x, p.y, WEAPON_CONFIG.bomb.radius, WEAPON_CONFIG.bomb.hits);
+          boom(p.x, p.y, WEAPON_CONFIG.bomb);
           projectiles.splice(i, 1);
         }
       }
@@ -542,18 +601,28 @@ export function createDestroyEngine(
       if (r.x < 8 || r.x > window.innerWidth - 8) r.vx *= -1;
       if (r.y < 8 || r.y > window.innerHeight - 8) r.vy *= -1;
       if (r.nibbleTimer <= 0) {
-        const nibbled = damageAt(r.x, r.y, WEAPON_CONFIG.swarm.radius, 1);
+        const swarmCfg = WEAPON_CONFIG.swarm;
+        const nibbled = damageAt(r.x, r.y, swarmCfg.radius, 1);
         r.nibbleTimer = 0.35 + Math.random() * 0.4;
         if (nibbled > 0) {
+          const timing = holeTiming(swarmCfg);
           punchHole(r.x, r.y, {
-            scale: 0.45 + Math.random() * 0.25,
+            scale: (0.45 + Math.random() * 0.25) * timing.scaleMul,
             crack: false,
             silent: true,
+            life: timing.life * 0.65,
+            hold: timing.hold * 0.55,
           });
           audio.play("roach");
         }
       }
       if (r.life <= 0) roaches.splice(i, 1);
+    }
+
+    // Scars heal — hold, then cover over based on weapon timing.
+    for (let i = holes.length - 1; i >= 0; i--) {
+      holes[i].life -= dt;
+      if (holes[i].life <= 0) holes.splice(i, 1);
     }
 
     // Explosions
