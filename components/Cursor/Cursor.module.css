@@ -76,6 +76,34 @@
   letter-spacing: 0.02em;
 }
 
+/* DESTROY aim reticle — warm crosshair, no blend wash-out on black */
+.mode_destroy {
+  mix-blend-mode: normal;
+  color: #fdba74;
+}
+
+.mode_destroy .center {
+  color: #fdba74;
+  font-size: 0.72rem;
+  text-shadow: none;
+}
+
+.mode_destroy .corner {
+  width: 6px;
+  height: 6px;
+  border-width: 1.5px;
+}
+
+.mode_destroy .tr,
+.mode_destroy .br {
+  margin-left: -6px;
+}
+
+.mode_destroy .bl,
+.mode_destroy .br {
+  margin-top: -6px;
+}
+
 .coords {
   position: fixed;
   top: 0;

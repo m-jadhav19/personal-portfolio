@@ -2,6 +2,8 @@
 
 import { useCallback, useRef } from "react";
 
+import { isDestroyEggActive } from "@/lib/easterEggs/destroy/isActive";
+
 const MAGNETIC_STRENGTH = 0.25;
 
 export function useMagneticHover<T extends HTMLElement>() {
@@ -10,6 +12,11 @@ export function useMagneticHover<T extends HTMLElement>() {
   const onMouseMove = useCallback((event: React.MouseEvent) => {
     const element = ref.current;
     if (!element) return;
+    // Destroy mode needs a stable aim — no magnetic pull on chrome.
+    if (isDestroyEggActive()) {
+      element.style.transform = "translate(0, 0)";
+      return;
+    }
 
     const rect = element.getBoundingClientRect();
     const relX = event.clientX - rect.left - rect.width / 2;

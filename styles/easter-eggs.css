@@ -66,6 +66,9 @@ html[data-easter-egg="broken-ux"] {
 html[data-easter-egg="destroy"] {
   scroll-behavior: auto !important;
   overflow: hidden;
+  --cursor-fg: #fdba74;
+  --cursor-offset-a: transparent;
+  --cursor-offset-b: transparent;
 }
 
 html[data-easter-egg="destroy"] body {

@@ -2,6 +2,8 @@
 
 import { useRef, type ReactNode } from "react";
 
+import { isDestroyEggActive } from "@/lib/easterEggs/destroy/isActive";
+
 type MagneticProps = {
   children: ReactNode;
   strength?: number;
@@ -22,6 +24,10 @@ export function Magnetic({
     if (!el) return;
     if (window.matchMedia("(pointer: coarse)").matches) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (isDestroyEggActive()) {
+      el.style.transform = "translate(0, 0)";
+      return;
+    }
 
     const rect = el.getBoundingClientRect();
     const x = event.clientX - (rect.left + rect.width / 2);

@@ -42,13 +42,12 @@ def hex_to_rgba(c: str) -> tuple[int, int, int, int]:
         r, g, b = int(c[0:2], 16), int(c[2:4], 16), int(c[4:6], 16)
         return (r, g, b, 255)
     if len(c) == 8:
-        r, g, b, a = (
+        return (
             int(c[0:2], 16),
             int(c[2:4], 16),
             int(c[4:6], 16),
             int(c[6:8], 16),
         )
-        return (r, g, b, a)
     raise ValueError(c)
 
 
@@ -58,7 +57,7 @@ def paint(rows: list[str], palette: dict[str, str], scale: int = 1) -> tuple[int
     out_w, out_h = w * scale, h * scale
     buf = bytearray(out_w * out_h * 4)
     for y, row in enumerate(rows):
-        for x, ch in enumerate(row):
+        for x, ch in enumerate(row.ljust(w, ".")):
             rgba = hex_to_rgba(palette.get(ch, "."))
             for dy in range(scale):
                 for dx in range(scale):
@@ -69,141 +68,224 @@ def paint(rows: list[str], palette: dict[str, str], scale: int = 1) -> tuple[int
     return out_w, out_h, bytes(buf)
 
 
-CHAR_PAL = {
-    ".": ".",
-    "o": "#e85d04",  # orange body
-    "d": "#9a3412",  # dark orange
-    "s": "#fdba74",  # skin
-    "b": "#431407",  # boots
-    "g": "#38bdf8",  # gun
-    "w": "#e0f2fe",  # gun tip
-    "e": "#111111",  # eye
-    "h": "#fff7ed",  # eye highlight
-}
-
-CHAR_IDLE = [
-    "....oooo....",
-    "...osssso...",
-    "...osehso...",
-    "...osssso...",
-    "..odoooooo..",
-    "..oooooooo..",
-    "..ooo..ooo..",
-    "..ooo..ooo..",
-    "..dd....dd..",
-    "..bb....bb..",
-]
-
-CHAR_WALK_A = [
-    "....oooo....",
-    "...osssso...",
-    "...osehso...",
-    "...osssso...",
-    "..odoooooo..",
-    "..oooooooo..",
-    "..ooo..ooo..",
-    ".ddo....odd.",
-    "bb......bb..",
-    "............",
-]
-
-CHAR_WALK_B = [
-    "....oooo....",
-    "...osssso...",
-    "...osehso...",
-    "...osssso...",
-    "..odoooooo..",
-    "..oooooooo..",
-    "..ooo..ooo..",
-    ".odd....ddo.",
-    "..bb......bb",
-    "............",
-]
-
-GUN = [
-    "gggggggw",
-    "gggggggw",
-    "..d.....",
-]
-
-BLASTER = [
-    "yyWW",
-    "yWWW",
-]
-
-MISSILE = [
-    "..rr..",
-    ".rrrr.",
-    ".ssss.",
-    ".ssss.",
-    ".ssss.",
-    "ff..ff",
-]
-
-BOMB = [
-    "..yy..",
-    "...g..",
-    ".kkkk.",
-    "kkkkkk",
-    "kkkkkk",
-    ".kkkk.",
-]
-
-ROACH = [
-    ".bbbb.",
-    "bbhbbb",
-    ".bbbb.",
-    "l.l.l.",
-]
-
-EXPLOSION = [
-    "...yy...",
-    ".yyrryy.",
-    "yrrWWrry",
-    "yrWWWWry",
-    "yrrWWrry",
-    ".yyrryy.",
-    "...yy...",
-]
-
-
 def save(name: str, rows: list[str], palette: dict[str, str], scale: int = 4) -> None:
     w, h, rgba = paint(rows, palette, scale=scale)
     write_png(OUT / f"{name}.png", w, h, rgba)
     print(f"wrote {OUT / name}.png ({w}x{h})")
 
 
+CHAR_PAL = {
+    ".": ".",
+    "o": "#f97316",  # bright orange body
+    "d": "#c2410c",  # mid orange
+    "D": "#7c2d12",  # deep shade
+    "s": "#fed7aa",  # skin
+    "S": "#fdba74",  # skin shade
+    "b": "#292524",  # boots
+    "B": "#1c1917",
+    "g": "#38bdf8",  # gun
+    "G": "#0ea5e9",
+    "w": "#f0f9ff",  # muzzle / white
+    "e": "#0c0a09",  # eye
+    "h": "#fff7ed",
+    "v": "#ea580c",  # visor stripe
+    "n": "#44403c",  # belt
+}
+
+# More readable mercenary — 16 wide
+CHAR_IDLE = [
+    ".....oooooo.....",
+    "....osssssso....",
+    "....osSehSso....",
+    "....osssssso....",
+    "....DovvvvoD....",
+    "...odooooooood..",
+    "...odooooooood..",
+    "...odo.nn.odod..",
+    "...odo....odod..",
+    "...Ddo....odD...",
+    "...bb......bb...",
+    "...BB......BB...",
+]
+
+CHAR_WALK_A = [
+    ".....oooooo.....",
+    "....osssssso....",
+    "....osSehSso....",
+    "....osssssso....",
+    "....DovvvvoD....",
+    "...odooooooood..",
+    "...odooooooood..",
+    "...odo.nn.odod..",
+    "..Dodo....odod..",
+    ".bbdo......dD...",
+    "BB.........bb...",
+    "...........BB...",
+]
+
+CHAR_WALK_B = [
+    ".....oooooo.....",
+    "....osssssso....",
+    "....osSehSso....",
+    "....osssssso....",
+    "....DovvvvoD....",
+    "...odooooooood..",
+    "...odooooooood..",
+    "...odo.nn.odod..",
+    "...odo....odoD..",
+    "...Dd......odbB.",
+    "...bb.........BB",
+    "...BB...........",
+]
+
+GUN = [
+    "..GGGGGGGw",
+    ".Ggggggggw",
+    ".Ggggggggw",
+    "..D.n.....",
+    "...n......",
+]
+
+BLASTER = [
+    ".yyWW.",
+    "yWWWWy",
+    ".yWWy.",
+]
+
+MISSILE = [
+    "...rr...",
+    "..rrrr..",
+    ".rssssr.",
+    ".rssssr.",
+    ".rwwwsr.",
+    ".rssssr.",
+    "..ffff..",
+    ".f....f.",
+]
+
+BOMB = [
+    "...yy...",
+    "....n...",
+    "..kkkk..",
+    ".kKKKKk.",
+    ".kKwwKk.",
+    ".kKKKKk.",
+    "..kkkk..",
+]
+
+ROACH = [
+    "..bbb...",
+    ".bbhbbb.",
+    "bbbhbbb.",
+    ".bbbbb..",
+    "l.l.l.l.",
+]
+
+EXPLOSION = [
+    "....yy....",
+    "..yyrrryy.",
+    ".yrrWWrry.",
+    "yrrWWWWrry",
+    "yrWWWWWWry",
+    "yrrWWWWrry",
+    ".yrrWWrry.",
+    "..yyrrryy.",
+    "....yy....",
+]
+
+# Jagged paper / glass bullet holes (black core + cracked rim)
+HOLE_PAL = {
+    ".": ".",
+    "k": "#0a0a0a",
+    "K": "#171717",
+    "g": "#3f3f46",
+    "w": "#a1a1aa80",
+    "c": "#52525b",
+}
+
+HOLE_A = [
+    "..cgkc..",
+    ".cKkkKc.",
+    "cgkkkkKc",
+    "cKkkkkkK",
+    ".kkkkkk.",
+    "cKkkkkKc",
+    ".cKkkKc.",
+    "..cgkc..",
+]
+
+HOLE_B = [
+    "...ck...",
+    ".cgkkKc.",
+    "cKkkkkk.",
+    ".kkkkkkc",
+    "cKkkkkkK",
+    ".gkkkkc.",
+    "..ckKc..",
+    "....c...",
+]
+
+HOLE_C = [
+    "..c..c..",
+    ".cKkkKc.",
+    "cKkkkkkK",
+    ".kkkkkk.",
+    "cKkwkkKc",
+    ".cKkkKc.",
+    "..c..c..",
+]
+
+CRACK = [
+    "....c...",
+    "...cK...",
+    "..c.....",
+    ".c......",
+    "cKc.....",
+    ".c......",
+]
+
+
 def main() -> None:
     OUT.mkdir(parents=True, exist_ok=True)
-    save("character-idle", CHAR_IDLE, CHAR_PAL, 4)
-    save("character-walk-a", CHAR_WALK_A, CHAR_PAL, 4)
-    save("character-walk-b", CHAR_WALK_B, CHAR_PAL, 4)
-    save("gun", GUN, CHAR_PAL, 4)
+    save("character-idle", CHAR_IDLE, CHAR_PAL, 3)
+    save("character-walk-a", CHAR_WALK_A, CHAR_PAL, 3)
+    save("character-walk-b", CHAR_WALK_B, CHAR_PAL, 3)
+    save("gun", GUN, CHAR_PAL, 3)
 
     weapon_pal = {
         ".": ".",
-        "y": "#fde047",
+        "y": "#facc15",
         "W": "#ffffff",
+        "w": "#e0f2fe",
         "r": "#ef4444",
-        "s": "#64748b",
+        "s": "#94a3b8",
         "f": "#f97316",
         "k": "#1e293b",
-        "g": "#a3a3a3",
-        "b": "#78350f",
+        "K": "#0f172a",
+        "n": "#a3a3a3",
+        "b": "#92400e",
         "h": "#451a03",
-        "l": "#451a03",
+        "l": "#78350f",
+        "G": "#0ea5e9",
+        "g": "#38bdf8",
+        "D": "#7c2d12",
     }
-    save("blaster-bolt", BLASTER, weapon_pal, 4)
-    save("missile", MISSILE, weapon_pal, 4)
-    save("bomb", BOMB, weapon_pal, 4)
-    save("roach", ROACH, weapon_pal, 4)
-    save("explosion", EXPLOSION, weapon_pal, 4)
+    save("blaster-bolt", BLASTER, weapon_pal, 3)
+    save("missile", MISSILE, weapon_pal, 3)
+    save("bomb", BOMB, weapon_pal, 3)
+    save("roach", ROACH, weapon_pal, 3)
+    save("explosion", EXPLOSION, weapon_pal, 3)
 
-    # Weapon HUD icons (same art, larger scale)
-    save("icon-blaster", BLASTER, weapon_pal, 6)
-    save("icon-missile", MISSILE, weapon_pal, 5)
-    save("icon-bomb", BOMB, weapon_pal, 5)
-    save("icon-roach", ROACH, weapon_pal, 6)
+    save("hole-a", HOLE_A, HOLE_PAL, 3)
+    save("hole-b", HOLE_B, HOLE_PAL, 3)
+    save("hole-c", HOLE_C, HOLE_PAL, 3)
+    save("crack", CRACK, HOLE_PAL, 3)
+
+    # HUD icons — slightly larger
+    save("icon-blaster", BLASTER, weapon_pal, 5)
+    save("icon-missile", MISSILE, weapon_pal, 4)
+    save("icon-bomb", BOMB, weapon_pal, 4)
+    save("icon-roach", ROACH, weapon_pal, 5)
 
 
 if __name__ == "__main__":
