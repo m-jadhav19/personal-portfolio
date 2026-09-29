@@ -10,12 +10,42 @@
   padding-inline: var(--grid-padding-inline);
   color: #ffffff;
   mix-blend-mode: difference;
-  transform: translateY(0);
-  transition: transform var(--duration-medium) var(--ease);
+  --header-sticker-h: clamp(38px, 3.4vw, 46px);
 }
 
-.headerHidden {
-  transform: translateY(-120%);
+.headerSticker {
+  position: fixed;
+  top: calc(var(--nav-height) / 2 - var(--header-sticker-h, 42px) / 2);
+  left: var(--grid-padding-inline);
+  z-index: 999;
+  height: var(--header-sticker-h, 42px);
+  aspect-ratio: 220 / 261;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  visibility: hidden;
+  opacity: 0;
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.45));
+  --header-sticker-h: clamp(38px, 3.4vw, 46px);
+}
+
+.headerStickerArt {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transition: transform var(--duration-fast) var(--ease);
+}
+
+.headerSticker:hover .headerStickerArt,
+.headerSticker:focus-visible .headerStickerArt {
+  transform: rotate(12deg) scale(1.1);
+}
+
+.headerSticker:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+  border-radius: 8px;
 }
 
 .inner {
@@ -33,6 +63,11 @@
   text-decoration: none;
   position: relative;
   z-index: 1;
+  transition: transform var(--duration-medium) var(--ease);
+}
+
+.headerDocked .logo {
+  transform: translateX(calc(var(--header-sticker-h) * 0.84 + 0.75rem));
 }
 
 .logoInner {
