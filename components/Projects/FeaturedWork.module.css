@@ -3,21 +3,17 @@
   margin-bottom: clamp(6rem, 12vh, 10rem);
 }
 
-.stickyHeading {
+.headingBlock {
   position: relative;
   z-index: 0;
   display: flex;
-  min-height: 100vh;
+  min-height: clamp(20rem, 55vh, 36rem);
   flex-direction: column;
   align-items: center;
   justify-content: center;
   padding-inline: var(--grid-padding-inline);
   text-align: center;
   pointer-events: none;
-}
-
-.featuredWork[data-scroll-sequence="true"] .stickyHeading {
-  will-change: transform;
 }
 
 .headingTitle {
@@ -379,8 +375,8 @@
 }
 
 @media (max-width: 900px) {
-  .stickyHeading {
-    min-height: 70vh;
+  .headingBlock {
+    min-height: clamp(16rem, 45vh, 28rem);
   }
 
   .projectRow {
@@ -412,8 +408,7 @@
 @media (prefers-reduced-motion: reduce) {
   .mediaParallax,
   .mediaColumn,
-  .info,
-  .featuredWork[data-scroll-sequence="true"] .stickyHeading {
+  .info {
     will-change: auto;
   }
 

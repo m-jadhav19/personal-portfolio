@@ -57,23 +57,25 @@ export function About() {
 
         <ScrambleText as="h2" text="About" className={styles.heading} />
 
-        <p className={styles.copy}>{portfolio.aboutCopy}</p>
+        <div className={styles.body}>
+          <p className={styles.copy}>{portfolio.aboutCopy}</p>
 
-        <div ref={stackRef} className={styles.stack}>
-          <p className={styles.stackLabel}>Currently working with</p>
-          <div className={styles.stackGrid}>
-            {portfolio.technicalStack.map((category) => (
-              <div
-                key={category.id}
-                className={styles.stackCategory}
-                data-stack-category
-              >
-                <p className={styles.stackCategoryLabel}>{category.label}</p>
-                <p className={styles.stackItems}>
-                  {category.items.join(" · ")}
-                </p>
-              </div>
-            ))}
+          <div ref={stackRef} className={styles.stack}>
+            <p className={styles.stackLabel}>Currently working with</p>
+            <div className={styles.stackGrid}>
+              {portfolio.technicalStack.map((category) => (
+                <div
+                  key={category.id}
+                  className={styles.stackCategory}
+                  data-stack-category
+                >
+                  <p className={styles.stackCategoryLabel}>{category.label}</p>
+                  <p className={styles.stackItems}>
+                    {category.items.join(" · ")}
+                  </p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>

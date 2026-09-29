@@ -37,6 +37,13 @@
   text-transform: uppercase;
 }
 
+.body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: start;
+  gap: clamp(2.5rem, 6vw, 6rem);
+}
+
 .copy {
   max-width: 42rem;
   margin: 0;
@@ -48,9 +55,8 @@
 }
 
 .stack {
-  margin-top: clamp(3rem, 8vw, 5rem);
-  padding-top: clamp(2rem, 4vw, 3rem);
-  border-top: 1px solid var(--border);
+  padding-left: clamp(1.5rem, 3vw, 3rem);
+  border-left: 1px solid var(--border);
 }
 
 .stackLabel {
@@ -85,6 +91,21 @@
   letter-spacing: 0.04em;
   text-transform: uppercase;
   line-height: 1.45;
+}
+
+@media (max-width: 900px) {
+  .body {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .stack {
+    margin-top: clamp(3rem, 8vw, 5rem);
+    padding-top: clamp(2rem, 4vw, 3rem);
+    padding-left: 0;
+    border-top: 1px solid var(--border);
+    border-left: 0;
+  }
 }
 
 @media (max-width: 767px) {

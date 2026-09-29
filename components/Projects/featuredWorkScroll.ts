@@ -16,29 +16,10 @@ function isDesktopViewport() {
 export function setupFeaturedWorkScroll(
   section: HTMLElement,
 ): FeaturedWorkScrollCleanup {
-  const headingWrap = section.querySelector<HTMLElement>(
-    "[data-featured-heading-wrap]",
-  );
-  const projects = section.querySelector<HTMLElement>("[data-featured-projects]");
   const heading = section.querySelector<HTMLElement>("[data-featured-heading]");
   const rows = gsap.utils.toArray<HTMLElement>("[data-project-row]", section);
   const triggers: ScrollTrigger[] = [];
   const tweens: gsap.core.Tween[] = [];
-
-  if (headingWrap && projects) {
-    const pinTrigger = ScrollTrigger.create({
-      trigger: section,
-      start: "top top",
-      end: () => `+=${projects.offsetHeight}`,
-      pin: headingWrap,
-      pinSpacing: false,
-      anticipatePin: 1,
-      fastScrollEnd: true,
-      invalidateOnRefresh: true,
-    });
-
-    triggers.push(pinTrigger);
-  }
 
   if (heading) {
     const finalText = heading.textContent?.trim() ?? "Featured Work";
