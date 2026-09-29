@@ -404,6 +404,7 @@ export function createDestroyEngine(
     }
 
     // Arc gun — chain lightning from gun to aim + nearby forks
+    if (zapArcs.length >= cfg.maxLive) return;
     impactAt(tx, ty, cfg);
     const forks = reducedMotion ? 2 : 4;
     for (let i = 0; i < forks && zapArcs.length < MAX_ZAPS; i++) {
