@@ -1,9 +1,10 @@
 export const LOADER_SEEN_KEY = "portfolio-loader-seen";
 
-export const MIN_LOADER_VISIBLE_MS = 1000;
-export const MIN_LOADER_REPEAT_VISIBLE_MS = 550;
-export const MIN_LOADER_ASSETS_READY_MS = 700;
-export const MIN_LOADER_REPEAT_ASSETS_READY_MS = 400;
+/** Keep the gate brief — content should be available immediately. */
+export const MIN_LOADER_VISIBLE_MS = 180;
+export const MIN_LOADER_REPEAT_VISIBLE_MS = 0;
+export const MIN_LOADER_ASSETS_READY_MS = 120;
+export const MIN_LOADER_REPEAT_ASSETS_READY_MS = 0;
 
 export type LoaderTiming = {
   intervalMs: number;
@@ -26,18 +27,20 @@ export function writeLoaderSeen() {
   window.sessionStorage.setItem(LOADER_SEEN_KEY, "true");
 }
 
-export function getLoaderTiming(  hasSeenLoader: boolean,
+export function getLoaderTiming(
+  hasSeenLoader: boolean,
   prefersReducedMotion: boolean,
 ): LoaderTiming {
   if (prefersReducedMotion) {
     return { intervalMs: 0, exitDelayMs: 0, exitDuration: 0 };
   }
 
+  // Repeat visits (and first visits after a prior session) skip the theater.
   if (hasSeenLoader) {
-    return { intervalMs: 35, exitDelayMs: 250, exitDuration: 0.35 };
+    return { intervalMs: 16, exitDelayMs: 0, exitDuration: 0.2 };
   }
 
-  return { intervalMs: 60, exitDelayMs: 500, exitDuration: 0.7 };
+  return { intervalMs: 28, exitDelayMs: 60, exitDuration: 0.35 };
 }
 
 export function nextLoaderCount(

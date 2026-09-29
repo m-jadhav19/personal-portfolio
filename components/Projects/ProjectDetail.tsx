@@ -77,7 +77,7 @@ export function ProjectDetail({ project, isOpen, onClose }: ProjectDetailProps) 
         <header className={styles.header}>
           <div data-detail-reveal>
             <p className={styles.eyebrow}>
-              {project.year ? `${project.year} · Details` : "Details"}
+              {project.year ? `${project.year} · Case Study` : "Case Study"}
             </p>
             <h2 id="project-detail-title" className={styles.title}>
               {project.title}
@@ -140,7 +140,7 @@ export function ProjectDetail({ project, isOpen, onClose }: ProjectDetailProps) 
             className={styles.primaryLink}
           data-cursor="link"
         >
-          View project <span aria-hidden="true">↗</span>
+          Live Demo <span aria-hidden="true">↗</span>
         </a>
         </div>
       </div>

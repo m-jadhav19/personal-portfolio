@@ -1,0 +1,279 @@
+.art {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 100%;
+  aspect-ratio: 445 / 430;
+  transform: translateY(-50%);
+  outline: none;
+}
+
+.art:focus-visible .sticker {
+  outline: 2px solid var(--accent);
+  outline-offset: 6px;
+  border-radius: 50%;
+}
+
+/* Brackets + sparks live outside the sticker, in the full artwork space. */
+.extras {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.extrasTop {
+  z-index: 3;
+}
+
+.part {
+  pointer-events: visiblePainted;
+  cursor: pointer;
+}
+
+/* ─── Sticker (Sticker.js layer stack) ───────────────────────────────────── */
+
+.sticker {
+  position: absolute;
+  z-index: 2;
+  aspect-ratio: 1 / 1;
+  pointer-events: auto;
+  touch-action: pan-y pinch-zoom;
+  user-select: none;
+  -webkit-user-select: none;
+  filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.45));
+}
+
+.tilt {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  will-change: transform;
+}
+
+/* Holographic foil: a hot spot plus a rainbow band that slides with the pointer. */
+.sheen {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0;
+  mix-blend-mode: screen;
+  background:
+    radial-gradient(
+      circle at var(--mx, 50%) var(--my, 50%),
+      rgba(255, 255, 255, 0.28) 0%,
+      rgba(255, 255, 255, 0) 30%
+    ),
+    linear-gradient(
+      115deg,
+      transparent 30%,
+      rgba(255, 255, 255, 0.22) 44%,
+      rgba(255, 255, 255, 0) 46%,
+      transparent 100%
+    ),
+    linear-gradient(
+      115deg,
+      transparent 25%,
+      rgba(255, 60, 170, 0.14) 38%,
+      rgba(60, 220, 255, 0.16) 48%,
+      rgba(255, 225, 60, 0.12) 58%,
+      transparent 72%
+    );
+  background-size: 100% 100%, 240% 240%, 260% 260%;
+  background-position:
+    0 0,
+    var(--mx, 50%) var(--my, 50%),
+    var(--mx, 50%) var(--my, 50%);
+  transition: opacity 280ms var(--ease);
+}
+
+.sticker[data-hover] .sheen {
+  opacity: 1;
+}
+
+.ring {
+  position: absolute;
+  z-index: 1;
+  aspect-ratio: 1 / 1;
+  border: 2px solid #2457ff;
+  border-radius: 50%;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.burst {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.glyph {
+  position: absolute;
+  font-family: var(--font-mono);
+  font-size: clamp(0.95rem, 1.6vw, 1.35rem);
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  pointer-events: none;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.55);
+  will-change: transform, opacity;
+}
+
+.peelMask {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.peelMove {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.front {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  mask-image: var(--sticker-mask);
+  mask-size: 100% 100%;
+  mask-repeat: no-repeat;
+  -webkit-mask-image: var(--sticker-mask);
+  -webkit-mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+}
+
+.frontSvg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.depth,
+.backShadow {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.depth {
+  z-index: 2;
+  opacity: 0.65;
+}
+
+.back {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 3;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.backClip {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #f5f0e0;
+  mask-size: 100% 100%;
+  mask-repeat: no-repeat;
+  -webkit-mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+}
+
+.back[data-direction="left"] .backClip,
+.back[data-direction="right"] .backClip {
+  mask-image: var(--sticker-mask-mirror-x);
+  -webkit-mask-image: var(--sticker-mask-mirror-x);
+}
+
+.back[data-direction="top"] .backClip,
+.back[data-direction="bottom"] .backClip {
+  mask-image: var(--sticker-mask-mirror-y);
+  -webkit-mask-image: var(--sticker-mask-mirror-y);
+}
+
+/* Faint print-through of the artwork on the sticker's paper back. */
+.ghost {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.12;
+}
+
+.back[data-direction="left"] .ghost,
+.back[data-direction="right"] .ghost {
+  transform: scaleX(-1);
+}
+
+.back[data-direction="top"] .ghost,
+.back[data-direction="bottom"] .ghost {
+  transform: scaleY(-1);
+}
+
+/* Sticker.js shadowL / shadowR / shadowT / shadowB */
+[data-direction="left"].backShadow,
+[data-direction="left"].depth {
+  background: linear-gradient(to left, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.01) 1%, rgba(0, 0, 0, 0.5) 100%);
+}
+
+[data-direction="right"].backShadow,
+[data-direction="right"].depth {
+  background: linear-gradient(to right, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.01) 1%, rgba(0, 0, 0, 0.5) 100%);
+}
+
+[data-direction="top"].backShadow,
+[data-direction="top"].depth {
+  background: linear-gradient(to top, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.01) 1%, rgba(0, 0, 0, 0.5) 100%);
+}
+
+[data-direction="bottom"].backShadow,
+[data-direction="bottom"].depth {
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.01) 1%, rgba(0, 0, 0, 0.5) 100%);
+}
+
+.hint {
+  position: absolute;
+  left: 50%;
+  bottom: -0.25rem;
+  z-index: 4;
+  margin: 0;
+  transform: translate(-50%, 100%);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 180ms var(--ease);
+}
+
+.hintVisible {
+  opacity: 0.85;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hint {
+    transition: none;
+  }
+}

@@ -121,6 +121,8 @@ export type Portfolio = {
   experiments: Experiment[];
   hero: {
     roles: string[];
+    /** One-line professional proposition under the role */
+    pitch: string;
     portrait: {
       src: string;
     };

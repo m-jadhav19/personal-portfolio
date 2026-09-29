@@ -158,7 +158,7 @@ export function AllProjectsCatalog({
                       rel="noopener noreferrer"
                       data-cursor="project"
                     >
-                      View project ↗
+                      Live Demo ↗
                     </a>
                     {onOpenDetail ? (
                       <button
@@ -166,7 +166,7 @@ export function AllProjectsCatalog({
                         onClick={() => onOpenDetail(project)}
                         data-cursor="button"
                       >
-                        Details →
+                        Case Study →
                       </button>
                     ) : null}
                   </div>

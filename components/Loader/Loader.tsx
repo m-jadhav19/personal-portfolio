@@ -103,7 +103,7 @@ function ProductionLoader() {
     }
 
     if (hasSeenLoader) {
-      setCount(65);
+      setCount(92);
     }
 
     const markReady = () => {
