@@ -8,14 +8,17 @@ import {
   type TargetRegistry,
 } from "./targets";
 import {
+  createBulletHole,
   drawBlasterBolt,
   drawBomb,
+  drawBulletHole,
   drawCharacter,
   drawDebris,
   drawExplosion,
   drawMissile,
   drawRoach,
   spawnDebris,
+  type BulletHole,
   type DebrisParticle,
 } from "./sprites";
 import {
@@ -89,6 +92,7 @@ export type DestroyEngine = {
 
 const MAX_PARTICLES = 180;
 const MAX_ROACHES = 18;
+const MAX_HOLES = 120;
 const LERP = 0.18;
 
 function prefersReducedMotionFlag(explicit?: boolean) {
@@ -132,6 +136,7 @@ export function createDestroyEngine(
   const projectiles: Projectile[] = [];
   const roaches: Roach[] = [];
   const explosions: Explosion[] = [];
+  const holes: BulletHole[] = [];
   let particles: DebrisParticle[] = [];
 
   function resize() {
@@ -172,6 +177,34 @@ export function createDestroyEngine(
     );
   }
 
+  function punchHole(
+    x: number,
+    y: number,
+    opts?: { scale?: number; crack?: boolean; silent?: boolean },
+  ) {
+    holes.push(createBulletHole(x, y, opts));
+    if (holes.length > MAX_HOLES) {
+      holes.splice(0, holes.length - MAX_HOLES);
+    }
+    if (!opts?.silent) {
+      audio.play("hit");
+    }
+  }
+
+  function scatterHoles(x: number, y: number, radius: number, count: number) {
+    const n = reducedMotion ? Math.max(2, Math.floor(count / 2)) : count;
+    for (let i = 0; i < n; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const dist = Math.random() * radius;
+      punchHole(x + Math.cos(angle) * dist, y + Math.sin(angle) * dist, {
+        scale: 0.7 + Math.random() * 0.9,
+        crack: true,
+        silent: true,
+      });
+    }
+    audio.play("hit");
+  }
+
   function damageAt(x: number, y: number, radius: number, hits: number) {
     const damaged = targets.applyDamage(x, y, radius, hits);
     const particleBudget = reducedMotion ? 4 : 14;
@@ -185,6 +218,7 @@ export function createDestroyEngine(
   function boom(x: number, y: number, radius: number, hits: number) {
     explosions.push({ x, y, life: 0.35, maxLife: 0.35 });
     damageAt(x, y, radius, hits);
+    scatterHoles(x, y, radius * 0.85, Math.round(radius / 14));
     audio.play("boom");
     if (!reducedMotion) {
       options.onShake?.(Math.min(1, radius / 100));
@@ -204,7 +238,8 @@ export function createDestroyEngine(
     if (id === "blaster") {
       if (countKind("blaster") >= cfg.maxLive) return;
       const speed = 1100;
-      // Instant bite at the click point so hero text dies on click, not only along the bolt path.
+      // Punch a visible hole + damage at the click point.
+      punchHole(pointer.x, pointer.y);
       damageAt(pointer.x, pointer.y, 0, 1);
       projectiles.push({
         kind: "blaster",
@@ -228,7 +263,7 @@ export function createDestroyEngine(
         ty: pointer.y,
         life: 2.5,
       });
-      audio.play("shoot");
+      audio.play("missile");
       return;
     }
 
@@ -243,7 +278,7 @@ export function createDestroyEngine(
         vy: Math.sin(aim) * speed - 220,
         fuse: 0.85,
       });
-      audio.play("shoot");
+      audio.play("throw");
       return;
     }
 
@@ -336,7 +371,11 @@ export function createDestroyEngine(
         p.x += p.vx * dt;
         p.y += p.vy * dt;
         p.life -= dt;
-        if (damageAt(p.x, p.y, 0, 1) > 0 || p.life <= 0) {
+        const hit = damageAt(p.x, p.y, 0, 1);
+        if (hit > 0) {
+          punchHole(p.x, p.y, { scale: 0.75 + Math.random() * 0.4 });
+          projectiles.splice(i, 1);
+        } else if (p.life <= 0) {
           projectiles.splice(i, 1);
         } else if (
           p.x < -40 ||
@@ -388,8 +427,14 @@ export function createDestroyEngine(
       if (r.nibbleTimer <= 0) {
         const nibbled = damageAt(r.x, r.y, WEAPON_CONFIG.swarm.radius, 1);
         r.nibbleTimer = 0.35 + Math.random() * 0.4;
-        // Only blip when something actually got chewed — avoids swarm audio spam.
-        if (nibbled > 0) audio.play("roach");
+        if (nibbled > 0) {
+          punchHole(r.x, r.y, {
+            scale: 0.45 + Math.random() * 0.25,
+            crack: false,
+            silent: true,
+          });
+          audio.play("roach");
+        }
       }
       if (r.life <= 0) roaches.splice(i, 1);
     }
@@ -415,6 +460,11 @@ export function createDestroyEngine(
     const w = window.innerWidth;
     const h = window.innerHeight;
     ctx.clearRect(0, 0, w, h);
+
+    // Holes sit under FX so the page looks punched through.
+    for (const hole of holes) {
+      drawBulletHole(ctx, hole, atlas);
+    }
 
     for (const p of particles) drawDebris(ctx, p);
     for (const e of explosions) {
@@ -487,8 +537,13 @@ export function createDestroyEngine(
     particles = [];
   }
 
+  function clearHoles() {
+    holes.length = 0;
+  }
+
   function repair() {
     clearFx();
+    clearHoles();
     targets.restoreAll();
     audio.play("ui");
   }
@@ -496,6 +551,7 @@ export function createDestroyEngine(
   function destroy() {
     stop();
     clearFx();
+    clearHoles();
     // Instant restore + clear pending rebuild timers (no flash on unmount).
     targets.dispose();
     audio.dispose();

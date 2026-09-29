@@ -1,7 +1,18 @@
 import {
+  HOLE_VARIANTS,
   drawSprite,
   type DestroySpriteAtlas,
+  type HoleVariant,
 } from "./spriteAtlas";
+
+export type BulletHole = {
+  x: number;
+  y: number;
+  variant: HoleVariant;
+  rotation: number;
+  scale: number;
+  crack: boolean;
+};
 
 export function drawPixelRect(
   ctx: CanvasRenderingContext2D,
@@ -260,4 +271,66 @@ export function drawDebris(
   ctx.globalAlpha = alpha;
   drawPixelRect(ctx, p.x, p.y, p.size, p.size, p.color);
   ctx.globalAlpha = 1;
+}
+
+export function createBulletHole(
+  x: number,
+  y: number,
+  opts?: { scale?: number; crack?: boolean },
+): BulletHole {
+  const variant =
+    HOLE_VARIANTS[Math.floor(Math.random() * HOLE_VARIANTS.length)];
+  return {
+    x,
+    y,
+    variant,
+    rotation: Math.random() * Math.PI * 2,
+    scale: opts?.scale ?? 0.85 + Math.random() * 0.55,
+    crack: opts?.crack ?? Math.random() < 0.55,
+  };
+}
+
+export function drawBulletHole(
+  ctx: CanvasRenderingContext2D,
+  hole: BulletHole,
+  atlas?: DestroySpriteAtlas | null,
+) {
+  const img = atlas?.get(hole.variant) ?? null;
+  const drew = drawSprite(ctx, img, hole.x, hole.y, {
+    rotation: hole.rotation,
+    scale: hole.scale,
+  });
+
+  if (!drew) {
+    // Procedural jagged hole fallback
+    ctx.save();
+    ctx.translate(Math.round(hole.x), Math.round(hole.y));
+    ctx.rotate(hole.rotation);
+    ctx.fillStyle = "#0a0a0a";
+    ctx.beginPath();
+    const r = 7 * hole.scale;
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * Math.PI * 2;
+      const jitter = r * (0.65 + Math.random() * 0.45);
+      const px = Math.cos(a) * jitter;
+      const py = Math.sin(a) * jitter;
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = "#3f3f46";
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  if (hole.crack) {
+    const crack = atlas?.get("crack") ?? null;
+    drawSprite(ctx, crack, hole.x + 6, hole.y - 4, {
+      rotation: hole.rotation + 0.4,
+      scale: hole.scale * 0.9,
+      alpha: 0.85,
+    });
+  }
 }
