@@ -25,19 +25,19 @@ test("cycleWeaponIndex wraps forward and backward", () => {
 });
 
 test("WEAPONS lists the chaos kit in order", () => {
-  assert.deepEqual([...WEAPONS], ["blaster", "missile", "bomb", "swarm"]);
+  assert.deepEqual([...WEAPONS], ["blaster", "rocket", "vortex", "zap"]);
 });
 
 test("heavier weapons scar longer and wider", () => {
   const blaster = WEAPON_CONFIG.blaster;
-  const missile = WEAPON_CONFIG.missile;
-  const bomb = WEAPON_CONFIG.bomb;
-  const swarm = WEAPON_CONFIG.swarm;
+  const rocket = WEAPON_CONFIG.rocket;
+  const vortex = WEAPON_CONFIG.vortex;
+  const zap = WEAPON_CONFIG.zap;
 
-  assert.ok(weaponHoleLife(blaster) < weaponHoleLife(missile));
-  assert.ok(weaponHoleLife(missile) < weaponHoleLife(bomb));
-  assert.ok(weaponHoleLife(swarm) > weaponHoleLife(blaster));
-  assert.ok(blaster.radius < missile.radius);
-  assert.ok(missile.radius < bomb.radius);
-  assert.ok(bomb.holeScale > blaster.holeScale);
+  assert.ok(weaponHoleLife(blaster) < weaponHoleLife(rocket));
+  assert.ok(weaponHoleLife(rocket) < weaponHoleLife(vortex));
+  assert.ok(weaponHoleLife(zap) > weaponHoleLife(blaster));
+  assert.ok(blaster.radius < rocket.radius);
+  assert.ok(rocket.radius < vortex.radius);
+  assert.ok(vortex.holeScale > blaster.holeScale);
 });

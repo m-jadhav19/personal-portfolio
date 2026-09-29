@@ -4,18 +4,17 @@ export const DESTROY_SPRITE_PATHS = {
   characterWalkB: "/destroy/sprites/character-walk-b.png",
   gun: "/destroy/sprites/gun.png",
   blasterBolt: "/destroy/sprites/blaster-bolt.png",
-  missile: "/destroy/sprites/missile.png",
-  bomb: "/destroy/sprites/bomb.png",
-  roach: "/destroy/sprites/roach.png",
+  rocket: "/destroy/sprites/rocket.png",
+  vortex: "/destroy/sprites/vortex.png",
   explosion: "/destroy/sprites/explosion.png",
   holeA: "/destroy/sprites/hole-a.png",
   holeB: "/destroy/sprites/hole-b.png",
   holeC: "/destroy/sprites/hole-c.png",
   crack: "/destroy/sprites/crack.png",
   iconBlaster: "/destroy/sprites/icon-blaster.png",
-  iconMissile: "/destroy/sprites/icon-missile.png",
-  iconBomb: "/destroy/sprites/icon-bomb.png",
-  iconRoach: "/destroy/sprites/icon-roach.png",
+  iconRocket: "/destroy/sprites/icon-rocket.png",
+  iconVortex: "/destroy/sprites/icon-vortex.png",
+  iconZap: "/destroy/sprites/icon-zap.png",
 } as const;
 
 export type DestroySpriteId = keyof typeof DESTROY_SPRITE_PATHS;

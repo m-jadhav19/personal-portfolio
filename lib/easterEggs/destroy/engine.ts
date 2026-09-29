@@ -10,13 +10,13 @@ import {
 import {
   createBulletHole,
   drawBlasterBolt,
-  drawBomb,
   drawBulletHole,
   drawCharacter,
   drawDebris,
   drawExplosion,
-  drawMissile,
-  drawRoach,
+  drawRocket,
+  drawVortex,
+  drawZapArc,
   spawnDebris,
   type BulletHole,
   type DebrisParticle,
@@ -43,7 +43,7 @@ type Projectile =
       life: number;
     }
   | {
-      kind: "missile";
+      kind: "rocket";
       x: number;
       y: number;
       tx: number;
@@ -51,22 +51,22 @@ type Projectile =
       life: number;
     }
   | {
-      kind: "bomb";
+      kind: "vortex";
       x: number;
       y: number;
-      vx: number;
-      vy: number;
-      fuse: number;
+      tx: number;
+      ty: number;
+      life: number;
+      spin: number;
     };
 
-type Roach = {
-  x: number;
-  y: number;
-  vx: number;
-  vy: number;
+type ZapArc = {
+  x0: number;
+  y0: number;
+  x1: number;
+  y1: number;
   life: number;
-  facing: 1 | -1;
-  nibbleTimer: number;
+  maxLife: number;
 };
 
 type Explosion = { x: number; y: number; life: number; maxLife: number };
@@ -93,7 +93,7 @@ export type DestroyEngine = {
 };
 
 const MAX_PARTICLES = 180;
-const MAX_ROACHES = 18;
+const MAX_ZAPS = 14;
 const MAX_HOLES = 160;
 const CHAR_MARGIN = 28;
 
@@ -137,7 +137,7 @@ export function createDestroyEngine(
   const dragOffset: Vec = { x: 0, y: 0 };
 
   const projectiles: Projectile[] = [];
-  const roaches: Roach[] = [];
+  const zapArcs: ZapArc[] = [];
   const explosions: Explosion[] = [];
   const holes: BulletHole[] = [];
   let particles: DebrisParticle[] = [];
@@ -374,53 +374,60 @@ export function createDestroyEngine(
       return;
     }
 
-    if (id === "missile") {
-      if (countKind("missile") >= cfg.maxLive) return;
+    if (id === "rocket") {
+      if (countKind("rocket") >= cfg.maxLive) return;
       projectiles.push({
-        kind: "missile",
+        kind: "rocket",
         x: tx + (Math.random() * 40 - 20),
-        y: -24,
+        y: -28,
         tx,
         ty,
         life: 2.5,
       });
-      audio.play("missile");
+      audio.play("rocket");
       return;
     }
 
-    if (id === "bomb") {
-      if (countKind("bomb") >= cfg.maxLive) return;
-      const speed = 420;
+    if (id === "vortex") {
+      if (countKind("vortex") >= cfg.maxLive) return;
       projectiles.push({
-        kind: "bomb",
-        x: character.x,
-        y: character.y,
-        vx: Math.cos(aim) * speed,
-        vy: Math.sin(aim) * speed - 220,
-        fuse: 0.85,
+        kind: "vortex",
+        x: character.x + Math.cos(aim) * 20,
+        y: character.y + Math.sin(aim) * 12,
+        tx,
+        ty,
+        life: 1.15,
+        spin: 0,
       });
-      audio.play("throw");
+      audio.play("vortex");
       return;
     }
 
-    // swarm — chew at aim point + leave a mark even on empty floor
-    if (roaches.length >= MAX_ROACHES) return;
-    impactAt(tx, ty, cfg, { holeScale: 0.55, radius: cfg.radius * 0.6, hits: 2 });
-    const spawnCount = reducedMotion ? 3 : 6;
-    for (let i = 0; i < spawnCount; i++) {
-      if (roaches.length >= MAX_ROACHES) break;
-      const angle = Math.random() * Math.PI * 2;
-      roaches.push({
-        x: tx + Math.cos(angle) * 12,
-        y: ty + Math.sin(angle) * 12,
-        vx: Math.cos(angle) * (40 + Math.random() * 80),
-        vy: Math.sin(angle) * (40 + Math.random() * 80),
-        life: 2.4 + Math.random() * 0.8,
-        facing: Math.cos(angle) >= 0 ? 1 : -1,
-        nibbleTimer: 0.2 + Math.random() * 0.3,
+    // Arc gun — chain lightning from gun to aim + nearby forks
+    impactAt(tx, ty, cfg);
+    const forks = reducedMotion ? 2 : 4;
+    for (let i = 0; i < forks && zapArcs.length < MAX_ZAPS; i++) {
+      const ang = Math.random() * Math.PI * 2;
+      const dist = 18 + Math.random() * cfg.radius;
+      const fx = tx + Math.cos(ang) * dist;
+      const fy = ty + Math.sin(ang) * dist;
+      zapArcs.push({
+        x0: i === 0 ? character.x : tx,
+        y0: i === 0 ? character.y : ty,
+        x1: i === 0 ? tx : fx,
+        y1: i === 0 ? ty : fy,
+        life: 0.18 + Math.random() * 0.1,
+        maxLife: 0.28,
       });
+      if (i > 0) {
+        impactAt(fx, fy, cfg, {
+          holeScale: 0.45,
+          radius: cfg.radius * 0.45,
+          hits: 1,
+        });
+      }
     }
-    audio.play("roach");
+    audio.play("zap");
   }
 
   function isHudTarget(target: EventTarget | null) {
@@ -565,62 +572,46 @@ export function createDestroyEngine(
         ) {
           projectiles.splice(i, 1);
         }
-      } else if (p.kind === "missile") {
+      } else if (p.kind === "rocket") {
         const dist = Math.hypot(p.tx - p.x, p.ty - p.y);
-        const step = 520 * dt;
+        const step = 560 * dt;
         if (dist <= step || p.y >= p.ty) {
-          boom(p.tx, p.ty, WEAPON_CONFIG.missile);
+          boom(p.tx, p.ty, WEAPON_CONFIG.rocket);
           projectiles.splice(i, 1);
         } else {
-          p.x += ((p.tx - p.x) / dist) * step * 0.35;
+          p.x += ((p.tx - p.x) / dist) * step * 0.4;
           p.y += step;
           p.life -= dt;
           if (p.life <= 0) projectiles.splice(i, 1);
         }
-      } else if (p.kind === "bomb") {
-        p.vy += 900 * dt;
-        p.x += p.vx * dt;
-        p.y += p.vy * dt;
-        p.fuse -= dt;
-        if (p.fuse <= 0) {
-          boom(p.x, p.y, WEAPON_CONFIG.bomb);
+      } else if (p.kind === "vortex") {
+        const dist = Math.hypot(p.tx - p.x, p.ty - p.y);
+        const step = 220 * dt;
+        if (dist > 1) {
+          p.x += ((p.tx - p.x) / dist) * step;
+          p.y += ((p.ty - p.y) / dist) * step;
+        }
+        p.spin += dt;
+        p.life -= dt;
+        // Mild pull sparks while drifting
+        if (!reducedMotion && Math.random() < 0.25) {
+          const sparks = spawnDebris(
+            { left: p.x - 8, top: p.y - 8, width: 16, height: 16 },
+            2,
+            ["#c084fc", "#67e8f9", "#f5d0fe"],
+          );
+          particles = particles.concat(sparks).slice(-MAX_PARTICLES);
+        }
+        if (p.life <= 0 || dist < 10) {
+          boom(p.x, p.y, WEAPON_CONFIG.vortex);
           projectiles.splice(i, 1);
         }
       }
     }
 
-    // Roaches
-    for (let i = roaches.length - 1; i >= 0; i--) {
-      const r = roaches[i];
-      r.x += r.vx * dt;
-      r.y += r.vy * dt;
-      r.life -= dt;
-      r.nibbleTimer -= dt;
-      if (Math.random() < 0.02) {
-        r.vx += (Math.random() - 0.5) * 60;
-        r.vy += (Math.random() - 0.5) * 60;
-      }
-      r.facing = r.vx >= 0 ? 1 : -1;
-      // bounce in viewport
-      if (r.x < 8 || r.x > window.innerWidth - 8) r.vx *= -1;
-      if (r.y < 8 || r.y > window.innerHeight - 8) r.vy *= -1;
-      if (r.nibbleTimer <= 0) {
-        const swarmCfg = WEAPON_CONFIG.swarm;
-        const nibbled = damageAt(r.x, r.y, swarmCfg.radius, 1);
-        r.nibbleTimer = 0.35 + Math.random() * 0.4;
-        if (nibbled > 0) {
-          const timing = holeTiming(swarmCfg);
-          punchHole(r.x, r.y, {
-            scale: (0.45 + Math.random() * 0.25) * timing.scaleMul,
-            crack: false,
-            silent: true,
-            life: timing.life * 0.65,
-            hold: timing.hold * 0.55,
-          });
-          audio.play("roach");
-        }
-      }
-      if (r.life <= 0) roaches.splice(i, 1);
+    for (let i = zapArcs.length - 1; i >= 0; i--) {
+      zapArcs[i].life -= dt;
+      if (zapArcs[i].life <= 0) zapArcs.splice(i, 1);
     }
 
     // Scars heal — hold, then cover over based on weapon timing.
@@ -664,15 +655,16 @@ export function createDestroyEngine(
     for (const p of projectiles) {
       if (p.kind === "blaster") {
         drawBlasterBolt(ctx, p.x, p.y, Math.atan2(p.vy, p.vx), atlas);
-      } else if (p.kind === "missile") {
-        drawMissile(ctx, p.x, p.y, atlas);
-      } else if (p.kind === "bomb") {
-        drawBomb(ctx, p.x, p.y, p.fuse, atlas);
+      } else if (p.kind === "rocket") {
+        const ang = Math.atan2(p.ty - p.y, p.tx - p.x);
+        drawRocket(ctx, p.x, p.y, ang, atlas);
+      } else if (p.kind === "vortex") {
+        drawVortex(ctx, p.x, p.y, p.spin, atlas);
       }
     }
 
-    for (const r of roaches) {
-      drawRoach(ctx, r.x, r.y, r.facing, walkPhase + r.x * 0.05, atlas);
+    for (const z of zapArcs) {
+      drawZapArc(ctx, z.x0, z.y0, z.x1, z.y1, z.life, z.maxLife);
     }
 
     const aim = Math.atan2(pointer.y - character.y, pointer.x - character.x);
@@ -728,7 +720,7 @@ export function createDestroyEngine(
 
   function clearFx() {
     projectiles.length = 0;
-    roaches.length = 0;
+    zapArcs.length = 0;
     explosions.length = 0;
     particles = [];
   }

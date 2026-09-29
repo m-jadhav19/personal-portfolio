@@ -146,39 +146,31 @@ GUN = [
     "...n......",
 ]
 
-BLASTER = [
+BLASTER_BOLT = [
     ".yyWW.",
     "yWWWWy",
     ".yWWy.",
 ]
 
-MISSILE = [
+ROCKET = [
     "...rr...",
     "..rrrr..",
     ".rssssr.",
+    ".rswwsr.",
     ".rssssr.",
-    ".rwwwsr.",
-    ".rssssr.",
+    "..sffs..",
     "..ffff..",
-    ".f....f.",
+    ".f.yy.f.",
 ]
 
-BOMB = [
-    "...yy...",
-    "....n...",
-    "..kkkk..",
-    ".kKKKKk.",
-    ".kKwwKk.",
-    ".kKKKKk.",
-    "..kkkk..",
-]
-
-ROACH = [
-    "..bbb...",
-    ".bbhbbb.",
-    "bbbhbbb.",
-    ".bbbbb..",
-    "l.l.l.l.",
+VORTEX = [
+    "....pp....",
+    "..ppCCpp..",
+    ".pCccccCp.",
+    ".pCcwwcCp.",
+    ".pCccccCp.",
+    "..ppCCpp..",
+    "....pp....",
 ]
 
 EXPLOSION = [
@@ -191,6 +183,56 @@ EXPLOSION = [
     ".yrrWWrry.",
     "..yyrrryy.",
     "....yy....",
+]
+
+# Distinct HUD gun silhouettes (read clearly at small size)
+ICON_BLASTER = [
+    "..............",
+    "....kkkkkkk...",
+    "...kgggggggw..",
+    "..kGgggggggwW.",
+    "..kGgggyykk...",
+    "...knn.kk.....",
+    "....nn........",
+    "..............",
+]
+
+ICON_ROCKET = [
+    "..............",
+    ".....rrr......",
+    "....rsssr.....",
+    "...rsssssr....",
+    "..kkssssssk...",
+    "..kksswwssk...",
+    "...ksssssk....",
+    "....kfffk.....",
+    "....f.y.f.....",
+    "..............",
+]
+
+ICON_VORTEX = [
+    "..............",
+    "....pppppp....",
+    "...pCCccCCp...",
+    "..pCc....cCp..",
+    "..pC..ww..Cp..",
+    "..pCc....cCp..",
+    "...pCCccCCp...",
+    "....ppyypp....",
+    "..............",
+]
+
+ICON_ZAP = [
+    "..............",
+    "....yyyy......",
+    "...yWWWWy.....",
+    "..kk.yy.kk....",
+    ".kgggggggk....",
+    ".kGggggggW....",
+    "..knn..nn.....",
+    "...yy.y.......",
+    "....y.........",
+    "..............",
 ]
 
 # Jagged paper / glass bullet holes (black core + cracked rim)
@@ -263,17 +305,16 @@ def main() -> None:
         "k": "#1e293b",
         "K": "#0f172a",
         "n": "#a3a3a3",
-        "b": "#92400e",
-        "h": "#451a03",
-        "l": "#78350f",
         "G": "#0ea5e9",
         "g": "#38bdf8",
         "D": "#7c2d12",
+        "p": "#a855f7",
+        "C": "#7c3aed",
+        "c": "#c084fc",
     }
-    save("blaster-bolt", BLASTER, weapon_pal, 3)
-    save("missile", MISSILE, weapon_pal, 3)
-    save("bomb", BOMB, weapon_pal, 3)
-    save("roach", ROACH, weapon_pal, 3)
+    save("blaster-bolt", BLASTER_BOLT, weapon_pal, 3)
+    save("rocket", ROCKET, weapon_pal, 3)
+    save("vortex", VORTEX, weapon_pal, 3)
     save("explosion", EXPLOSION, weapon_pal, 3)
 
     save("hole-a", HOLE_A, HOLE_PAL, 3)
@@ -281,11 +322,11 @@ def main() -> None:
     save("hole-c", HOLE_C, HOLE_PAL, 3)
     save("crack", CRACK, HOLE_PAL, 3)
 
-    # HUD icons — slightly larger
-    save("icon-blaster", BLASTER, weapon_pal, 5)
-    save("icon-missile", MISSILE, weapon_pal, 4)
-    save("icon-bomb", BOMB, weapon_pal, 4)
-    save("icon-roach", ROACH, weapon_pal, 5)
+    # HUD icons — larger gun silhouettes
+    save("icon-blaster", ICON_BLASTER, weapon_pal, 3)
+    save("icon-rocket", ICON_ROCKET, weapon_pal, 3)
+    save("icon-vortex", ICON_VORTEX, weapon_pal, 3)
+    save("icon-zap", ICON_ZAP, weapon_pal, 3)
 
 
 if __name__ == "__main__":

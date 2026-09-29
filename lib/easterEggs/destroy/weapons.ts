@@ -1,24 +1,24 @@
-export type WeaponId = "blaster" | "missile" | "bomb" | "swarm";
+export type WeaponId = "blaster" | "rocket" | "vortex" | "zap";
 
 export const WEAPONS = [
   "blaster",
-  "missile",
-  "bomb",
-  "swarm",
+  "rocket",
+  "vortex",
+  "zap",
 ] as const satisfies readonly WeaponId[];
 
 export const WEAPON_LABELS: Record<WeaponId, string> = {
-  blaster: "Blaster",
-  missile: "Missile",
-  bomb: "Bomb",
-  swarm: "Roaches",
+  blaster: "Neon Blaster",
+  rocket: "Rocket Launcher",
+  vortex: "Void Orb",
+  zap: "Arc Gun",
 };
 
 export const WEAPON_ICON_SRC: Record<WeaponId, string> = {
   blaster: "/destroy/sprites/icon-blaster.png",
-  missile: "/destroy/sprites/icon-missile.png",
-  bomb: "/destroy/sprites/icon-bomb.png",
-  swarm: "/destroy/sprites/icon-roach.png",
+  rocket: "/destroy/sprites/icon-rocket.png",
+  vortex: "/destroy/sprites/icon-vortex.png",
+  zap: "/destroy/sprites/icon-zap.png",
 };
 
 export function clampWeaponIndex(index: number): number {
@@ -60,32 +60,32 @@ export const WEAPON_CONFIG: Record<WeaponId, WeaponConfig> = {
     holeFade: 0.9,
     holeScale: 0.95,
   },
-  missile: {
-    id: "missile",
+  rocket: {
+    id: "rocket",
     maxLive: 4,
-    radius: 72,
-    hits: 4,
+    radius: 78,
+    hits: 5,
     holeHold: 2.4,
     holeFade: 1.6,
-    holeScale: 1.15,
+    holeScale: 1.2,
   },
-  bomb: {
-    id: "bomb",
+  vortex: {
+    id: "vortex",
     maxLive: 3,
-    radius: 110,
-    hits: 6,
-    holeHold: 3.2,
-    holeFade: 2.2,
-    holeScale: 1.35,
+    radius: 120,
+    hits: 7,
+    holeHold: 3.4,
+    holeFade: 2.4,
+    holeScale: 1.4,
   },
-  swarm: {
-    id: "swarm",
-    maxLive: 2,
-    radius: 40,
-    hits: 3,
-    holeHold: 1.6,
-    holeFade: 1.2,
-    holeScale: 0.7,
+  zap: {
+    id: "zap",
+    maxLive: 6,
+    radius: 54,
+    hits: 4,
+    holeHold: 1.7,
+    holeFade: 1.3,
+    holeScale: 0.85,
   },
 };
 
