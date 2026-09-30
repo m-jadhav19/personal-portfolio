@@ -15,10 +15,10 @@ export const WEAPON_LABELS: Record<WeaponId, string> = {
 };
 
 export const WEAPON_ICON_SRC: Record<WeaponId, string> = {
-  blaster: "/destroy/sprites/icon-blaster.png",
-  rocket: "/destroy/sprites/icon-rocket.png",
-  vortex: "/destroy/sprites/icon-vortex.png",
-  zap: "/destroy/sprites/icon-zap.png",
+  blaster: "/destroy/sprites/icon-blaster.svg",
+  rocket: "/destroy/sprites/icon-rocket.svg",
+  vortex: "/destroy/sprites/icon-vortex.svg",
+  zap: "/destroy/sprites/icon-zap.svg",
 };
 
 export function clampWeaponIndex(index: number): number {

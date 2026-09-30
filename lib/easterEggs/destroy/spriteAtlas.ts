@@ -1,20 +1,31 @@
 export const DESTROY_SPRITE_PATHS = {
-  characterIdle: "/destroy/sprites/character-idle.png",
-  characterWalkA: "/destroy/sprites/character-walk-a.png",
-  characterWalkB: "/destroy/sprites/character-walk-b.png",
-  gun: "/destroy/sprites/gun.png",
-  blasterBolt: "/destroy/sprites/blaster-bolt.png",
-  rocket: "/destroy/sprites/rocket.png",
-  vortex: "/destroy/sprites/vortex.png",
-  explosion: "/destroy/sprites/explosion.png",
-  holeA: "/destroy/sprites/hole-a.png",
-  holeB: "/destroy/sprites/hole-b.png",
-  holeC: "/destroy/sprites/hole-c.png",
-  crack: "/destroy/sprites/crack.png",
-  iconBlaster: "/destroy/sprites/icon-blaster.png",
-  iconRocket: "/destroy/sprites/icon-rocket.png",
-  iconVortex: "/destroy/sprites/icon-vortex.png",
-  iconZap: "/destroy/sprites/icon-zap.png",
+  characterIdle: "/destroy/sprites/character-idle.svg",
+  characterWalkA: "/destroy/sprites/character-walk-a.svg",
+  characterWalkB: "/destroy/sprites/character-walk-b.svg",
+  gun: "/destroy/sprites/gun.svg",
+  blasterBolt: "/destroy/sprites/blaster-bolt.svg",
+  rocket: "/destroy/sprites/rocket.svg",
+  vortex: "/destroy/sprites/vortex.svg",
+  explosion: "/destroy/sprites/explosion.svg",
+  holeA: "/destroy/sprites/hole-a.svg",
+  holeB: "/destroy/sprites/hole-b.svg",
+  holeC: "/destroy/sprites/hole-c.svg",
+  crack: "/destroy/sprites/crack.svg",
+  iconBlaster: "/destroy/sprites/icon-blaster.svg",
+  iconRocket: "/destroy/sprites/icon-rocket.svg",
+  iconVortex: "/destroy/sprites/icon-vortex.svg",
+  iconZap: "/destroy/sprites/icon-zap.svg",
+  enemyRoach: "/destroy/sprites/enemy-roach.svg",
+  enemyDrone: "/destroy/sprites/enemy-drone.svg",
+  enemySlime: "/destroy/sprites/enemy-slime.svg",
+  pickupHealth: "/destroy/sprites/pickup-health.svg",
+  pickupShield: "/destroy/sprites/pickup-shield.svg",
+  pickupRapid: "/destroy/sprites/pickup-rapid.svg",
+  envCrate: "/destroy/sprites/env-crate.svg",
+  envBarrel: "/destroy/sprites/env-barrel.svg",
+  envBush: "/destroy/sprites/env-bush.svg",
+  envRock: "/destroy/sprites/env-rock.svg",
+  envTile: "/destroy/sprites/env-tile.svg",
 } as const;
 
 export type DestroySpriteId = keyof typeof DESTROY_SPRITE_PATHS;
@@ -96,3 +107,29 @@ export function drawSprite(
 
 export const HOLE_VARIANTS = ["holeA", "holeB", "holeC"] as const;
 export type HoleVariant = (typeof HOLE_VARIANTS)[number];
+
+export const ENEMY_SPRITE: Record<"roach" | "drone" | "slime", DestroySpriteId> =
+  {
+    roach: "enemyRoach",
+    drone: "enemyDrone",
+    slime: "enemySlime",
+  };
+
+export const PICKUP_SPRITE: Record<
+  "health" | "shield" | "rapid",
+  DestroySpriteId
+> = {
+  health: "pickupHealth",
+  shield: "pickupShield",
+  rapid: "pickupRapid",
+};
+
+export const ENV_SPRITE: Record<
+  "crate" | "barrel" | "bush" | "rock",
+  DestroySpriteId
+> = {
+  crate: "envCrate",
+  barrel: "envBarrel",
+  bush: "envBush",
+  rock: "envRock",
+};

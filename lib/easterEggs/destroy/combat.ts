@@ -1,7 +1,16 @@
-/** Enemies, pickups, and player combat helpers for destroy mode. */
+/** Enemies, pickups, environment props, and player combat helpers. */
+
+import {
+  ENEMY_SPRITE,
+  ENV_SPRITE,
+  PICKUP_SPRITE,
+  drawSprite,
+  type DestroySpriteAtlas,
+} from "./spriteAtlas";
 
 export type EnemyKind = "roach" | "drone" | "slime";
 export type PickupKind = "health" | "shield" | "rapid";
+export type EnvPropKind = "crate" | "barrel" | "bush" | "rock";
 
 export type Enemy = {
   kind: EnemyKind;
@@ -24,6 +33,27 @@ export type Pickup = {
   life: number;
   bob: number;
 };
+
+export type EnvProp = {
+  kind: EnvPropKind;
+  x: number;
+  y: number;
+  hp: number;
+  radius: number;
+  hitFlash: number;
+};
+
+export const ENV_PROP_STATS: Record<
+  EnvPropKind,
+  { hp: number; radius: number; score: number }
+> = {
+  crate: { hp: 2, radius: 16, score: 40 },
+  barrel: { hp: 3, radius: 15, score: 55 },
+  bush: { hp: 1, radius: 14, score: 20 },
+  rock: { hp: 4, radius: 16, score: 70 },
+};
+
+const ENV_KINDS: EnvPropKind[] = ["crate", "barrel", "bush", "rock"];
 
 export const PLAYER_MAX_HP = 100;
 
@@ -149,52 +179,89 @@ export function steerEnemyToward(
   if (enemy.hitFlash > 0) enemy.hitFlash -= dt;
 }
 
+export function spawnEnvProps(
+  width: number,
+  height: number,
+  count = 10,
+): EnvProp[] {
+  const props: EnvProp[] = [];
+  const margin = 70;
+  for (let i = 0; i < count; i++) {
+    const kind = ENV_KINDS[Math.floor(Math.random() * ENV_KINDS.length)];
+    const stats = ENV_PROP_STATS[kind];
+    props.push({
+      kind,
+      x: margin + Math.random() * (width - margin * 2),
+      y: margin + Math.random() * (height - margin * 2),
+      hp: stats.hp,
+      radius: stats.radius,
+      hitFlash: 0,
+    });
+  }
+  return props;
+}
+
 export function drawPixelEnemy(
   ctx: CanvasRenderingContext2D,
   enemy: Enemy,
+  atlas?: DestroySpriteAtlas | null,
 ) {
   const ox = Math.round(enemy.x);
   const oy = Math.round(enemy.y);
   const flash = enemy.hitFlash > 0;
+  const bob = enemy.kind === "roach" ? Math.sin(enemy.phase * 12) * 1.5 : 0;
   ctx.save();
   if (flash) ctx.globalAlpha = 0.55 + Math.sin(enemy.hitFlash * 40) * 0.45;
 
-  if (enemy.kind === "roach") {
-    const bob = Math.sin(enemy.phase * 12) * 1.5;
-    ctx.fillStyle = flash ? "#fef08a" : "#92400e";
-    ctx.fillRect(ox - 7, oy - 3 + bob, 14, 7);
-    ctx.fillStyle = flash ? "#fff" : "#451a03";
-    ctx.fillRect(ox + (enemy.facing > 0 ? 5 : -8), oy - 4 + bob, 3, 3);
-    ctx.fillStyle = "#78350f";
-    for (let i = 0; i < 3; i++) {
-      ctx.fillRect(ox - 6 + i * 5, oy + 4 + bob, 2, 3);
+  const sprite = atlas?.get(ENEMY_SPRITE[enemy.kind]) ?? null;
+  const drew = drawSprite(ctx, sprite, ox, oy + bob, {
+    facing: enemy.facing,
+    scale: 1,
+  });
+
+  if (!drew) {
+    if (enemy.kind === "roach") {
+      ctx.fillStyle = flash ? "#fef08a" : "#92400e";
+      ctx.fillRect(ox - 7, oy - 3 + bob, 14, 7);
+      ctx.fillStyle = flash ? "#fff" : "#451a03";
+      ctx.fillRect(ox + (enemy.facing > 0 ? 5 : -8), oy - 4 + bob, 3, 3);
+      ctx.fillStyle = "#78350f";
+      for (let i = 0; i < 3; i++) {
+        ctx.fillRect(ox - 6 + i * 5, oy + 4 + bob, 2, 3);
+      }
+    } else if (enemy.kind === "drone") {
+      ctx.fillStyle = flash ? "#fde047" : "#64748b";
+      ctx.fillRect(ox - 8, oy - 4, 16, 8);
+      ctx.fillStyle = flash ? "#fff" : "#38bdf8";
+      ctx.fillRect(ox - 3, oy - 2, 6, 4);
+      ctx.fillStyle = "#f97316";
+      ctx.fillRect(ox - 10, oy + 2, 4, 2);
+      ctx.fillRect(ox + 6, oy + 2, 4, 2);
+    } else {
+      const squash = 1 + Math.sin(enemy.phase * 6) * 0.12;
+      ctx.fillStyle = flash ? "#bbf7d0" : "#22c55e";
+      ctx.beginPath();
+      ctx.ellipse(ox, oy, 11 * squash, 8 / squash, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#052e16";
+      ctx.fillRect(ox - 4, oy - 2, 2, 2);
+      ctx.fillRect(ox + 2, oy - 2, 2, 2);
     }
-  } else if (enemy.kind === "drone") {
-    ctx.fillStyle = flash ? "#fde047" : "#64748b";
-    ctx.fillRect(ox - 8, oy - 4, 16, 8);
-    ctx.fillStyle = flash ? "#fff" : "#38bdf8";
-    ctx.fillRect(ox - 3, oy - 2, 6, 4);
-    ctx.fillStyle = "#f97316";
-    ctx.fillRect(ox - 10, oy + 2, 4, 2);
-    ctx.fillRect(ox + 6, oy + 2, 4, 2);
-  } else {
-    // slime
-    const squash = 1 + Math.sin(enemy.phase * 6) * 0.12;
-    ctx.fillStyle = flash ? "#bbf7d0" : "#22c55e";
-    ctx.beginPath();
-    ctx.ellipse(ox, oy, 11 * squash, 8 / squash, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = "#052e16";
-    ctx.fillRect(ox - 4, oy - 2, 2, 2);
-    ctx.fillRect(ox + 2, oy - 2, 2, 2);
   }
   ctx.restore();
 }
 
-export function drawPickup(ctx: CanvasRenderingContext2D, pickup: Pickup) {
+export function drawPickup(
+  ctx: CanvasRenderingContext2D,
+  pickup: Pickup,
+  atlas?: DestroySpriteAtlas | null,
+) {
   const bob = Math.sin(pickup.bob) * 4;
   const ox = Math.round(pickup.x);
   const oy = Math.round(pickup.y + bob);
+  const sprite = atlas?.get(PICKUP_SPRITE[pickup.kind]) ?? null;
+  if (drawSprite(ctx, sprite, ox, oy, { scale: 1 })) return;
+
   ctx.save();
   if (pickup.kind === "health") {
     ctx.fillStyle = "#14532d";
@@ -221,6 +288,65 @@ export function drawPickup(ctx: CanvasRenderingContext2D, pickup: Pickup) {
     ctx.fillStyle = "#fdba74";
     ctx.fillRect(ox - 6, oy - 2, 12, 4);
     ctx.fillRect(ox - 2, oy - 6, 4, 12);
+  }
+  ctx.restore();
+}
+
+export function drawEnvProp(
+  ctx: CanvasRenderingContext2D,
+  prop: EnvProp,
+  atlas?: DestroySpriteAtlas | null,
+) {
+  const ox = Math.round(prop.x);
+  const oy = Math.round(prop.y);
+  ctx.save();
+  if (prop.hitFlash > 0) {
+    ctx.globalAlpha = 0.5 + Math.sin(prop.hitFlash * 40) * 0.5;
+  }
+  const sprite = atlas?.get(ENV_SPRITE[prop.kind]) ?? null;
+  const drew = drawSprite(ctx, sprite, ox, oy, { scale: 1 });
+  if (!drew) {
+    ctx.fillStyle =
+      prop.kind === "crate"
+        ? "#a16207"
+        : prop.kind === "barrel"
+          ? "#b91c1c"
+          : prop.kind === "bush"
+            ? "#166534"
+            : "#78716c";
+    ctx.fillRect(ox - 10, oy - 10, 20, 20);
+  }
+  ctx.restore();
+}
+
+export function drawTileFloor(
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  atlas?: DestroySpriteAtlas | null,
+) {
+  const tile = atlas?.get("envTile") ?? null;
+  if (!tile || !tile.complete || tile.naturalWidth === 0) {
+    // Soft pixel grit fallback
+    ctx.save();
+    ctx.fillStyle = "rgba(15, 23, 42, 0.18)";
+    for (let y = 0; y < height; y += 24) {
+      for (let x = 0; x < width; x += 24) {
+        if ((x + y) % 48 === 0) ctx.fillRect(x, y, 12, 12);
+      }
+    }
+    ctx.restore();
+    return;
+  }
+  const tw = tile.naturalWidth;
+  const th = tile.naturalHeight;
+  ctx.save();
+  ctx.globalAlpha = 0.22;
+  ctx.imageSmoothingEnabled = false;
+  for (let y = 0; y < height + th; y += th) {
+    for (let x = 0; x < width + tw; x += tw) {
+      ctx.drawImage(tile, x, y, tw, th);
+    }
   }
   ctx.restore();
 }

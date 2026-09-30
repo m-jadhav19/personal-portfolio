@@ -211,7 +211,7 @@ export function DestroySiteSimulator({ onExit }: DestroySiteSimulatorProps) {
         <div className={styles.brand}>
           <p className={styles.title}>Destroy mode</p>
           <p className={styles.hint}>
-            click fire · WASD / RMB move · 1–4 · Esc
+            WASD move · mouse aim · click fire · RMB drag · 1–4 · Esc
           </p>
         </div>
 

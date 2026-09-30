@@ -13,13 +13,18 @@ import {
   BOSS_SCORE_THRESHOLD,
   DOM_DESTROY_SCORE,
   ENEMY_SCORE,
+  ENV_PROP_STATS,
   PLAYER_MAX_HP,
+  drawEnvProp,
   drawPickup,
   drawPixelEnemy,
+  drawTileFloor,
   spawnEnemyAtEdge,
+  spawnEnvProps,
   spawnPickupRandom,
   steerEnemyToward,
   type Enemy,
+  type EnvProp,
   type Pickup,
 } from "./combat";
 import {
@@ -206,6 +211,7 @@ export function createDestroyEngine(
   let particles: DebrisParticle[] = [];
   const enemies: Enemy[] = [];
   const pickups: Pickup[] = [];
+  let envProps: EnvProp[] = [];
   const bossShots: BossProjectile[] = [];
   let boss: PortraitBoss | null = null;
   let bossReveal: BossReveal | null = null;
@@ -572,7 +578,37 @@ export function createDestroyEngine(
         }
       }
     }
+
+    killed += hurtEnvPropsAt(x, y, radius, damage);
     return killed;
+  }
+
+  function hurtEnvPropsAt(
+    x: number,
+    y: number,
+    radius: number,
+    damage: number,
+  ) {
+    let smashed = 0;
+    for (let i = envProps.length - 1; i >= 0; i--) {
+      const prop = envProps[i];
+      if (Math.hypot(prop.x - x, prop.y - y) > radius + prop.radius) continue;
+      prop.hp -= damage;
+      prop.hitFlash = 0.16;
+      if (prop.hp > 0) continue;
+      const bits = spawnDebris(
+        { left: prop.x - 8, top: prop.y - 8, width: 16, height: 16 },
+        reducedMotion ? 4 : 10,
+        ["#a16207", "#b91c1c", "#166534", "#78716c", "#fde68a"],
+      );
+      particles = particles.concat(bits).slice(-MAX_PARTICLES);
+      explosions.push({ x: prop.x, y: prop.y, life: 0.2, maxLife: 0.2 });
+      addScore(ENV_PROP_STATS[prop.kind].score);
+      envProps.splice(i, 1);
+      smashed += 1;
+      audio.play("hit");
+    }
+    return smashed;
   }
 
   function resize() {
@@ -896,9 +932,14 @@ export function createDestroyEngine(
     }
   }
 
+  /** Aim follows mouse/trackpad freely — never snaps the character to the cursor. */
+  function syncPointer(clientX: number, clientY: number) {
+    pointer.x = clientX;
+    pointer.y = clientY;
+  }
+
   function onPointerMove(event: PointerEvent) {
-    pointer.x = event.clientX;
-    pointer.y = event.clientY;
+    syncPointer(event.clientX, event.clientY);
 
     // Bitmask is more reliable than button events alone across browsers.
     const rightHeld = (event.buttons & 2) !== 0;
@@ -919,12 +960,16 @@ export function createDestroyEngine(
     }
   }
 
+  // Trackpad / mouse aim backup — some devices update mousemove more reliably.
+  function onMouseMove(event: MouseEvent) {
+    syncPointer(event.clientX, event.clientY);
+  }
+
   function onPointerDown(event: PointerEvent) {
     if (isHudTarget(event.target)) return;
 
     // Keep aim synced even when the first interaction is a click (no prior move).
-    pointer.x = event.clientX;
-    pointer.y = event.clientY;
+    syncPointer(event.clientX, event.clientY);
 
     // Right-click drag repositions the character.
     if (event.button === 2) {
@@ -1057,9 +1102,13 @@ export function createDestroyEngine(
       }
     }
 
-    // Face the aim point; walk frames while dragging or strafing.
+    // Face the aim point (mouse/trackpad), independent of WASD strafe.
     if (Math.abs(pointer.x - character.x) > 1) {
       facing = pointer.x >= character.x ? 1 : -1;
+    }
+
+    for (const prop of envProps) {
+      if (prop.hitFlash > 0) prop.hitFlash = Math.max(0, prop.hitFlash - dt);
     }
     if (dragging) {
       walkPhase += dt * 14;
@@ -1266,18 +1315,23 @@ export function createDestroyEngine(
     const h = window.innerHeight;
     ctx.clearRect(0, 0, w, h);
 
+    // Pixel tile wash under everything — 8-bit stage dressing.
+    drawTileFloor(ctx, w, h, atlas);
+
     // Holes sit under FX so the page looks punched through.
     for (const hole of holes) {
       drawBulletHole(ctx, hole, atlas);
     }
+
+    for (const prop of envProps) drawEnvProp(ctx, prop, atlas);
 
     for (const p of particles) drawDebris(ctx, p);
     for (const e of explosions) {
       drawExplosion(ctx, e.x, e.y, e.life, e.maxLife, atlas);
     }
 
-    for (const p of pickups) drawPickup(ctx, p);
-    for (const e of enemies) drawPixelEnemy(ctx, e);
+    for (const p of pickups) drawPickup(ctx, p, atlas);
+    for (const e of enemies) drawPixelEnemy(ctx, e, atlas);
     if (boss) drawPortraitBoss(ctx, boss, bossPortrait);
     for (const s of bossShots) drawBossShot(ctx, s);
 
@@ -1351,10 +1405,16 @@ export function createDestroyEngine(
     running = true;
     resize();
     clampCharacter(character.x, character.y);
+    envProps = spawnEnvProps(
+      window.innerWidth,
+      window.innerHeight,
+      reducedMotion ? 6 : 12,
+    );
     emitScore();
     emitBoss();
     lastTs = performance.now();
     window.addEventListener("pointermove", onPointerMove);
+    window.addEventListener("mousemove", onMouseMove, { passive: true });
     window.addEventListener("pointerdown", onPointerDown);
     window.addEventListener("pointerup", onPointerUp);
     window.addEventListener("pointercancel", onPointerUp);
@@ -1374,6 +1434,7 @@ export function createDestroyEngine(
     clearMoveKeys();
     cancelAnimationFrame(raf);
     window.removeEventListener("pointermove", onPointerMove);
+    window.removeEventListener("mousemove", onMouseMove);
     window.removeEventListener("pointerdown", onPointerDown);
     window.removeEventListener("pointerup", onPointerUp);
     window.removeEventListener("pointercancel", onPointerUp);
@@ -1393,6 +1454,7 @@ export function createDestroyEngine(
     particles = [];
     enemies.length = 0;
     pickups.length = 0;
+    envProps = [];
     bossShots.length = 0;
   }
 
@@ -1420,6 +1482,11 @@ export function createDestroyEngine(
     rapidTimer = 0;
     enemySpawnTimer = 1.4;
     pickupSpawnTimer = 4;
+    envProps = spawnEnvProps(
+      window.innerWidth,
+      window.innerHeight,
+      reducedMotion ? 6 : 12,
+    );
     emitHealth();
     emitBuffs();
     emitScore();
