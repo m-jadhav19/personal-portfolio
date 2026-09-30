@@ -126,7 +126,7 @@ export function createDestroyEngine(
   let hidden = false;
 
   const pointer: Vec = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
-  // Fixed stance — only moves when right-click dragged.
+  // Fixed stance — only moves via right-click drag or WASD. Never follows the cursor.
   const character: Vec = {
     x: Math.min(120, window.innerWidth * 0.18),
     y: window.innerHeight * 0.55,
@@ -135,6 +135,13 @@ export function createDestroyEngine(
   let walkPhase = 0;
   let dragging = false;
   const dragOffset: Vec = { x: 0, y: 0 };
+  const moveKeys = {
+    up: false,
+    down: false,
+    left: false,
+    right: false,
+  };
+  const MOVE_SPEED = 260;
 
   const projectiles: Projectile[] = [];
   const zapArcs: ZapArc[] = [];
@@ -511,10 +518,50 @@ export function createDestroyEngine(
     }
   }
 
+  function setMoveKey(code: string, pressed: boolean): boolean {
+    switch (code) {
+      case "KeyW":
+      case "ArrowUp":
+        moveKeys.up = pressed;
+        return true;
+      case "KeyS":
+      case "ArrowDown":
+        moveKeys.down = pressed;
+        return true;
+      case "KeyA":
+      case "ArrowLeft":
+        moveKeys.left = pressed;
+        return true;
+      case "KeyD":
+      case "ArrowRight":
+        moveKeys.right = pressed;
+        return true;
+      default:
+        return false;
+    }
+  }
+
+  function clearMoveKeys() {
+    moveKeys.up = false;
+    moveKeys.down = false;
+    moveKeys.left = false;
+    moveKeys.right = false;
+  }
+
   function onKeyDown(event: KeyboardEvent) {
     if (isTypingTarget(event.target)) return;
     if (event.code >= "Digit1" && event.code <= "Digit4") {
       setWeapon(Number(event.code.slice(-1)) - 1);
+      return;
+    }
+    if (setMoveKey(event.code, true)) {
+      event.preventDefault();
+    }
+  }
+
+  function onKeyUp(event: KeyboardEvent) {
+    if (setMoveKey(event.code, false)) {
+      event.preventDefault();
     }
   }
 
@@ -547,13 +594,31 @@ export function createDestroyEngine(
   }
 
   function update(dt: number) {
-    // Face the aim point; walk frames only while dragging.
+    // WASD / arrows — the only non-drag way to reposition. Never chase the cursor.
+    if (!paused && !hidden && !dragging) {
+      let mx = 0;
+      let my = 0;
+      if (moveKeys.left) mx -= 1;
+      if (moveKeys.right) mx += 1;
+      if (moveKeys.up) my -= 1;
+      if (moveKeys.down) my += 1;
+      if (mx !== 0 || my !== 0) {
+        const len = Math.hypot(mx, my) || 1;
+        clampCharacter(
+          character.x + (mx / len) * MOVE_SPEED * dt,
+          character.y + (my / len) * MOVE_SPEED * dt,
+        );
+        walkPhase += dt * 14;
+      }
+    }
+
+    // Face the aim point; walk frames while dragging or strafing.
     if (Math.abs(pointer.x - character.x) > 1) {
       facing = pointer.x >= character.x ? 1 : -1;
     }
     if (dragging) {
       walkPhase += dt * 14;
-    } else {
+    } else if (!moveKeys.up && !moveKeys.down && !moveKeys.left && !moveKeys.right) {
       walkPhase += dt * 2.2;
     }
 
@@ -697,6 +762,8 @@ export function createDestroyEngine(
     window.addEventListener("pointerup", onPointerUp);
     window.addEventListener("pointercancel", onPointerUp);
     window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("keyup", onKeyUp);
+    window.addEventListener("blur", clearMoveKeys);
     window.addEventListener("wheel", onWheel, { passive: false });
     window.addEventListener("contextmenu", onContextMenu);
     window.addEventListener("resize", resize);
@@ -707,12 +774,15 @@ export function createDestroyEngine(
   function stop() {
     running = false;
     dragging = false;
+    clearMoveKeys();
     cancelAnimationFrame(raf);
     window.removeEventListener("pointermove", onPointerMove);
     window.removeEventListener("pointerdown", onPointerDown);
     window.removeEventListener("pointerup", onPointerUp);
     window.removeEventListener("pointercancel", onPointerUp);
     window.removeEventListener("keydown", onKeyDown);
+    window.removeEventListener("keyup", onKeyUp);
+    window.removeEventListener("blur", clearMoveKeys);
     window.removeEventListener("wheel", onWheel);
     window.removeEventListener("contextmenu", onContextMenu);
     window.removeEventListener("resize", resize);
@@ -752,7 +822,10 @@ export function createDestroyEngine(
     stop,
     setPaused(next) {
       paused = next;
-      if (next) dragging = false;
+      if (next) {
+        dragging = false;
+        clearMoveKeys();
+      }
       if (!next) lastTs = performance.now();
     },
     isPaused: () => paused,

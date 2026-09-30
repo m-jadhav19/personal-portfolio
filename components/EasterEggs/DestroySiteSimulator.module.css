@@ -98,7 +98,8 @@
   border: 1px solid rgba(253, 186, 116, 0.35);
   background: rgba(0, 0, 0, 0.35);
   color: #e7e5e4;
-  cursor: pointer;
+  /* Custom cursor owns the reticle — no OS pointer / snap target. */
+  cursor: none;
   image-rendering: pixelated;
 }
 
@@ -139,7 +140,7 @@
   font-size: 0.68rem;
   font-weight: 600;
   padding: 0.35rem 0.55rem;
-  cursor: pointer;
+  cursor: none;
 }
 
 .btn:hover {
