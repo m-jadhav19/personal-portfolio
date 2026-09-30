@@ -41,8 +41,8 @@ const GAP = 8;
 /** Tighter aim reticle while DESTROY is active. */
 const DESTROY_GAP = 5;
 /** Mechanical claw: open reticle spreads, grabbing pinches shut. */
-const GRAB_GAP = 16;
-const GRABBING_GAP = 6;
+const GRAB_GAP = 14;
+const GRABBING_GAP = 9;
 const HAND_STATES = new Set<CursorState>(["grab", "grabbing"]);
 const FRAME_OUTSET = 6;
 const BRACKET_FOLLOW = 0.45;
@@ -239,40 +239,34 @@ function GrabberIcon({ closed }: { closed: boolean }) {
       viewBox="0 0 32 32"
       fill="none"
       stroke="currentColor"
-      strokeWidth={1.7}
+      strokeWidth={1.55}
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden="true"
     >
-      {/* top claw */}
-      <path d="M16 3v7.5c0 2 1 3.25 3 4" />
-
-      {/* right claw */}
-      <path d="M29 16h-7.5c-2 0-3.25 1-4 3" />
-
-      {/* bottom claw */}
-      <path d="M16 29v-7.5c0-2-1-3.25-3-4" />
-
-      {/* left claw */}
-      <path d="M3 16h7.5c2 0 3.25-1 4-3" />
-
-      {/* center hub */}
-      <rect
-        x="14"
-        y="14"
-        width="4"
-        height="4"
-        rx="0.8"
-        transform="rotate(45 16 16)"
-        fill="currentColor"
-        stroke="none"
-      />
-
-      {/* small claw tips */}
-      <path d="M16 10.5l-1.8 2.1" />
-      <path d="M21.5 16l-2.1-1.8" />
-      <path d="M16 21.5l1.8-2.1" />
-      <path d="M10.5 16l2.1 1.8" />
+      {/* Discrete open/closed paths — no spin tween (that ghosted under difference blend). */}
+      <g className={styles.grabberArms}>
+        {closed ? (
+          <>
+            <path d="M10.6 10.6 14.45 14.45" />
+            <path d="M21.4 10.6 17.55 14.45" />
+            <path d="M21.4 21.4 17.55 17.55" />
+            <path d="M10.6 21.4 14.45 17.55" />
+          </>
+        ) : (
+          <>
+            <path d="M16 7.6V13.1" />
+            <path d="M14.35 7.6H17.65" />
+            <path d="M16 18.9V24.4" />
+            <path d="M14.35 24.4H17.65" />
+            <path d="M7.6 16H13.1" />
+            <path d="M7.6 14.35V17.65" />
+            <path d="M18.9 16H24.4" />
+            <path d="M24.4 14.35V17.65" />
+          </>
+        )}
+      </g>
+      <circle cx="16" cy="16" r="1.65" />
     </svg>
   );
 }
@@ -455,29 +449,21 @@ export function Cursor() {
           : BRACKET_FOLLOW;
 
       // Outer brackets twist inward so the reticle reads as claw arms closing.
-      const clawTwist =
-        hand && resolved.state === "grabbing"
-          ? 34
-          : hand
-            ? 10
-            : 0;
-      const clawSign: Record<(typeof CORNERS)[number]["key"], number> = {
-        tl: 1,
-        tr: -1,
-        bl: -1,
-        br: 1,
-      };
-
       for (const item of CORNERS) {
         const current = corners.current[item.key];
         const target = targets.current[item.key];
-        current.x += (target.x - current.x) * follow;
-        current.y += (target.y - current.y) * follow;
+        if (hand) {
+          // Grab states keep hub + brackets locked; lerp made the claw look off-center.
+          current.x = target.x;
+          current.y = target.y;
+        } else {
+          current.x += (target.x - current.x) * follow;
+          current.y += (target.y - current.y) * follow;
+        }
 
         const node = cornerRefs.current[item.key];
         if (node) {
-          const rot = clawTwist * clawSign[item.key];
-          node.style.transform = `translate3d(${current.x}px, ${current.y}px, 0) rotate(${rot}deg)`;
+          node.style.transform = `translate3d(${current.x}px, ${current.y}px, 0)`;
         }
       }
 
