@@ -12,7 +12,9 @@ type HeroMarqueeProps = {
 
 function MarqueeTrack({ text }: { text: string }) {
   const items = Array.from({ length: REPEAT_COUNT }, (_, index) => (
-    <span key={index}>{text}</span>
+    <span key={index} data-destroy-target data-intro="marquee-chunk">
+      {text}
+    </span>
   ));
 
   return <div className={styles.track}>{items}</div>;
