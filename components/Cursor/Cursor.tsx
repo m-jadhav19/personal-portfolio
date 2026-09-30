@@ -18,7 +18,9 @@ type CursorState =
   | "lab"
   | "capability"
   | "nav"
-  | "interactive";
+  | "interactive"
+  | "grab"
+  | "grabbing";
 
 const SYMBOL: Record<CursorState, string> = {
   default: "·",
@@ -30,12 +32,18 @@ const SYMBOL: Record<CursorState, string> = {
   capability: "+",
   nav: "·",
   interactive: "+",
+  grab: "·",
+  grabbing: "·",
 };
 
 /** Half-size of the default square reticle (edge to center). */
 const GAP = 8;
 /** Tighter aim reticle while DESTROY is active. */
 const DESTROY_GAP = 5;
+/** Open hand: the reticle opens around it. Grabbing: it pinches shut. */
+const GRAB_GAP = 14;
+const GRABBING_GAP = 7;
+const HAND_STATES = new Set<CursorState>(["grab", "grabbing"]);
 const FRAME_OUTSET = 6;
 const BRACKET_FOLLOW = 0.45;
 const FRAME_FOLLOW = 0.32;
@@ -115,6 +123,11 @@ function resolveFromPoint(
   // Destroy mode owns aiming — never snap/frame to HUD weapon buttons or page UI.
   if (isDestroyEggActive()) {
     return { state: "default", frameEl: null };
+  }
+
+  // A carried sticker ignores the pointer, so it flags the drag on <html> instead.
+  if (document.documentElement.hasAttribute("data-cursor-grabbing")) {
+    return { state: "grabbing", frameEl: null };
   }
 
   const stack = document.elementsFromPoint(x, y);
@@ -215,6 +228,37 @@ function frameOffsets(rect: DOMRect) {
 function resolveIdleGlyph(mode: SystemMode, interruptGlyph: string | null) {
   if (interruptGlyph) return interruptGlyph;
   return MODE_CURSOR[mode].glyph;
+}
+
+function HandIcon({ closed }: { closed: boolean }) {
+  return (
+    <svg
+      className={styles.hand}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.75}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      {closed ? (
+        <>
+          <path d="M18 11.5V9a2 2 0 0 0-4 0v1.4" />
+          <path d="M14 10V8a2 2 0 0 0-4 0v2" />
+          <path d="M10 9.9V9a2 2 0 0 0-4 0v5" />
+          <path d="M6 14a2 2 0 0 0-4 0" />
+          <path d="M18 11a2 2 0 1 1 4 0v3a8 8 0 0 1-8 8h-4a8 8 0 0 1-8-8 2 2 0 1 1 4 0" />
+        </>
+      ) : (
+        <>
+          <path d="M18 11V6a2 2 0 0 0-4 0" />
+          <path d="M14 10V4a2 2 0 0 0-4 0v2" />
+          <path d="M10 10.5V6a2 2 0 0 0-4 0v8" />
+          <path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15" />
+        </>
+      )}
+    </svg>
+  );
 }
 
 export function Cursor() {
@@ -323,7 +367,9 @@ export function Cursor() {
 
       // Re-resolve every frame so overlays (All Work) clear stale hero frames
       // even when the mouse hasn't moved.
-      applyTarget(resolveFromPoint(mx, my));
+      const resolved = resolveFromPoint(mx, my);
+      applyTarget(resolved);
+      const hand = !inDestroy && HAND_STATES.has(resolved.state);
 
       if (glitchUntil.current && now >= glitchUntil.current) {
         glitchUntil.current = 0;
@@ -364,6 +410,12 @@ export function Cursor() {
 
       if (frameTarget) {
         targets.current = frameOffsets(frameTarget.getBoundingClientRect());
+      } else if (hand) {
+        targets.current = defaultOffsets(
+          mx,
+          my,
+          resolved.state === "grabbing" ? GRABBING_GAP : GRAB_GAP,
+        );
       } else if (!inDestroy && glitchUntil.current) {
         const scramble = GAP + 3 + Math.random() * 5;
         targets.current = {
@@ -492,6 +544,7 @@ export function Cursor() {
   const showCoords = state === "lab";
 
   const destroyActive = activeEgg === "destroy";
+  const hand = !destroyActive && HAND_STATES.has(state) ? state : null;
 
   return createPortal(
     <div
@@ -502,7 +555,7 @@ export function Cursor() {
         glitch && !destroyActive ? styles.rootGlitch : ""
       } ${styles[`mode_${mode}`] ?? ""} ${
         destroyActive ? styles.mode_destroy : ""
-      }`}
+      } ${hand ? styles.rootHand : ""} ${hand === "grabbing" ? styles.rootGrabbing : ""}`}
       aria-hidden="true"
     >
       {CORNERS.map(({ key, className }) => (
@@ -515,7 +568,7 @@ export function Cursor() {
         />
       ))}
       <span ref={centerRef} className={styles.center}>
-        {displayGlyph}
+        {hand ? <HandIcon closed={hand === "grabbing"} /> : displayGlyph}
       </span>
       <span
         ref={coordsRef}
