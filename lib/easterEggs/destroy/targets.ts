@@ -45,6 +45,8 @@ const AOE_SELECTOR = [
   "figure",
   "figcaption",
   "[data-intro]",
+  "[data-intro='marquee-chunk']",
+  "[data-intro='marquee-line']",
   "[data-destroy-target]",
 ].join(",");
 
@@ -101,7 +103,15 @@ function hasMeaningfulContent(el: HTMLElement): boolean {
 
 function isDestroyable(el: HTMLElement): boolean {
   if (isIgnorable(el)) return false;
-  if (!TARGET_TAGS.has(el.tagName) && !el.hasAttribute("data-intro")) {
+  const forced =
+    el.hasAttribute("data-destroy-target") ||
+    el.hasAttribute("data-intro") ||
+    el.closest("[data-intro='marquee-line']") === el;
+  if (
+    !TARGET_TAGS.has(el.tagName) &&
+    !forced &&
+    !el.hasAttribute("data-intro")
+  ) {
     return false;
   }
   // Skip giant page shells
@@ -112,10 +122,43 @@ function isDestroyable(el: HTMLElement): boolean {
 
   const rect = el.getBoundingClientRect();
   // Avoid wiping the entire viewport in one shot (huge wrappers)
-  if (rect.width * rect.height > window.innerWidth * window.innerHeight * 0.55) {
+  // Marquee chunks / forced targets may be wide — allow up to full width strips.
+  const areaCap =
+    el.hasAttribute("data-destroy-target") ||
+    el.getAttribute("data-intro") === "marquee-line" ||
+    el.getAttribute("data-intro") === "marquee-chunk"
+      ? window.innerWidth * window.innerHeight * 0.85
+      : window.innerWidth * window.innerHeight * 0.55;
+  if (rect.width * rect.height > areaCap) {
     return false;
   }
   return true;
+}
+
+function pointInRect(x: number, y: number, rect: DOMRect) {
+  return (
+    x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom
+  );
+}
+
+/** Hit-test nodes that may have pointer-events:none (e.g. front marquee). */
+function probeForcedTargets(x: number, y: number): HTMLElement | null {
+  const nodes = document.querySelectorAll<HTMLElement>(
+    "[data-destroy-target], [data-intro='marquee-chunk'], [data-intro='marquee-line']",
+  );
+  let best: HTMLElement | null = null;
+  let bestArea = Number.POSITIVE_INFINITY;
+  for (const el of nodes) {
+    if (!isDestroyable(el)) continue;
+    const rect = el.getBoundingClientRect();
+    if (!pointInRect(x, y, rect)) continue;
+    const area = rect.width * rect.height;
+    if (area < bestArea) {
+      best = el;
+      bestArea = area;
+    }
+  }
+  return best;
 }
 
 function pickBestFromPoint(x: number, y: number): HTMLElement | null {
@@ -128,7 +171,7 @@ function pickBestFromPoint(x: number, y: number): HTMLElement | null {
     if (el.closest(IGNORE_SELECTOR)) continue;
     // Walk up a few ancestors to find a sensible destroyable node
     let cur: HTMLElement | null = el;
-    for (let depth = 0; depth < 5 && cur; depth += 1) {
+    for (let depth = 0; depth < 6 && cur; depth += 1) {
       if (isDestroyable(cur)) {
         const area =
           cur.getBoundingClientRect().width * cur.getBoundingClientRect().height;
@@ -141,6 +184,15 @@ function pickBestFromPoint(x: number, y: number): HTMLElement | null {
       }
       cur = cur.parentElement;
     }
+  }
+
+  // Front marquee / forced targets can miss the stack when pointer-events were none.
+  const forced = probeForcedTargets(x, y);
+  if (forced) {
+    const area =
+      forced.getBoundingClientRect().width *
+      forced.getBoundingClientRect().height;
+    if (!best || area <= bestArea) best = forced;
   }
 
   return best;

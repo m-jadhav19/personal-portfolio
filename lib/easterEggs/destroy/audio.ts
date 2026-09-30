@@ -5,6 +5,9 @@ export type BlipKind =
   | "rocket"
   | "vortex"
   | "zap"
+  | "hurt"
+  | "pickup"
+  | "enemy"
   | "ui";
 
 export type DestroyAudio = {
@@ -180,6 +183,22 @@ export function createDestroyAudio(initialMuted = false): DestroyAudio {
           q: 0.5,
           buffer: longNoise,
         });
+        break;
+      }
+      case "hurt": {
+        tone(audio, "sawtooth", 320, 90, now, 0.16, 0.06, master, 0.002);
+        tone(audio, "square", 180, 60, now, 0.12, 0.035, master, 0.002);
+        burst(audio, now, 0.1, 0.07, master, 900, { q: 0.7 });
+        break;
+      }
+      case "pickup": {
+        tone(audio, "sine", 520, 880, now, 0.12, 0.04, master, 0.004);
+        tone(audio, "triangle", 780, 1200, now + 0.04, 0.1, 0.03, master, 0.003);
+        break;
+      }
+      case "enemy": {
+        burst(audio, now, 0.06, 0.05, master, 2200, { q: 1.4 });
+        tone(audio, "square", 240, 110, now, 0.07, 0.025, master, 0.002);
         break;
       }
       case "ui":

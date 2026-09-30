@@ -1,5 +1,15 @@
 import { createDestroyAudio } from "./audio";
 import {
+  PLAYER_MAX_HP,
+  drawPickup,
+  drawPixelEnemy,
+  spawnEnemyAtEdge,
+  spawnPickupRandom,
+  steerEnemyToward,
+  type Enemy,
+  type Pickup,
+} from "./combat";
+import {
   loadDestroySpriteAtlas,
   type DestroySpriteAtlas,
 } from "./spriteAtlas";
@@ -77,6 +87,9 @@ export type DestroyEngineOptions = {
   initialMuted?: boolean;
   onWeaponChange?: (index: number, id: WeaponId) => void;
   onShake?: (magnitude: number) => void;
+  onHealthChange?: (health: number, maxHealth: number) => void;
+  onBuffChange?: (buffs: { shield: number; rapid: number }) => void;
+  onDeath?: () => void;
 };
 
 export type DestroyEngine = {
@@ -88,6 +101,7 @@ export type DestroyEngine = {
   isMuted: () => boolean;
   setWeapon: (index: number) => void;
   getWeaponIndex: () => number;
+  getHealth: () => { health: number; maxHealth: number };
   repair: () => void;
   destroy: () => void;
 };
@@ -95,7 +109,10 @@ export type DestroyEngine = {
 const MAX_PARTICLES = 180;
 const MAX_ZAPS = 14;
 const MAX_HOLES = 160;
+const MAX_ENEMIES = 14;
+const MAX_PICKUPS = 5;
 const CHAR_MARGIN = 28;
+const CHAR_HIT_R = 20;
 
 function prefersReducedMotionFlag(explicit?: boolean) {
   if (typeof explicit === "boolean") return explicit;
@@ -148,6 +165,83 @@ export function createDestroyEngine(
   const explosions: Explosion[] = [];
   const holes: BulletHole[] = [];
   let particles: DebrisParticle[] = [];
+  const enemies: Enemy[] = [];
+  const pickups: Pickup[] = [];
+
+  let health = PLAYER_MAX_HP;
+  let hurtFlash = 0;
+  let hurtIFrames = 0;
+  let knockX = 0;
+  let knockY = 0;
+  let shieldTimer = 0;
+  let rapidTimer = 0;
+  let enemySpawnTimer = 1.2;
+  let pickupSpawnTimer = 5;
+  let buffEmitTimer = 0;
+  let dead = false;
+
+  function emitHealth() {
+    options.onHealthChange?.(health, PLAYER_MAX_HP);
+  }
+
+  function emitBuffs() {
+    options.onBuffChange?.({ shield: shieldTimer, rapid: rapidTimer });
+  }
+
+  function takeDamage(amount: number, fromX: number, fromY: number) {
+    if (dead || paused || shieldTimer > 0 || hurtIFrames > 0) return;
+    health = Math.max(0, health - amount);
+    hurtFlash = 0.45;
+    hurtIFrames = 0.55;
+    const ang = Math.atan2(character.y - fromY, character.x - fromX);
+    knockX = Math.cos(ang) * 10;
+    knockY = Math.sin(ang) * 10;
+    audio.play("hurt");
+    options.onShake?.(0.55);
+    emitHealth();
+    if (health <= 0) {
+      dead = true;
+      paused = true;
+      options.onDeath?.();
+    }
+  }
+
+  function heal(amount: number) {
+    health = Math.min(PLAYER_MAX_HP, health + amount);
+    emitHealth();
+  }
+
+  function hurtEnemiesAt(x: number, y: number, radius: number, damage: number) {
+    let killed = 0;
+    for (let i = enemies.length - 1; i >= 0; i--) {
+      const e = enemies[i];
+      if (Math.hypot(e.x - x, e.y - y) > radius + e.radius) continue;
+      e.hp -= damage;
+      e.hitFlash = 0.18;
+      if (e.hp <= 0) {
+        const bits = spawnDebris(
+          { left: e.x - 6, top: e.y - 6, width: 12, height: 12 },
+          reducedMotion ? 3 : 8,
+          ["#92400e", "#4ade80", "#94a3b8", "#fde047"],
+        );
+        particles = particles.concat(bits).slice(-MAX_PARTICLES);
+        enemies.splice(i, 1);
+        killed += 1;
+        audio.play("enemy");
+        // Chance to drop a pickup on kill
+        if (pickups.length < MAX_PICKUPS && Math.random() < 0.18) {
+          pickups.push({
+            kind: Math.random() < 0.6 ? "health" : Math.random() < 0.5 ? "shield" : "rapid",
+            x: e.x,
+            y: e.y,
+            life: 10,
+            bob: 0,
+          });
+        }
+      }
+    }
+    return killed;
+  }
 
   function resize() {
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -278,6 +372,8 @@ export function createDestroyEngine(
     const hits = opts?.hits ?? cfg.hits;
     const timing = holeTiming(cfg);
     const destroyed = damageAt(x, y, radius, hits);
+    const enemyDmg = Math.max(1, hits + (rapidTimer > 0 ? 1 : 0));
+    const slain = hurtEnemiesAt(x, y, Math.max(18, radius || 16), enemyDmg);
 
     punchHole(x, y, {
       scale:
@@ -288,7 +384,7 @@ export function createDestroyEngine(
       hold: timing.hold,
     });
 
-    if (destroyed === 0) {
+    if (destroyed === 0 && slain === 0) {
       // Empty space — surface crater + sparks
       const sparkCount = reducedMotion ? 4 : 10;
       const crater = Math.max(8, radius * 0.35);
@@ -316,7 +412,7 @@ export function createDestroyEngine(
     }
 
     audio.play("hit");
-    return destroyed;
+    return destroyed + slain;
   }
 
   function boom(x: number, y: number, cfg: WeaponConfig) {
@@ -324,6 +420,7 @@ export function createDestroyEngine(
     const hits = cfg.hits;
     explosions.push({ x, y, life: 0.35, maxLife: 0.35 });
     const destroyed = damageAt(x, y, radius, hits);
+    hurtEnemiesAt(x, y, radius, Math.max(2, hits));
     scatterHoles(
       x,
       y,
@@ -356,15 +453,16 @@ export function createDestroyEngine(
   }
 
   function fire() {
-    if (paused || hidden || dragging) return;
+    if (paused || hidden || dragging || dead) return;
     const id = currentWeapon();
     const cfg = WEAPON_CONFIG[id];
     const aim = Math.atan2(pointer.y - character.y, pointer.x - character.x);
     const tx = pointer.x;
     const ty = pointer.y;
+    const liveBonus = rapidTimer > 0 ? 4 : 0;
 
     if (id === "blaster") {
-      if (countKind("blaster") >= cfg.maxLive) return;
+      if (countKind("blaster") >= cfg.maxLive + liveBonus) return;
       const speed = 1200;
       // Hole + destroy/surface at the aim point immediately.
       impactAt(tx, ty, cfg);
@@ -445,7 +543,7 @@ export function createDestroyEngine(
   }
 
   function beginDrag(clientX: number, clientY: number) {
-    if (paused) return;
+    if (paused || dead) return;
     dragging = true;
     dragOffset.x = clientX - character.x;
     dragOffset.y = clientY - character.y;
@@ -595,7 +693,7 @@ export function createDestroyEngine(
 
   function update(dt: number) {
     // WASD / arrows — the only non-drag way to reposition. Never chase the cursor.
-    if (!paused && !hidden && !dragging) {
+    if (!paused && !hidden && !dragging && !dead) {
       let mx = 0;
       let my = 0;
       if (moveKeys.left) mx -= 1;
@@ -701,6 +799,74 @@ export function createDestroyEngine(
       p.life -= dt;
       if (p.life <= 0) particles.splice(i, 1);
     }
+
+    // Player combat timers
+    if (hurtFlash > 0) hurtFlash -= dt;
+    if (hurtIFrames > 0) hurtIFrames -= dt;
+    knockX *= Math.max(0, 1 - dt * 10);
+    knockY *= Math.max(0, 1 - dt * 10);
+    if (shieldTimer > 0) shieldTimer = Math.max(0, shieldTimer - dt);
+    if (rapidTimer > 0) rapidTimer = Math.max(0, rapidTimer - dt);
+    if (shieldTimer > 0 || rapidTimer > 0) {
+      buffEmitTimer -= dt;
+      if (buffEmitTimer <= 0) {
+        emitBuffs();
+        buffEmitTimer = 0.25;
+      }
+    } else if (buffEmitTimer !== 0) {
+      buffEmitTimer = 0;
+      emitBuffs();
+    }
+
+    // Random enemy waves from the edges
+    enemySpawnTimer -= dt;
+    if (enemySpawnTimer <= 0 && enemies.length < MAX_ENEMIES) {
+      const burst = reducedMotion ? 1 : 1 + (Math.random() < 0.35 ? 1 : 0);
+      for (let i = 0; i < burst && enemies.length < MAX_ENEMIES; i++) {
+        enemies.push(
+          spawnEnemyAtEdge(window.innerWidth, window.innerHeight),
+        );
+      }
+      enemySpawnTimer = 0.9 + Math.random() * 2.4;
+    }
+
+    for (let i = enemies.length - 1; i >= 0; i--) {
+      const e = enemies[i];
+      steerEnemyToward(e, character.x, character.y, dt);
+      const dist = Math.hypot(e.x - character.x, e.y - character.y);
+      if (dist < CHAR_HIT_R + e.radius * 0.7) {
+        takeDamage(e.damage, e.x, e.y);
+      }
+    }
+
+    // Power-ups / health reups
+    pickupSpawnTimer -= dt;
+    if (pickupSpawnTimer <= 0 && pickups.length < MAX_PICKUPS) {
+      pickups.push(spawnPickupRandom(window.innerWidth, window.innerHeight));
+      pickupSpawnTimer = 4.5 + Math.random() * 5.5;
+    }
+
+    for (let i = pickups.length - 1; i >= 0; i--) {
+      const p = pickups[i];
+      p.bob += dt * 4;
+      p.life -= dt;
+      if (p.life <= 0) {
+        pickups.splice(i, 1);
+        continue;
+      }
+      if (Math.hypot(p.x - character.x, p.y - character.y) < 26) {
+        if (p.kind === "health") heal(28);
+        else if (p.kind === "shield") {
+          shieldTimer = Math.max(shieldTimer, 4.5);
+          emitBuffs();
+        } else {
+          rapidTimer = Math.max(rapidTimer, 5.5);
+          emitBuffs();
+        }
+        audio.play("pickup");
+        pickups.splice(i, 1);
+      }
+    }
   }
 
   function draw() {
@@ -718,6 +884,9 @@ export function createDestroyEngine(
       drawExplosion(ctx, e.x, e.y, e.life, e.maxLife, atlas);
     }
 
+    for (const p of pickups) drawPickup(ctx, p);
+    for (const e of enemies) drawPixelEnemy(ctx, e);
+
     for (const p of projectiles) {
       if (p.kind === "blaster") {
         drawBlasterBolt(ctx, p.x, p.y, Math.atan2(p.vy, p.vx), atlas);
@@ -734,7 +903,12 @@ export function createDestroyEngine(
     }
 
     const aim = Math.atan2(pointer.y - character.y, pointer.x - character.x);
-    drawCharacter(ctx, character.x, character.y, facing, aim, walkPhase, atlas);
+    drawCharacter(ctx, character.x, character.y, facing, aim, walkPhase, atlas, {
+      hurtFlash,
+      shielded: shieldTimer > 0,
+      knockX,
+      knockY,
+    });
   }
 
   function frame(ts: number) {
@@ -794,6 +968,8 @@ export function createDestroyEngine(
     zapArcs.length = 0;
     explosions.length = 0;
     particles = [];
+    enemies.length = 0;
+    pickups.length = 0;
   }
 
   function clearHoles() {
@@ -804,6 +980,18 @@ export function createDestroyEngine(
     clearFx();
     clearHoles();
     targets.restoreAll();
+    health = PLAYER_MAX_HP;
+    dead = false;
+    hurtFlash = 0;
+    hurtIFrames = 0;
+    knockX = 0;
+    knockY = 0;
+    shieldTimer = 0;
+    rapidTimer = 0;
+    enemySpawnTimer = 1.4;
+    pickupSpawnTimer = 4;
+    emitHealth();
+    emitBuffs();
     audio.play("ui");
   }
 
@@ -817,10 +1005,14 @@ export function createDestroyEngine(
     ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
   }
 
+  emitHealth();
+
   return {
     start,
     stop,
     setPaused(next) {
+      // Don't unpause while dead unless repair revived the player.
+      if (!next && dead) return;
       paused = next;
       if (next) {
         dragging = false;
@@ -835,6 +1027,7 @@ export function createDestroyEngine(
     isMuted: () => audio.isMuted(),
     setWeapon,
     getWeaponIndex: () => weaponIndex,
+    getHealth: () => ({ health, maxHealth: PLAYER_MAX_HP }),
     repair,
     destroy,
   };
