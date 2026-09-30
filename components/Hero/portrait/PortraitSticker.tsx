@@ -82,6 +82,10 @@ const IDLE_SLEEP_MS = 11000;
 const BOUNDS_MARGIN = 16;
 /** Dropping within this fraction of the sticker's width from home snaps it back. */
 const SNAP_HOME = 0.45;
+/** Off the hero the sticker shrinks to this fraction of its hero size. */
+const AWAY_RATIO = 0.7;
+const AWAY_MIN_WIDTH = 170;
+const CARRY_SCALE = 1.1;
 
 type Mode = "home" | "lifting" | "carrying" | "moving" | "placed";
 
@@ -389,6 +393,8 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
     let trackEyes = true;
     let hovered = false;
     let lidRest = 0;
+    /** 0 awake, 1 looking around, 2 dozing. */
+    let idleStage = 0;
 
     const reduced = prefersReducedMotion();
     reducedRef.current = reduced;
@@ -716,7 +722,7 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
     let blinkTimer = 0;
     const scheduleBlink = () => {
       blinkTimer = window.setTimeout(() => {
-        blink();
+        if (idleStage < 2) blink();
         scheduleBlink();
       }, 2600 + Math.random() * 3400);
     };
@@ -805,7 +811,6 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
 
     // ── Idle: look around, then yawn and doze off until the pointer moves ──
     let lastActive = performance.now();
-    let idleStage = 0;
     let idleTl: gsap.core.Timeline | null = null;
     let lastSnore = 0;
 
@@ -822,16 +827,18 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
         .to(faceGroups.map((g) => g.el), { x: 0, duration: 0.35 }, "<");
     };
 
+    // Yawn, then settle into heavy eyelids.
     const doze = () => {
       trackEyes = false;
+      lidRest = 0.62;
       idleTl = gsap
         .timeline()
         .to(pupils, { x: 0, y: 2, duration: 0.4 })
         .to(mouth, { scaleX: 0.85, scaleY: 2.3, duration: 0.8, ease: "sine.inOut" }, 0)
-        .to(lids, { scaleY: 0.6, duration: 0.8, ease: "sine.inOut" }, 0)
+        .to(lids, { scaleY: 0.85, duration: 0.8, ease: "sine.inOut" }, 0)
         .to(brows, { y: 3, duration: 0.8 }, 0)
         .to(mouth, { scaleX: 1, scaleY: 1, duration: 0.6, ease: "sine.inOut" }, "+=0.7")
-        .add(() => setLids(0.62, 0.6));
+        .to(lids, { scaleY: lidRest, duration: 0.6, ease: "sine.inOut" }, "<");
     };
 
     const wake = () => {
@@ -876,18 +883,23 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
     const headerHeight = () => document.querySelector("header")?.offsetHeight ?? 0;
     const stickerWidth = () => sticker.offsetWidth;
 
+    const awayWidth = () =>
+      Math.max(AWAY_MIN_WIDTH, slot.offsetWidth * AWAY_RATIO);
+
     /** Page coords for the sticker's top-left, kept inside the on-screen bounds. */
     const boundedTarget = (clientX: number, clientY: number) => {
       const w = stickerWidth();
+      // Room for the lift scale, which grows the sticker around its centre.
+      const inset = BOUNDS_MARGIN + (w * (CARRY_SCALE - 1)) / 2;
       const left = clamp(
         clientX - grab.x,
-        BOUNDS_MARGIN,
-        window.innerWidth - w - BOUNDS_MARGIN,
+        inset,
+        window.innerWidth - w - inset,
       );
       const top = clamp(
         clientY - grab.y,
-        headerHeight() + BOUNDS_MARGIN,
-        window.innerHeight - w - BOUNDS_MARGIN,
+        headerHeight() + inset,
+        window.innerHeight - w - inset,
       );
       return { x: left + window.scrollX, y: top + window.scrollY };
     };
@@ -907,7 +919,7 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
     };
 
     const toSlot = () => {
-      gsap.killTweensOf(sticker, "x,y,rotation,scale");
+      gsap.killTweensOf(sticker, "x,y,rotation,scale,width");
       if (sticker.parentElement !== slot) slot.appendChild(sticker);
       sticker.style.width = "";
       gsap.set(sticker, { x: 0, y: 0, rotation: 0, scale: 1 });
@@ -978,9 +990,16 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
         .timeline({
           onComplete: () => {
             peel.reset();
+            const wasHome = sticker.parentElement !== layer;
             toLayer();
             sticker.classList.add(styles.carried);
             setCarrying(true);
+            if (wasHome) {
+              const from = sticker.offsetWidth;
+              const to = awayWidth();
+              grab = { x: (grab.x * to) / from, y: (grab.y * to) / from };
+              gsap.to(sticker, { width: to, duration: 0.3, ease: "power3.out" });
+            }
             follow = {
               x: gsap.quickTo(sticker, "x", { duration: 0.3, ease: "power3.out" }),
               y: gsap.quickTo(sticker, "y", { duration: 0.3, ease: "power3.out" }),
@@ -988,7 +1007,12 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
             const target = boundedTarget(lastClient.x, lastClient.y);
             follow.x(target.x);
             follow.y(target.y);
-            gsap.to(sticker, { scale: 1.1, rotation: -6, duration: 0.3, ease: "back.out(2)" });
+            gsap.to(sticker, {
+              scale: CARRY_SCALE,
+              rotation: -6,
+              duration: 0.3,
+              ease: "back.out(2)",
+            });
             modeRef.current = "carrying";
             busyRef.current = false;
           },
@@ -1016,6 +1040,7 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
         .to(sticker, {
           x: home.x,
           y: home.y,
+          width: home.w,
           rotation: 0,
           scale: 1,
           duration: 0.55,
@@ -1104,7 +1129,8 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
     };
 
     const onKey = (event: globalThis.KeyboardEvent) => {
-      if (event.key === "Escape" && modeRef.current === "carrying") goHome();
+      if (event.key !== "Escape") return;
+      if (modeRef.current === "carrying" || modeRef.current === "placed") goHome();
     };
 
     const onPointerMove = (event: PointerEvent) => {
