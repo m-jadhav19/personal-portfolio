@@ -35,6 +35,11 @@ export function DestroySiteSimulator({ onExit }: DestroySiteSimulatorProps) {
   const [health, setHealth] = useState(100);
   const [maxHealth, setMaxHealth] = useState(100);
   const [buffs, setBuffs] = useState({ shield: 0, rapid: 0 });
+  const [boss, setBoss] = useState<{
+    hp: number;
+    maxHp: number;
+    alive: boolean;
+  } | null>(null);
 
   const leaveMode = useCallback(() => {
     // Soft-restore + teardown happen in the mount effect cleanup.
@@ -77,6 +82,7 @@ export function DestroySiteSimulator({ onExit }: DestroySiteSimulatorProps) {
         setMaxHealth(max);
       },
       onBuffChange: (next) => setBuffs(next),
+      onBossChange: (next) => setBoss(next),
       onDeath: () => {
         setDead(true);
         setPaused(true);
@@ -142,6 +148,10 @@ export function DestroySiteSimulator({ onExit }: DestroySiteSimulatorProps) {
   };
 
   const healthPct = Math.max(0, Math.min(100, (health / maxHealth) * 100));
+  const bossPct =
+    boss && boss.maxHp > 0
+      ? Math.max(0, Math.min(100, (boss.hp / boss.maxHp) * 100))
+      : 0;
 
   return (
     <div className={`${styles.root} ${shaking ? styles.shake : ""}`}>
@@ -150,6 +160,30 @@ export function DestroySiteSimulator({ onExit }: DestroySiteSimulatorProps) {
         className={styles.canvas}
         aria-hidden="true"
       />
+
+      {boss?.alive ? (
+        <div
+          className={styles.bossBar}
+          data-destroy-ignore
+          data-cursor="hide"
+          aria-label={`Portrait boss health ${Math.round(boss.hp)} of ${boss.maxHp}`}
+        >
+          <div className={styles.bossBarLabel}>
+            <span>PORTRAIT BOSS</span>
+            <span>
+              {Math.ceil(boss.hp)}/{boss.maxHp}
+            </span>
+          </div>
+          <div className={styles.bossBarTrack}>
+            <div
+              className={`${styles.bossBarFill} ${
+                bossPct < 30 ? styles.bossBarFillLow : ""
+              }`}
+              style={{ width: `${bossPct}%` }}
+            />
+          </div>
+        </div>
+      ) : null}
 
       <header
         className={styles.hud}

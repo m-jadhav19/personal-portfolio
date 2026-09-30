@@ -1,5 +1,15 @@
 import { createDestroyAudio } from "./audio";
 import {
+  createPortraitBoss,
+  drawBossShot,
+  drawPortraitBoss,
+  hurtBoss,
+  loadBossPortrait,
+  updatePortraitBoss,
+  type BossProjectile,
+  type PortraitBoss,
+} from "./boss";
+import {
   PLAYER_MAX_HP,
   drawPickup,
   drawPixelEnemy,
@@ -89,6 +99,7 @@ export type DestroyEngineOptions = {
   onShake?: (magnitude: number) => void;
   onHealthChange?: (health: number, maxHealth: number) => void;
   onBuffChange?: (buffs: { shield: number; rapid: number }) => void;
+  onBossChange?: (boss: { hp: number; maxHp: number; alive: boolean } | null) => void;
   onDeath?: () => void;
 };
 
@@ -167,6 +178,15 @@ export function createDestroyEngine(
   let particles: DebrisParticle[] = [];
   const enemies: Enemy[] = [];
   const pickups: Pickup[] = [];
+  const bossShots: BossProjectile[] = [];
+  let boss: PortraitBoss | null = null;
+  const bossPortrait = loadBossPortrait();
+  let portraitDomHidden: HTMLElement | null = null;
+  let portraitDomPrev = {
+    visibility: "",
+    opacity: "",
+    pointerEvents: "",
+  };
 
   let health = PLAYER_MAX_HP;
   let hurtFlash = 0;
@@ -178,6 +198,7 @@ export function createDestroyEngine(
   let enemySpawnTimer = 1.2;
   let pickupSpawnTimer = 5;
   let buffEmitTimer = 0;
+  let bossEmitTimer = 0;
   let dead = false;
 
   function emitHealth() {
@@ -186,6 +207,46 @@ export function createDestroyEngine(
 
   function emitBuffs() {
     options.onBuffChange?.({ shield: shieldTimer, rapid: rapidTimer });
+  }
+
+  function emitBoss() {
+    if (!boss || !boss.alive) {
+      options.onBossChange?.(boss ? { hp: 0, maxHp: boss.maxHp, alive: false } : null);
+      return;
+    }
+    options.onBossChange?.({
+      hp: boss.hp,
+      maxHp: boss.maxHp,
+      alive: true,
+    });
+  }
+
+  function hidePortraitDom() {
+    const el = document.querySelector<HTMLElement>("[data-intro='portrait']");
+    if (!el || portraitDomHidden) return;
+    portraitDomHidden = el;
+    portraitDomPrev = {
+      visibility: el.style.visibility,
+      opacity: el.style.opacity,
+      pointerEvents: el.style.pointerEvents,
+    };
+    el.style.opacity = "0";
+    el.style.visibility = "hidden";
+    el.style.pointerEvents = "none";
+  }
+
+  function restorePortraitDom() {
+    if (!portraitDomHidden) return;
+    portraitDomHidden.style.visibility = portraitDomPrev.visibility;
+    portraitDomHidden.style.opacity = portraitDomPrev.opacity;
+    portraitDomHidden.style.pointerEvents = portraitDomPrev.pointerEvents;
+    portraitDomHidden = null;
+  }
+
+  function spawnBoss() {
+    boss = createPortraitBoss(window.innerWidth, window.innerHeight);
+    hidePortraitDom();
+    emitBoss();
   }
 
   function takeDamage(amount: number, fromX: number, fromY: number) {
@@ -237,6 +298,40 @@ export function createDestroyEngine(
             life: 10,
             bob: 0,
           });
+        }
+      }
+    }
+
+    if (boss?.alive) {
+      if (Math.hypot(boss.x - x, boss.y - y) <= radius + boss.radius) {
+        const result = hurtBoss(boss, Math.max(1, damage));
+        if (result.hit) {
+          audio.play("hit");
+          emitBoss();
+        }
+        if (result.killed) {
+          killed += 1;
+          explosions.push({ x: boss.x, y: boss.y, life: 0.55, maxLife: 0.55 });
+          const bits = spawnDebris(
+            { left: boss.x - 30, top: boss.y - 30, width: 60, height: 60 },
+            reducedMotion ? 10 : 28,
+            ["#fdba74", "#38bdf8", "#f97316", "#fde047", "#c084fc"],
+          );
+          particles = particles.concat(bits).slice(-MAX_PARTICLES);
+          audio.play("boom");
+          options.onShake?.(1);
+          // Boss loot shower
+          for (const kind of ["health", "shield", "rapid"] as const) {
+            if (pickups.length >= MAX_PICKUPS) break;
+            pickups.push({
+              kind,
+              x: boss.x + (Math.random() * 40 - 20),
+              y: boss.y + (Math.random() * 40 - 20),
+              life: 14,
+              bob: Math.random() * 4,
+            });
+          }
+          emitBoss();
         }
       }
     }
@@ -867,6 +962,51 @@ export function createDestroyEngine(
         pickups.splice(i, 1);
       }
     }
+
+    // Portrait boss — floats, charges, and volleys ink shots
+    if (boss?.alive) {
+      const newShots = updatePortraitBoss(
+        boss,
+        dt,
+        character,
+        window.innerWidth,
+        window.innerHeight,
+        reducedMotion,
+      );
+      for (const shot of newShots) {
+        bossShots.push(shot);
+        if (newShots.length && shot === newShots[0]) audio.play("vortex");
+      }
+      if (Math.hypot(boss.x - character.x, boss.y - character.y) < CHAR_HIT_R + boss.radius * 0.55) {
+        takeDamage(boss.damage, boss.x, boss.y);
+      }
+      bossEmitTimer -= dt;
+      if (bossEmitTimer <= 0) {
+        emitBoss();
+        bossEmitTimer = 0.2;
+      }
+    }
+
+    for (let i = bossShots.length - 1; i >= 0; i--) {
+      const s = bossShots[i];
+      s.x += s.vx * dt;
+      s.y += s.vy * dt;
+      s.life -= dt;
+      if (Math.hypot(s.x - character.x, s.y - character.y) < CHAR_HIT_R + 6) {
+        takeDamage(10, s.x, s.y);
+        bossShots.splice(i, 1);
+        continue;
+      }
+      if (
+        s.life <= 0 ||
+        s.x < -40 ||
+        s.y < -40 ||
+        s.x > window.innerWidth + 40 ||
+        s.y > window.innerHeight + 40
+      ) {
+        bossShots.splice(i, 1);
+      }
+    }
   }
 
   function draw() {
@@ -886,6 +1026,8 @@ export function createDestroyEngine(
 
     for (const p of pickups) drawPickup(ctx, p);
     for (const e of enemies) drawPixelEnemy(ctx, e);
+    if (boss) drawPortraitBoss(ctx, boss, bossPortrait);
+    for (const s of bossShots) drawBossShot(ctx, s);
 
     for (const p of projectiles) {
       if (p.kind === "blaster") {
@@ -930,6 +1072,7 @@ export function createDestroyEngine(
     running = true;
     resize();
     clampCharacter(character.x, character.y);
+    spawnBoss();
     lastTs = performance.now();
     window.addEventListener("pointermove", onPointerMove);
     window.addEventListener("pointerdown", onPointerDown);
@@ -970,6 +1113,7 @@ export function createDestroyEngine(
     particles = [];
     enemies.length = 0;
     pickups.length = 0;
+    bossShots.length = 0;
   }
 
   function clearHoles() {
@@ -980,6 +1124,7 @@ export function createDestroyEngine(
     clearFx();
     clearHoles();
     targets.restoreAll();
+    restorePortraitDom();
     health = PLAYER_MAX_HP;
     dead = false;
     hurtFlash = 0;
@@ -990,6 +1135,7 @@ export function createDestroyEngine(
     rapidTimer = 0;
     enemySpawnTimer = 1.4;
     pickupSpawnTimer = 4;
+    spawnBoss();
     emitHealth();
     emitBuffs();
     audio.play("ui");
@@ -999,6 +1145,8 @@ export function createDestroyEngine(
     stop();
     clearFx();
     clearHoles();
+    restorePortraitDom();
+    boss = null;
     // Instant restore + clear pending rebuild timers (no flash on unmount).
     targets.dispose();
     audio.dispose();
