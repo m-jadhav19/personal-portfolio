@@ -1725,6 +1725,7 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
         <div
           ref={stickerRef}
           className={styles.sticker}
+          data-destroy-portrait="sticker"
           style={maskVars}
           onPointerEnter={onStickerPointerEnter}
           onPointerMove={onStickerPointerMove}

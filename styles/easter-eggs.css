@@ -87,13 +87,10 @@ html[data-easter-egg="destroy"] [data-destroy-target] {
 
 /* Portrait just watches the destroy character — no peel / poke / destroy hits. */
 html[data-easter-egg="destroy"] [data-intro="portrait"],
-html[data-easter-egg="destroy"] [data-intro="portrait"] * {
+html[data-easter-egg="destroy"] [data-intro="portrait"] *,
+html[data-easter-egg="destroy"] [data-destroy-portrait="sticker"],
+html[data-easter-egg="destroy"] [data-destroy-portrait="sticker"] * {
   pointer-events: none !important;
-}
-
-html[data-easter-egg="destroy"] [data-intro="portrait"][data-mogambo-reveal="true"] {
-  will-change: transform, filter, opacity;
-  transition: none !important;
 }
 
 html[data-easter-egg="broken-ux"] * {
