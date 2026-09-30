@@ -32,10 +32,11 @@ export type PortraitBoss = {
 export function createPortraitBoss(
   width: number,
   height: number,
+  origin?: { x: number; y: number },
 ): PortraitBoss {
   return {
-    x: width * 0.62,
-    y: height * 0.42,
+    x: origin?.x ?? width * 0.62,
+    y: origin?.y ?? height * 0.42,
     hp: BOSS_MAX_HP,
     maxHp: BOSS_MAX_HP,
     phase: 0,

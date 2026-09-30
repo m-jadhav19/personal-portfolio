@@ -10,6 +10,9 @@ import {
   type PortraitBoss,
 } from "./boss";
 import {
+  BOSS_SCORE_THRESHOLD,
+  DOM_DESTROY_SCORE,
+  ENEMY_SCORE,
   PLAYER_MAX_HP,
   drawPickup,
   drawPixelEnemy,
@@ -99,6 +102,7 @@ export type DestroyEngineOptions = {
   onShake?: (magnitude: number) => void;
   onHealthChange?: (health: number, maxHealth: number) => void;
   onBuffChange?: (buffs: { shield: number; rapid: number }) => void;
+  onScoreChange?: (score: number, threshold: number, bossSummoned: boolean) => void;
   onBossChange?: (boss: { hp: number; maxHp: number; alive: boolean } | null) => void;
   onDeath?: () => void;
 };
@@ -113,6 +117,7 @@ export type DestroyEngine = {
   setWeapon: (index: number) => void;
   getWeaponIndex: () => number;
   getHealth: () => { health: number; maxHealth: number };
+  getScore: () => { score: number; threshold: number; bossSummoned: boolean };
   repair: () => void;
   destroy: () => void;
 };
@@ -189,6 +194,8 @@ export function createDestroyEngine(
   };
 
   let health = PLAYER_MAX_HP;
+  let score = 0;
+  let bossSummoned = false;
   let hurtFlash = 0;
   let hurtIFrames = 0;
   let knockX = 0;
@@ -209,6 +216,10 @@ export function createDestroyEngine(
     options.onBuffChange?.({ shield: shieldTimer, rapid: rapidTimer });
   }
 
+  function emitScore() {
+    options.onScoreChange?.(score, BOSS_SCORE_THRESHOLD, bossSummoned);
+  }
+
   function emitBoss() {
     if (!boss || !boss.alive) {
       options.onBossChange?.(boss ? { hp: 0, maxHp: boss.maxHp, alive: false } : null);
@@ -219,6 +230,17 @@ export function createDestroyEngine(
       maxHp: boss.maxHp,
       alive: true,
     });
+  }
+
+  function portraitOrigin() {
+    const el = document.querySelector<HTMLElement>("[data-intro='portrait']");
+    if (!el) return undefined;
+    const rect = el.getBoundingClientRect();
+    if (rect.width < 8 || rect.height < 8) return undefined;
+    return {
+      x: rect.left + rect.width / 2,
+      y: rect.top + rect.height / 2,
+    };
   }
 
   function hidePortraitDom() {
@@ -244,10 +266,30 @@ export function createDestroyEngine(
   }
 
   function spawnBoss() {
-    boss = createPortraitBoss(window.innerWidth, window.innerHeight);
+    if (bossSummoned) return;
+    bossSummoned = true;
+    boss = createPortraitBoss(
+      window.innerWidth,
+      window.innerHeight,
+      portraitOrigin(),
+    );
     hidePortraitDom();
     audio.play("bossIntro");
+    options.onShake?.(0.85);
     emitBoss();
+    emitScore();
+  }
+
+  function maybeSummonBoss() {
+    if (bossSummoned || dead || paused) return;
+    if (score >= BOSS_SCORE_THRESHOLD) spawnBoss();
+  }
+
+  function addScore(points: number) {
+    if (points <= 0 || dead) return;
+    score += points;
+    emitScore();
+    maybeSummonBoss();
   }
 
   function takeDamage(amount: number, fromX: number, fromY: number) {
@@ -289,6 +331,7 @@ export function createDestroyEngine(
         particles = particles.concat(bits).slice(-MAX_PARTICLES);
         enemies.splice(i, 1);
         killed += 1;
+        addScore(ENEMY_SCORE[e.kind]);
         audio.play("enemy");
         // Chance to drop a pickup on kill
         if (pickups.length < MAX_PICKUPS && Math.random() < 0.18) {
@@ -312,6 +355,7 @@ export function createDestroyEngine(
         }
         if (result.killed) {
           killed += 1;
+          addScore(500);
           explosions.push({ x: boss.x, y: boss.y, life: 0.55, maxLife: 0.55 });
           const bits = spawnDebris(
             { left: boss.x - 30, top: boss.y - 30, width: 60, height: 60 },
@@ -453,6 +497,9 @@ export function createDestroyEngine(
     for (const d of damaged) {
       const next = spawnDebris(d.box, particleBudget);
       particles = particles.concat(next).slice(-MAX_PARTICLES);
+    }
+    if (damaged.length > 0) {
+      addScore(damaged.length * DOM_DESTROY_SCORE);
     }
     return damaged.length;
   }
@@ -1073,7 +1120,8 @@ export function createDestroyEngine(
     running = true;
     resize();
     clampCharacter(character.x, character.y);
-    spawnBoss();
+    emitScore();
+    emitBoss();
     lastTs = performance.now();
     window.addEventListener("pointermove", onPointerMove);
     window.addEventListener("pointerdown", onPointerDown);
@@ -1127,6 +1175,9 @@ export function createDestroyEngine(
     targets.restoreAll();
     restorePortraitDom();
     health = PLAYER_MAX_HP;
+    score = 0;
+    bossSummoned = false;
+    boss = null;
     dead = false;
     hurtFlash = 0;
     hurtIFrames = 0;
@@ -1136,9 +1187,10 @@ export function createDestroyEngine(
     rapidTimer = 0;
     enemySpawnTimer = 1.4;
     pickupSpawnTimer = 4;
-    spawnBoss();
     emitHealth();
     emitBuffs();
+    emitScore();
+    emitBoss();
     audio.play("ui");
   }
 
@@ -1148,6 +1200,8 @@ export function createDestroyEngine(
     clearHoles();
     restorePortraitDom();
     boss = null;
+    bossSummoned = false;
+    score = 0;
     // Instant restore + clear pending rebuild timers (no flash on unmount).
     targets.dispose();
     audio.dispose();
@@ -1177,6 +1231,7 @@ export function createDestroyEngine(
     setWeapon,
     getWeaponIndex: () => weaponIndex,
     getHealth: () => ({ health, maxHealth: PLAYER_MAX_HP }),
+    getScore: () => ({ score, threshold: BOSS_SCORE_THRESHOLD, bossSummoned }),
     repair,
     destroy,
   };

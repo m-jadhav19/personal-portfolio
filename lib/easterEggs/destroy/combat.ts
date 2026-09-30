@@ -27,6 +27,17 @@ export type Pickup = {
 
 export const PLAYER_MAX_HP = 100;
 
+/** Points needed before Mogambo lifts out of the portrait. */
+export const BOSS_SCORE_THRESHOLD = 1000;
+
+export const ENEMY_SCORE: Record<EnemyKind, number> = {
+  roach: 100,
+  drone: 175,
+  slime: 250,
+};
+
+export const DOM_DESTROY_SCORE = 25;
+
 export const ENEMY_STATS: Record<
   EnemyKind,
   { hp: number; damage: number; speed: number; radius: number }

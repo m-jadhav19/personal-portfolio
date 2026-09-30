@@ -2,6 +2,9 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  BOSS_SCORE_THRESHOLD,
+  DOM_DESTROY_SCORE,
+  ENEMY_SCORE,
   ENEMY_STATS,
   PLAYER_MAX_HP,
   randomEnemyKind,
@@ -12,6 +15,15 @@ import {
 
 test("PLAYER_MAX_HP is a positive pool", () => {
   assert.ok(PLAYER_MAX_HP >= 50);
+});
+
+test("boss score threshold is reachable via enemy kills", () => {
+  assert.ok(BOSS_SCORE_THRESHOLD >= 500);
+  assert.ok(ENEMY_SCORE.roach > 0);
+  assert.ok(ENEMY_SCORE.slime >= ENEMY_SCORE.roach);
+  assert.ok(DOM_DESTROY_SCORE > 0);
+  const killsNeeded = Math.ceil(BOSS_SCORE_THRESHOLD / ENEMY_SCORE.roach);
+  assert.ok(killsNeeded <= 15);
 });
 
 test("spawnEnemyAtEdge places foes outside the viewport", () => {

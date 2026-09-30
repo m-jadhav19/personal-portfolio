@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { BOSS_NAME } from "@/lib/easterEggs/destroy/boss";
+import { BOSS_SCORE_THRESHOLD } from "@/lib/easterEggs/destroy/combat";
 import { createDestroyEngine, type DestroyEngine } from "@/lib/easterEggs/destroy/engine";
 import {
   WEAPON_ICON_SRC,
@@ -35,6 +36,9 @@ export function DestroySiteSimulator({ onExit }: DestroySiteSimulatorProps) {
   const [shaking, setShaking] = useState(false);
   const [health, setHealth] = useState(100);
   const [maxHealth, setMaxHealth] = useState(100);
+  const [score, setScore] = useState(0);
+  const [scoreThreshold, setScoreThreshold] = useState(BOSS_SCORE_THRESHOLD);
+  const [bossSummoned, setBossSummoned] = useState(false);
   const [buffs, setBuffs] = useState({ shield: 0, rapid: 0 });
   const [boss, setBoss] = useState<{
     hp: number;
@@ -81,6 +85,11 @@ export function DestroySiteSimulator({ onExit }: DestroySiteSimulatorProps) {
       onHealthChange: (hp, max) => {
         setHealth(hp);
         setMaxHealth(max);
+      },
+      onScoreChange: (nextScore, threshold, summoned) => {
+        setScore(nextScore);
+        setScoreThreshold(threshold);
+        setBossSummoned(summoned);
       },
       onBuffChange: (next) => setBuffs(next),
       onBossChange: (next) => setBoss(next),
@@ -145,10 +154,17 @@ export function DestroySiteSimulator({ onExit }: DestroySiteSimulatorProps) {
     engineRef.current?.repair();
     setDead(false);
     setPaused(false);
+    setScore(0);
+    setBossSummoned(false);
+    setBoss(null);
     engineRef.current?.setPaused(false);
   };
 
   const healthPct = Math.max(0, Math.min(100, (health / maxHealth) * 100));
+  const scorePct = Math.max(
+    0,
+    Math.min(100, (score / Math.max(1, scoreThreshold)) * 100),
+  );
   const bossPct =
     boss && boss.maxHp > 0
       ? Math.max(0, Math.min(100, (boss.hp / boss.maxHp) * 100))
@@ -227,6 +243,34 @@ export function DestroySiteSimulator({ onExit }: DestroySiteSimulatorProps) {
           </div>
         </div>
 
+        <div
+          className={styles.scoreBlock}
+          aria-label={
+            bossSummoned
+              ? `Score ${score}`
+              : `Score ${score} of ${scoreThreshold} until ${BOSS_NAME}`
+          }
+        >
+          <div className={styles.healthLabelRow}>
+            <span>SCORE</span>
+            <span>
+              {bossSummoned
+                ? score
+                : `${Math.min(score, scoreThreshold)}/${scoreThreshold}`}
+            </span>
+          </div>
+          {!bossSummoned ? (
+            <div className={styles.scoreTrack}>
+              <div
+                className={styles.scoreFill}
+                style={{ width: `${scorePct}%` }}
+              />
+            </div>
+          ) : (
+            <p className={styles.scoreHint}>{BOSS_NAME.toUpperCase()}</p>
+          )}
+        </div>
+
         <div className={styles.weapons} role="group" aria-label="Weapons">
           {WEAPONS.map((id: WeaponId, index) => (
             <button
@@ -294,8 +338,10 @@ export function DestroySiteSimulator({ onExit }: DestroySiteSimulatorProps) {
             </h2>
             <p className={styles.pauseSub}>
               {dead
-                ? "Repair restores the page and revives you. Enemies keep coming — grab health and power-ups."
-                : "Repair restores the page in place. Leave mode exits without a reload. Exit hard-resets the site."}
+                ? "Repair restores the page, resets score, and revives you. Reach the score threshold to wake Mogambo."
+                : bossSummoned
+                  ? "Mogambo is loose. Repair restores the page and resets score. Leave mode exits without a reload."
+                  : `Rack up ${scoreThreshold} points to pull Mogambo from the portrait. Repair restores the page in place.`}
             </p>
             <div className={styles.pauseActions}>
               {!dead ? (
