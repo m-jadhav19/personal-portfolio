@@ -116,6 +116,16 @@
   white-space: nowrap;
 }
 
+@media (max-width: 640px) {
+  .boundsLabel {
+    width: max-content;
+    max-width: calc(100% - 24px);
+    white-space: normal;
+    text-align: center;
+    line-height: 1.5;
+  }
+}
+
 @keyframes bounds-in {
   from {
     opacity: 0;

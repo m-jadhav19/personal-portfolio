@@ -11,6 +11,7 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 
+import { scrollByDelta } from "@/lib/lenis";
 import { StickerPeel } from "@/lib/sticker";
 
 import {
@@ -86,8 +87,16 @@ const SNAP_HOME = 0.45;
 const AWAY_RATIO = 0.7;
 const AWAY_MIN_WIDTH = 170;
 const CARRY_SCALE = 1.1;
+/** Touch: hold this long without moving to peel the sticker off. */
+const LONG_PRESS_MS = 380;
+const PRESS_SLOP = 10;
+const HOLD_HINT = "hold to peel me off";
+/** Touch-carrying near the top/bottom edge scrolls the page this fast (px per frame). */
+const EDGE_SCROLL_ZONE = 72;
+const EDGE_SCROLL_SPEED = 14;
 
 type Mode = "home" | "lifting" | "carrying" | "moving" | "placed";
+type CarryInput = "mouse" | "touch";
 
 function silhouetteMask(transform = "") {
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${CROP.x} ${CROP.y} ${CROP.size} ${CROP.size}"><g transform="${transform}"><path fill="#000" d="${PATH.base}"/></g></svg>`;
@@ -195,7 +204,7 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
   const hitsRef = useRef<number[]>([]);
 
   const [hint, setHint] = useState<string | null>(null);
-  const [carrying, setCarrying] = useState(false);
+  const [carrying, setCarrying] = useState<CarryInput | null>(null);
   const [away, setAway] = useState(false);
 
   const maskVars = useMemo(() => {
@@ -879,6 +888,17 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
     let lastMoveAt = 0;
     let follow: { x: gsap.QuickToFunc; y: gsap.QuickToFunc } | null = null;
     let swallowClick = false;
+    // Touch: a long press peels it off, dragging carries it, lifting the finger sticks it.
+    let press: { id: number; x: number; y: number; timer: number } | null = null;
+    let touchCarry: {
+      id: number;
+      x: number;
+      y: number;
+      moved: boolean;
+      dropAt: { x: number; y: number } | null;
+    } | null = null;
+    let edgeRaf = 0;
+    let hintTimer = 0;
 
     const headerHeight = () => document.querySelector("header")?.offsetHeight ?? 0;
     const stickerWidth = () => sticker.offsetWidth;
@@ -929,7 +949,7 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
     const endCarry = () => {
       follow = null;
       sticker.classList.remove(styles.carried);
-      setCarrying(false);
+      setCarrying(null);
     };
 
     const whee = () => {
@@ -944,7 +964,7 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
       gsap.to(pupils, { scale: 1, duration: 0.3 });
     };
 
-    const pickup = (clientX: number, clientY: number) => {
+    const pickup = (clientX: number, clientY: number, input: CarryInput = "mouse") => {
       const peel = peelRef.current;
       if (!peel) return;
       wake();
@@ -993,7 +1013,7 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
             const wasHome = sticker.parentElement !== layer;
             toLayer();
             sticker.classList.add(styles.carried);
-            setCarrying(true);
+            setCarrying(input);
             if (wasHome) {
               const from = sticker.offsetWidth;
               const to = awayWidth();
@@ -1015,6 +1035,14 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
             });
             modeRef.current = "carrying";
             busyRef.current = false;
+            // The finger may already have lifted mid-peel after dragging.
+            const drop = touchCarry?.dropAt;
+            if (drop) {
+              touchCarry = null;
+              place(drop.x, drop.y);
+            } else if (touchCarry) {
+              startEdgeScroll();
+            }
           },
         })
         .to(lift, { depth: size * 0.3, duration: 0.2, ease: "power2.out", onUpdate: applyLift });
@@ -1105,6 +1133,93 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
       follow.y(target.y);
     };
 
+    const stopEdgeScroll = () => {
+      cancelAnimationFrame(edgeRaf);
+      edgeRaf = 0;
+    };
+
+    const edgeScroll = () => {
+      edgeRaf = 0;
+      if (!touchCarry || modeRef.current !== "carrying") return;
+      const top = headerHeight() + EDGE_SCROLL_ZONE;
+      const bottom = window.innerHeight - EDGE_SCROLL_ZONE;
+      const y = lastClient.y;
+      const push = y < top ? (y - top) / EDGE_SCROLL_ZONE : y > bottom ? (y - bottom) / EDGE_SCROLL_ZONE : 0;
+      if (push) scrollByDelta(clamp(push, -1, 1) * EDGE_SCROLL_SPEED);
+      edgeRaf = requestAnimationFrame(edgeScroll);
+    };
+
+    const startEdgeScroll = () => {
+      if (!edgeRaf) edgeRaf = requestAnimationFrame(edgeScroll);
+    };
+
+    const clearHoldHint = (delay: number) => {
+      window.clearTimeout(hintTimer);
+      hintTimer = window.setTimeout(() => {
+        setHint((current) => (current === HOLD_HINT ? null : current));
+      }, delay);
+    };
+
+    const cancelPress = () => {
+      if (!press) return;
+      window.clearTimeout(press.timer);
+      press = null;
+      gsap.to(sticker, { scale: 1, duration: 0.25, ease: "power2.out", overwrite: "auto" });
+      clearHoldHint(1200);
+    };
+
+    const onTouchPressStart = (event: PointerEvent) => {
+      if (event.pointerType === "mouse" || !event.isPrimary) return;
+      if (reducedRef.current || busyRef.current) return;
+      if (modeRef.current !== "home" && modeRef.current !== "placed") return;
+      cancelPress();
+      const { pointerId: id, clientX: x, clientY: y } = event;
+      window.clearTimeout(hintTimer);
+      setHint(HOLD_HINT);
+      // Swelling while held shows the press is registering before it lets go.
+      gsap.to(sticker, {
+        scale: 1.06,
+        duration: LONG_PRESS_MS / 1000,
+        ease: "power1.out",
+        overwrite: "auto",
+      });
+      press = {
+        id,
+        x,
+        y,
+        timer: window.setTimeout(() => {
+          press = null;
+          dragRef.current = null;
+          suppressClickRef.current = true;
+          navigator.vibrate?.(12);
+          touchCarry = { id, x, y, moved: false, dropAt: null };
+          pickup(x, y, "touch");
+        }, LONG_PRESS_MS),
+      };
+    };
+
+    const onPointerEnd = (event: PointerEvent) => {
+      if (press?.id === event.pointerId) cancelPress();
+      if (touchCarry?.id !== event.pointerId) return;
+      stopEdgeScroll();
+      if (event.type !== "pointerup" || !touchCarry.moved) {
+        // Held without dragging: it stays peeled until the next tap sticks it.
+        touchCarry = null;
+        return;
+      }
+      if (modeRef.current === "lifting") {
+        touchCarry.dropAt = { x: event.clientX, y: event.clientY };
+        return;
+      }
+      touchCarry = null;
+      if (modeRef.current === "carrying") place(event.clientX, event.clientY);
+    };
+
+    // Keeps the page still while a finger drags the sticker around.
+    const onTouchMove = (event: TouchEvent) => {
+      if (touchCarry && event.cancelable) event.preventDefault();
+    };
+
     const onCapturePointerDown = (event: PointerEvent) => {
       if (modeRef.current !== "carrying") return;
       if (event.pointerType === "mouse" && event.button !== 0) return;
@@ -1122,6 +1237,12 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
     };
 
     const onCaptureContextMenu = (event: MouseEvent) => {
+      // Touch long presses also raise a context menu; the gesture owns those.
+      if (press || touchCarry || modeRef.current === "lifting" || modeRef.current === "moving") {
+        event.preventDefault();
+        event.stopPropagation();
+        return;
+      }
       if (modeRef.current !== "carrying") return;
       event.preventDefault();
       event.stopPropagation();
@@ -1134,6 +1255,16 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
     };
 
     const onPointerMove = (event: PointerEvent) => {
+      if (press?.id === event.pointerId) {
+        // Moving before the hold completes is a scroll or an edge peel, not a pickup.
+        if (Math.hypot(event.clientX - press.x, event.clientY - press.y) > PRESS_SLOP) cancelPress();
+      }
+      if (
+        touchCarry?.id === event.pointerId &&
+        Math.hypot(event.clientX - touchCarry.x, event.clientY - touchCarry.y) > PRESS_SLOP
+      ) {
+        touchCarry.moved = true;
+      }
       const now = performance.now();
       const dt = Math.max(1, now - lastMoveAt);
       const speed = Math.hypot(event.clientX - lastClient.x, event.clientY - lastClient.y) / dt;
@@ -1187,8 +1318,19 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
     window.addEventListener("click", onCaptureClick, true);
     window.addEventListener("contextmenu", onCaptureContextMenu, true);
     window.addEventListener("keydown", onKey);
+    window.addEventListener("pointerup", onPointerEnd);
+    window.addEventListener("pointercancel", onPointerEnd);
+    window.addEventListener("touchmove", onTouchMove, { passive: false });
+    sticker.addEventListener("pointerdown", onTouchPressStart);
 
     return () => {
+      cancelPress();
+      stopEdgeScroll();
+      window.clearTimeout(hintTimer);
+      window.removeEventListener("pointerup", onPointerEnd);
+      window.removeEventListener("pointercancel", onPointerEnd);
+      window.removeEventListener("touchmove", onTouchMove);
+      sticker.removeEventListener("pointerdown", onTouchPressStart);
       window.clearTimeout(blinkTimer);
       window.clearInterval(idleTimer);
       idleTl?.kill();
@@ -1225,7 +1367,7 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
       // React only knows the sticker as a child of its slot.
       sticker.classList.remove(styles.carried);
       toSlot();
-      setCarrying(false);
+      setCarrying(null);
       layer.remove();
       fx.remove();
       fxRef.current = null;
@@ -1539,7 +1681,9 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
         ? createPortal(
             <div className={styles.bounds} aria-hidden="true">
               <span className={styles.boundsLabel}>
-                Click anywhere to stick it · Esc puts it back
+                {carrying === "touch"
+                  ? "Let go anywhere to stick it · drop it on its spot to put it back"
+                  : "Click anywhere to stick it · Esc puts it back"}
               </span>
             </div>,
             document.body,

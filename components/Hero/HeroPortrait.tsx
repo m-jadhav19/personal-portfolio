@@ -18,7 +18,7 @@ export function HeroPortrait({ portraitRef }: HeroPortraitProps) {
       data-cursor="hide"
     >
       <PortraitSticker
-        label={`Sticker portrait of ${portfolio.headerTaglineTwo}. Its face follows your pointer. Right-click it to peel it off and click anywhere to stick it, or poke the brackets, glasses, hair and sparks.`}
+        label={`Sticker portrait of ${portfolio.headerTaglineTwo}. Its face follows your pointer. Right-click or long-press it to peel it off, then click or drag anywhere to stick it, or poke the brackets, glasses, hair and sparks.`}
       />
     </div>
   );
