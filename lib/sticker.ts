@@ -62,7 +62,10 @@ type FoldGeometry = {
   dy: number;
 };
 
-const ANIMATE = "all 0.6s cubic-bezier(.23,1,.32,1)";
+const ANIMATE_MS = 600;
+const ANIMATE = ["transform", "width", "height"]
+  .map((prop) => `${prop} ${ANIMATE_MS / 1000}s cubic-bezier(.23,1,.32,1)`)
+  .join(", ");
 const INSTANT = "all 0s";
 
 function translate(x: number, y: number) {
@@ -117,6 +120,7 @@ export class StickerPeel {
   private size: number;
   private direction: StickerDirection | null = null;
   private rest: FoldGeometry | null = null;
+  private hideTimer = 0;
 
   constructor(layers: StickerLayers, size: number) {
     this.layers = layers;
@@ -147,6 +151,7 @@ export class StickerPeel {
     back.dataset.direction = direction;
     this.layers.backShadow.dataset.direction = direction;
     depth.dataset.direction = direction;
+    this.showBack(true);
 
     setStyle(mask, { transition: INSTANT, width: `${this.size}px`, height: `${this.size}px`, transform: translate(0, 0) });
     setStyle(move, { transition: INSTANT, transform: translate(0, 0) });
@@ -180,9 +185,19 @@ export class StickerPeel {
     setStyle(move, { transition: ANIMATE, transform: translate(0, 0) });
     setStyle(back, { transition: ANIMATE, transform: translate(bx, by) });
     setStyle(depth, { transform: translate(-10000, -10000) });
+    this.hideTimer = window.setTimeout(() => this.showBack(false), ANIMATE_MS);
 
     this.direction = null;
     this.rest = null;
+  }
+
+  /**
+   * At rest the flap is parked flush against the mask's edge; under a 3D tilt the
+   * clip's anti-aliased edge leaks a hairline of it, so it's hidden between peels.
+   */
+  private showBack(visible: boolean) {
+    window.clearTimeout(this.hideTimer);
+    this.layers.back.style.visibility = visible ? "visible" : "hidden";
   }
 
   reset() {
@@ -195,6 +210,7 @@ export class StickerPeel {
     setStyle(move, { transition: INSTANT, transform: translate(0, 0) });
     setStyle(back, { transition: INSTANT, transform: translate(this.size, 0) });
     setStyle(depth, { transform: translate(-10000, -10000) });
+    this.showBack(false);
     this.direction = null;
     this.rest = null;
   }
