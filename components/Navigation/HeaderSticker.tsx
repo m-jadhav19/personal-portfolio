@@ -6,6 +6,7 @@ import { useEffect, useRef } from "react";
 import {
   PORTRAIT_BOXES as BOX,
   PORTRAIT_COLORS as COLOR,
+  PORTRAIT_LIP as LIP,
   PORTRAIT_PATHS as PATH,
 } from "@/components/Hero/portrait/portraitPaths";
 
@@ -85,6 +86,7 @@ export function HeaderSticker({ docked, onClick }: HeaderStickerProps) {
         <path d={PATH.brows} fill={COLOR.ink} />
         <path d={PATH.beard} fill={COLOR.ink} />
         <path d={PATH.mouth} fill={COLOR.cream} />
+        <path d={LIP.lower} fill={COLOR.lip} />
         <path d={PATH.glasses} fill={COLOR.ink} />
         <path d={PATH.lensL} fill={COLOR.cream} />
         <path d={PATH.lensR} fill={COLOR.cream} />

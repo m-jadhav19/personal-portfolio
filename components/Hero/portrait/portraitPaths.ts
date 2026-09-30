@@ -8,6 +8,15 @@ export const PORTRAIT_COLORS = {
   ink: "#0e1111",
   cream: "#f5f0e0",
   cobalt: "#2457ff",
+  lip: "#d9786f",
+} as const;
+
+/** Hand-drawn to sit inside the traced mouth, between the mustache and the goatee. */
+export const PORTRAIT_LIP = {
+  lower:
+    "M 189 285.2 C 194 284.4, 200 284.9, 206 284.9 C 212 284.9, 218 284.4, 223 285.2 C 221.2 289.6, 214.4 292.2, 206 292.2 C 197.6 292.2, 190.8 289.6, 189 285.2 Z",
+  shine: "M 199 288.6 C 202 289.6, 206 289.8, 209.5 289.2",
+  line: "M 186.5 284.8 C 196 287, 216 287, 225.5 284.8",
 } as const;
 
 export const PORTRAIT_PATHS = {

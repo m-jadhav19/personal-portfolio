@@ -19,6 +19,7 @@ import { StickerPeel } from "@/lib/sticker";
 import {
   PORTRAIT_BOXES as BOX,
   PORTRAIT_COLORS as COLOR,
+  PORTRAIT_LIP as LIP,
   PORTRAIT_PATHS as PATH,
   PORTRAIT_VIEWBOX as VB,
 } from "./portraitPaths";
@@ -1540,7 +1541,25 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
           onClick={interactive ? onPartClick("talk") : undefined}
         >
           <path d={PATH.beard} fill={COLOR.ink} />
-          <path data-part={interactive ? "mouth" : undefined} d={PATH.mouth} fill={COLOR.cream} />
+          <g data-part={interactive ? "mouth" : undefined}>
+            <path d={PATH.mouth} fill={COLOR.cream} />
+            <path d={LIP.lower} fill={COLOR.lip} />
+            <path
+              d={LIP.shine}
+              fill="none"
+              stroke={COLOR.cream}
+              strokeWidth={1.4}
+              strokeLinecap="round"
+              opacity={0.55}
+            />
+            <path
+              d={LIP.line}
+              fill="none"
+              stroke={COLOR.ink}
+              strokeWidth={2.4}
+              strokeLinecap="round"
+            />
+          </g>
         </g>
       </g>
 
