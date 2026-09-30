@@ -36,6 +36,10 @@ import {
   type TargetRegistry,
 } from "./targets";
 import {
+  earliestCircleHit,
+  sampleSegment,
+} from "./collision";
+import {
   createBulletHole,
   drawBlasterBolt,
   drawBulletHole,
@@ -97,16 +101,16 @@ type Projectile =
       kind: "rocket";
       x: number;
       y: number;
-      tx: number;
-      ty: number;
+      vx: number;
+      vy: number;
       life: number;
     }
   | {
       kind: "vortex";
       x: number;
       y: number;
-      tx: number;
-      ty: number;
+      vx: number;
+      vy: number;
       life: number;
       spin: number;
     };
@@ -846,28 +850,127 @@ export function createDestroyEngine(
     return projectiles.filter((p) => p.kind === kind).length;
   }
 
+  function livingCircles() {
+    const circles: { x: number; y: number; radius: number }[] = [];
+    for (const e of enemies) circles.push(e);
+    for (const prop of envProps) circles.push(prop);
+    if (boss?.alive) circles.push(boss);
+    return circles;
+  }
+
+  /**
+   * Move a projectile along a segment and stop on the first solid hit
+   * (enemy / prop / boss / DOM). Returns true if the shot was consumed.
+   */
+  function resolveFlight(
+    x0: number,
+    y0: number,
+    x1: number,
+    y1: number,
+    cfg: WeaponConfig,
+    mode: "impact" | "boom",
+  ): { consumed: boolean; x: number; y: number } {
+    const entityHit = earliestCircleHit(
+      x0,
+      y0,
+      x1,
+      y1,
+      livingCircles(),
+      mode === "boom" ? 6 : 4,
+    );
+
+    let hitX = x1;
+    let hitY = y1;
+    let consumed = false;
+
+    if (entityHit) {
+      hitX = entityHit.x;
+      hitY = entityHit.y;
+      consumed = true;
+    } else {
+      // Probe the page along the path — anything under the bolt takes the hit.
+      const samples = sampleSegment(
+        x0,
+        y0,
+        x1,
+        y1,
+        reducedMotion ? 2 : 4,
+      );
+      for (const sample of samples) {
+        const n = damageAt(sample.x, sample.y, mode === "boom" ? 10 : 0, 1, {
+          awardScore: true,
+        });
+        if (n > 0) {
+          hitX = sample.x;
+          hitY = sample.y;
+          consumed = true;
+          break;
+        }
+      }
+    }
+
+    if (consumed) {
+      if (mode === "boom") boom(hitX, hitY, cfg);
+      else impactAt(hitX, hitY, cfg);
+    }
+
+    return { consumed, x: hitX, y: hitY };
+  }
+
+  /** Hitscan beam: damage every entity the ray crosses, plus DOM samples. */
+  function raycastBeam(
+    x0: number,
+    y0: number,
+    x1: number,
+    y1: number,
+    cfg: WeaponConfig,
+  ) {
+    const circles = livingCircles();
+    const hits: { t: number; x: number; y: number }[] = [];
+    for (const c of circles) {
+      const hit = earliestCircleHit(x0, y0, x1, y1, [c], 4);
+      if (hit) hits.push(hit);
+    }
+    hits.sort((a, b) => a.t - b.t);
+
+    const seen = new Set<string>();
+    for (const hit of hits.slice(0, cfg.hits)) {
+      const key = `${Math.round(hit.x)},${Math.round(hit.y)}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      impactAt(hit.x, hit.y, cfg, {
+        radius: Math.max(16, cfg.radius * 0.35),
+        hits: 1,
+        holeScale: 0.7,
+      });
+    }
+
+    // Always land at the aim tip, and nick DOM under the beam.
+    impactAt(x1, y1, cfg);
+    for (const sample of sampleSegment(x0, y0, x1, y1, reducedMotion ? 2 : 3)) {
+      damageAt(sample.x, sample.y, 0, 1);
+    }
+  }
+
   function fire() {
     if (paused || hidden || dragging || dead) return;
     const id = currentWeapon();
     const cfg = WEAPON_CONFIG[id];
     const aim = Math.atan2(pointer.y - character.y, pointer.x - character.x);
-    const tx = pointer.x;
-    const ty = pointer.y;
     const liveBonus = rapidTimer > 0 ? 4 : 0;
+    const muzzleX = character.x + Math.cos(aim) * 28;
+    const muzzleY = character.y + Math.sin(aim) * 8;
 
     if (id === "blaster") {
       if (countKind("blaster") >= cfg.maxLive + liveBonus) return;
-      const speed = 1200;
-      // Hole + destroy/surface at the aim point immediately.
-      impactAt(tx, ty, cfg);
-      const dist = Math.hypot(tx - character.x, ty - character.y);
+      const speed = 980;
       projectiles.push({
         kind: "blaster",
-        x: character.x + Math.cos(aim) * 28,
-        y: character.y + Math.sin(aim) * 8,
+        x: muzzleX,
+        y: muzzleY,
         vx: Math.cos(aim) * speed,
         vy: Math.sin(aim) * speed,
-        life: Math.max(0.08, dist / speed + 0.04),
+        life: 0.7,
       });
       audio.play("shoot");
       return;
@@ -875,13 +978,14 @@ export function createDestroyEngine(
 
     if (id === "rocket") {
       if (countKind("rocket") >= cfg.maxLive) return;
+      const speed = 520;
       projectiles.push({
         kind: "rocket",
-        x: tx + (Math.random() * 40 - 20),
-        y: -28,
-        tx,
-        ty,
-        life: 2.5,
+        x: character.x + Math.cos(aim) * 22,
+        y: character.y + Math.sin(aim) * 10,
+        vx: Math.cos(aim) * speed,
+        vy: Math.sin(aim) * speed,
+        life: 1.8,
       });
       audio.play("rocket");
       return;
@@ -889,43 +993,56 @@ export function createDestroyEngine(
 
     if (id === "vortex") {
       if (countKind("vortex") >= cfg.maxLive) return;
+      const speed = 340;
       projectiles.push({
         kind: "vortex",
         x: character.x + Math.cos(aim) * 20,
         y: character.y + Math.sin(aim) * 12,
-        tx,
-        ty,
-        life: 1.15,
+        vx: Math.cos(aim) * speed,
+        vy: Math.sin(aim) * speed,
+        life: 1.2,
         spin: 0,
       });
       audio.play("vortex");
       return;
     }
 
-    // Arc gun — chain lightning from gun to aim + nearby forks
+    // Arc gun — hitscan beam along the aim line, then side forks.
     if (zapArcs.length >= cfg.maxLive) return;
-    impactAt(tx, ty, cfg);
-    const forks = reducedMotion ? 2 : 4;
+    const reach = Math.min(
+      420,
+      Math.hypot(pointer.x - muzzleX, pointer.y - muzzleY) + 40,
+    );
+    const tipX = muzzleX + Math.cos(aim) * reach;
+    const tipY = muzzleY + Math.sin(aim) * reach;
+    raycastBeam(muzzleX, muzzleY, tipX, tipY, cfg);
+    zapArcs.push({
+      x0: muzzleX,
+      y0: muzzleY,
+      x1: tipX,
+      y1: tipY,
+      life: 0.2,
+      maxLife: 0.28,
+    });
+    const forks = reducedMotion ? 1 : 2;
     for (let i = 0; i < forks && zapArcs.length < MAX_ZAPS; i++) {
-      const ang = Math.random() * Math.PI * 2;
-      const dist = 18 + Math.random() * cfg.radius;
-      const fx = tx + Math.cos(ang) * dist;
-      const fy = ty + Math.sin(ang) * dist;
+      const ang = aim + (Math.random() - 0.5) * 0.9;
+      const dist = 24 + Math.random() * cfg.radius;
+      const fx = tipX + Math.cos(ang) * dist;
+      const fy = tipY + Math.sin(ang) * dist;
       zapArcs.push({
-        x0: i === 0 ? character.x : tx,
-        y0: i === 0 ? character.y : ty,
-        x1: i === 0 ? tx : fx,
-        y1: i === 0 ? ty : fy,
-        life: 0.18 + Math.random() * 0.1,
-        maxLife: 0.28,
+        x0: tipX,
+        y0: tipY,
+        x1: fx,
+        y1: fy,
+        life: 0.14 + Math.random() * 0.08,
+        maxLife: 0.22,
       });
-      if (i > 0) {
-        impactAt(fx, fy, cfg, {
-          holeScale: 0.45,
-          radius: cfg.radius * 0.45,
-          hits: 1,
-        });
-      }
+      impactAt(fx, fy, cfg, {
+        holeScale: 0.45,
+        radius: cfg.radius * 0.4,
+        hits: 1,
+      });
     }
     audio.play("zap");
   }
@@ -1128,13 +1245,30 @@ export function createDestroyEngine(
       walkPhase += dt * 2.2;
     }
 
-    // Projectiles — blaster bolts are visual tracers (impact already applied).
+    // Projectiles — collide with anything along the flight path.
     for (let i = projectiles.length - 1; i >= 0; i--) {
       const p = projectiles[i];
+      const x0 = p.x;
+      const y0 = p.y;
+      const x1 = p.x + p.vx * dt;
+      const y1 = p.y + p.vy * dt;
+      p.life -= dt;
+
       if (p.kind === "blaster") {
-        p.x += p.vx * dt;
-        p.y += p.vy * dt;
-        p.life -= dt;
+        const result = resolveFlight(
+          x0,
+          y0,
+          x1,
+          y1,
+          WEAPON_CONFIG.blaster,
+          "impact",
+        );
+        if (result.consumed) {
+          projectiles.splice(i, 1);
+          continue;
+        }
+        p.x = x1;
+        p.y = y1;
         if (
           p.life <= 0 ||
           p.x < -40 ||
@@ -1144,40 +1278,70 @@ export function createDestroyEngine(
         ) {
           projectiles.splice(i, 1);
         }
-      } else if (p.kind === "rocket") {
-        const dist = Math.hypot(p.tx - p.x, p.ty - p.y);
-        const step = 560 * dt;
-        if (dist <= step || p.y >= p.ty) {
-          boom(p.tx, p.ty, WEAPON_CONFIG.rocket);
+        continue;
+      }
+
+      if (p.kind === "rocket") {
+        const result = resolveFlight(
+          x0,
+          y0,
+          x1,
+          y1,
+          WEAPON_CONFIG.rocket,
+          "boom",
+        );
+        if (result.consumed) {
           projectiles.splice(i, 1);
-        } else {
-          p.x += ((p.tx - p.x) / dist) * step * 0.4;
-          p.y += step;
-          p.life -= dt;
-          if (p.life <= 0) projectiles.splice(i, 1);
+          continue;
         }
-      } else if (p.kind === "vortex") {
-        const dist = Math.hypot(p.tx - p.x, p.ty - p.y);
-        const step = 220 * dt;
-        if (dist > 1) {
-          p.x += ((p.tx - p.x) / dist) * step;
-          p.y += ((p.ty - p.y) / dist) * step;
-        }
-        p.spin += dt;
-        p.life -= dt;
-        // Occasional pull spark — keep rare to avoid particle storms.
-        if (!reducedMotion && Math.random() < 0.06) {
-          const sparks = spawnDebris(
-            { left: p.x - 8, top: p.y - 8, width: 16, height: 16 },
-            1,
-            ["#c084fc", "#67e8f9"],
-          );
-          particles = particles.concat(sparks).slice(-MAX_PARTICLES);
-        }
-        if (p.life <= 0 || dist < 10) {
-          boom(p.x, p.y, WEAPON_CONFIG.vortex);
+        p.x = x1;
+        p.y = y1;
+        if (
+          p.life <= 0 ||
+          p.x < -60 ||
+          p.y < -60 ||
+          p.x > window.innerWidth + 60 ||
+          p.y > window.innerHeight + 60
+        ) {
+          boom(p.x, p.y, WEAPON_CONFIG.rocket);
           projectiles.splice(i, 1);
         }
+        continue;
+      }
+
+      // Vortex — same ballistic path, bigger boom on contact / timeout.
+      p.spin += dt;
+      if (!reducedMotion && Math.random() < 0.06) {
+        const sparks = spawnDebris(
+          { left: p.x - 8, top: p.y - 8, width: 16, height: 16 },
+          1,
+          ["#c084fc", "#67e8f9"],
+        );
+        particles = particles.concat(sparks).slice(-MAX_PARTICLES);
+      }
+      const result = resolveFlight(
+        x0,
+        y0,
+        x1,
+        y1,
+        WEAPON_CONFIG.vortex,
+        "boom",
+      );
+      if (result.consumed) {
+        projectiles.splice(i, 1);
+        continue;
+      }
+      p.x = x1;
+      p.y = y1;
+      if (
+        p.life <= 0 ||
+        p.x < -60 ||
+        p.y < -60 ||
+        p.x > window.innerWidth + 60 ||
+        p.y > window.innerHeight + 60
+      ) {
+        boom(p.x, p.y, WEAPON_CONFIG.vortex);
+        projectiles.splice(i, 1);
       }
     }
 
@@ -1362,8 +1526,7 @@ export function createDestroyEngine(
       if (p.kind === "blaster") {
         drawBlasterBolt(ctx, p.x, p.y, Math.atan2(p.vy, p.vx), atlas);
       } else if (p.kind === "rocket") {
-        const ang = Math.atan2(p.ty - p.y, p.tx - p.x);
-        drawRocket(ctx, p.x, p.y, ang, atlas);
+        drawRocket(ctx, p.x, p.y, Math.atan2(p.vy, p.vx), atlas);
       } else if (p.kind === "vortex") {
         drawVortex(ctx, p.x, p.y, p.spin, atlas);
       }
