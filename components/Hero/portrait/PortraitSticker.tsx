@@ -9,6 +9,7 @@ import {
   type CSSProperties,
   type KeyboardEvent,
 } from "react";
+import { createPortal } from "react-dom";
 
 import { StickerPeel } from "@/lib/sticker";
 
@@ -39,7 +40,7 @@ const HINTS: Record<Part, string> = {
   eyes: "click to wink",
   beard: "click to chat",
   ear: "listening",
-  face: "boop",
+  face: "right-click to peel me off",
   sparks: "idea!",
   "bracket-left": "click to close the tag",
   "bracket-right": "click to close the tag",
@@ -55,7 +56,6 @@ const CROP = {
 
 /** Fraction of the sticker (from each edge) that grabs a peel. */
 const EDGE = 0.2;
-const TEASE = 0.3;
 const DRAG_THRESHOLD = 6;
 const PUPIL_RANGE = { x: 7, y: 4.5 };
 const TILT = 14;
@@ -63,17 +63,37 @@ const TILT = 14;
 const FLING_AT = 0.55;
 const COMBO_HITS = 6;
 const COMBO_WINDOW = 1400;
-const IDLE_PEEK_MS = 6000;
 const GLYPHS = ["</>", "{ }", "=>", ";", "( )", "✦", "#", "01"];
 const GLYPH_COLORS = [COLOR.cobalt, COLOR.cream, COLOR.cobalt, "#ffd23f"];
 const MAX_PARTICLES = 60;
+
+/** How far (in artwork units) each feature shifts when the head "turns" toward the pointer. */
+const FACE_SHIFT = {
+  ear: { x: -4, y: 1.5 },
+  hair: { x: 3, y: 2.5 },
+  brows: { x: 5, y: 4 },
+  beard: { x: 4, y: 2 },
+  eyes: { x: 6, y: 4 },
+} as const;
+const SURPRISE_SPEED = 3.2;
+const IDLE_LOOK_MS = 5000;
+const IDLE_SLEEP_MS = 11000;
+/** Gap kept between a carried sticker and the viewport edges. */
+const BOUNDS_MARGIN = 16;
+/** Dropping within this fraction of the sticker's width from home snaps it back. */
+const SNAP_HOME = 0.45;
+
+type Mode = "home" | "lifting" | "carrying" | "moving" | "placed";
 
 function silhouetteMask(transform = "") {
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${CROP.x} ${CROP.y} ${CROP.size} ${CROP.size}"><g transform="${transform}"><path fill="#000" d="${PATH.base}"/></g></svg>`;
   return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
 }
 
-/** Code glyphs that pop out of a click, arc up and fall with gravity. */
+const clamp = (value: number, min: number, max: number) =>
+  Math.min(max, Math.max(min, value));
+
+/** Code glyphs that pop out of a click, arc up and fall with gravity. `x`/`y` are viewport coords. */
 function spawnBurst(
   layer: HTMLElement,
   x: number,
@@ -110,9 +130,32 @@ function spawnBurst(
   }
 }
 
+/** Sleepy "z"s drifting up from a point. */
+function spawnSnore(layer: HTMLElement, x: number, y: number) {
+  ["z", "Z", "z"].forEach((letter, i) => {
+    const el = document.createElement("span");
+    el.className = `${styles.glyph} ${styles.snore}`;
+    el.textContent = letter;
+    el.style.left = `${x}px`;
+    el.style.top = `${y}px`;
+    layer.appendChild(el);
+    gsap
+      .timeline({ delay: i * 0.35, onComplete: () => el.remove() })
+      .set(el, { xPercent: -50, yPercent: -50, autoAlpha: 0, scale: 0.5 })
+      .to(el, { autoAlpha: 1, scale: 1 + i * 0.25, duration: 0.3 })
+      .to(el, { x: 18 + i * 10, y: -50 - i * 14, duration: 1.4, ease: "sine.out" }, 0)
+      .to(el, { autoAlpha: 0, duration: 0.4 }, 1.1);
+  });
+}
+
 function prefersReducedMotion() {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
+
+type Carry = {
+  pickup: (clientX: number, clientY: number) => void;
+  goHome: () => void;
+};
 
 type PortraitStickerProps = {
   label: string;
@@ -120,6 +163,7 @@ type PortraitStickerProps = {
 
 export function PortraitSticker({ label }: PortraitStickerProps) {
   const artRef = useRef<HTMLDivElement>(null);
+  const slotRef = useRef<HTMLDivElement>(null);
   const stickerRef = useRef<HTMLDivElement>(null);
   const maskRef = useRef<HTMLDivElement>(null);
   const moveRef = useRef<HTMLDivElement>(null);
@@ -137,14 +181,18 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
   const suppressClickRef = useRef(false);
   const reducedRef = useRef(false);
   const actionsRef = useRef<Record<string, () => void>>({});
+  const carryRef = useRef<Carry | null>(null);
   const tiltRef = useRef<HTMLDivElement>(null);
   const tiltToRef = useRef<((x: number, y: number) => void) | null>(null);
-  const burstRef = useRef<HTMLDivElement>(null);
   const ringRef = useRef<HTMLDivElement>(null);
+  const fxRef = useRef<HTMLDivElement | null>(null);
   const busyRef = useRef(false);
+  const modeRef = useRef<Mode>("home");
   const hitsRef = useRef<number[]>([]);
 
   const [hint, setHint] = useState<string | null>(null);
+  const [carrying, setCarrying] = useState(false);
+  const [away, setAway] = useState(false);
 
   const maskVars = useMemo(() => {
     const mirrorX = `translate(${CROP.x * 2 + CROP.size} 0) scale(-1 1)`;
@@ -156,7 +204,7 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
     } as CSSProperties;
   }, []);
 
-  const stickerPosition: CSSProperties = {
+  const slotPosition: CSSProperties = {
     left: `${(CROP.x / VB.width) * 100}%`,
     top: `${(CROP.y / VB.height) * 100}%`,
     width: `${(CROP.size / VB.width) * 100}%`,
@@ -214,9 +262,14 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
     return Math.min(1, Math.max(0, raw / size));
   };
 
+  const interactive = () =>
+    !reducedRef.current &&
+    !busyRef.current &&
+    (modeRef.current === "home" || modeRef.current === "placed");
+
   const onStickerPointerMove = (event: React.PointerEvent) => {
     const peel = peelRef.current;
-    if (!peel || reducedRef.current || busyRef.current) return;
+    if (!peel || !interactive()) return;
     const point = localPoint(event.clientX, event.clientY);
     if (!point) return;
 
@@ -234,53 +287,29 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
       }
       peel.update(point.x, point.y);
       drag.progress = peelProgress(point.x, point.y, point.size);
-      setHint(drag.progress > FLING_AT ? "let go to toss it" : "peeling…");
+      const canToss = modeRef.current === "home" && drag.progress > FLING_AT;
+      setHint(canToss ? "let go to toss it" : "peeling…");
       return;
     }
 
     if (event.pointerType !== "mouse") return;
-
     stickerRef.current?.setAttribute("data-hover", "");
     tiltToRef.current?.(
       (point.x / point.size) * 2 - 1,
       (point.y / point.size) * 2 - 1,
     );
+  };
 
-    // Hover teaser: curl just the edge you're near, like a sticker corner lifting.
-    if (!inEdge(point.x, point.y, point.size)) {
-      if (peel.active) peel.release();
-      return;
-    }
-    if (!peel.active) peel.begin(point.x, point.y);
-    // The square crop has empty margin around the head, so the curl has to reach
-    // past it to actually lift the artwork.
-    // Curl grows as the pointer nears the edge it came from.
-    const size = point.size;
-    const zone = size * EDGE;
-    const direction = peel.currentDirection;
-    const distance =
-      direction === "left"
-        ? point.x
-        : direction === "right"
-          ? size - point.x
-          : direction === "top"
-            ? point.y
-            : size - point.y;
-    const closeness = 1 - Math.min(1, Math.max(0, distance / zone));
-    const depth = size * TEASE * (0.45 + 0.55 * closeness);
-    const x =
-      direction === "left" ? depth : direction === "right" ? size - depth : point.x;
-    const y =
-      direction === "top" ? depth : direction === "bottom" ? size - depth : point.y;
-    peel.update(x, y);
+  const onStickerPointerEnter = (event: React.PointerEvent) => {
+    if (event.pointerType !== "mouse" || !interactive()) return;
+    setHint(HINTS.face);
+    run("hover-on");
   };
 
   const onStickerPointerDown = (event: React.PointerEvent) => {
     suppressClickRef.current = false;
     const peel = peelRef.current;
-    if (!peel || reducedRef.current || busyRef.current || event.button !== 0) {
-      return;
-    }
+    if (!peel || !interactive() || event.button !== 0) return;
     const point = localPoint(event.clientX, event.clientY);
     if (!point || !inEdge(point.x, point.y, point.size)) return;
 
@@ -293,7 +322,7 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
       peeling: false,
       progress: 0,
     };
-    if (!peel.active) peel.begin(point.x, point.y);
+    peel.begin(point.x, point.y);
   };
 
   const endDrag = (event: React.PointerEvent) => {
@@ -303,28 +332,38 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
     if (drag.peeling) {
       suppressClickRef.current = true;
       setHint(null);
-      if (drag.progress > FLING_AT) {
+      if (modeRef.current === "home" && drag.progress > FLING_AT) {
         run("fling");
-      } else {
-        peelRef.current?.release();
+        return;
       }
-    } else if (event.pointerType !== "mouse") {
-      peelRef.current?.release();
     }
+    peelRef.current?.release();
   };
 
   const onStickerPointerLeave = () => {
     stickerRef.current?.removeAttribute("data-hover");
     tiltToRef.current?.(0, 0);
+    run("hover-off");
+    if (!busyRef.current) setHint(null);
     if (dragRef.current || busyRef.current) return;
     peelRef.current?.release();
   };
 
-  // ─── Part animations ────────────────────────────────────────────────────
+  const onStickerContextMenu = (event: React.MouseEvent) => {
+    if (!carryRef.current || !interactive()) return;
+    event.preventDefault();
+    event.stopPropagation();
+    carryRef.current.pickup(event.clientX, event.clientY);
+  };
+
+  // ─── Face, part animations and the peel-and-place mechanic ─────────────
   useEffect(() => {
     const root = artRef.current;
-    if (!root) return;
+    const sticker = stickerRef.current;
+    const slot = slotRef.current;
+    if (!root || !sticker || !slot) return;
     const q = <T extends Element = SVGGraphicsElement>(part: string) =>
+      sticker.querySelector<T>(`[data-part="${part}"]`) ??
       root.querySelector<T>(`[data-part="${part}"]`);
 
     const hair = q("hair");
@@ -337,21 +376,49 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
     const sparks = [q("spark-a"), q("spark-b")];
     const bracketL = q("bracket-left");
     const bracketR = q("bracket-right");
-    const sticker = stickerRef.current;
     const tilt = tiltRef.current;
     const ring = ringRef.current;
-    const burstLayer = burstRef.current;
+    const faceGroups = (Object.keys(FACE_SHIFT) as (keyof typeof FACE_SHIFT)[])
+      .map((key) => ({
+        key,
+        el: sticker.querySelector<SVGGElement>(`[data-face="${key}"]`),
+      }))
+      .filter((group): group is { key: keyof typeof FACE_SHIFT; el: SVGGElement } =>
+        Boolean(group.el),
+      );
     let trackEyes = true;
+    let hovered = false;
+    let lidRest = 0;
 
     const reduced = prefersReducedMotion();
     reducedRef.current = reduced;
+
+    const fx = document.createElement("div");
+    fx.className = styles.fx;
+    document.body.appendChild(fx);
+    fxRef.current = fx;
 
     gsap.set(lids, { scaleY: 0, transformOrigin: "50% 0%" });
     gsap.set(hair, { transformOrigin: "50% 100%" });
     gsap.set(mouth, { transformOrigin: "50% 0%" });
     gsap.set(ear, { transformOrigin: "0% 50%" });
+    gsap.set(pupils, { transformOrigin: "50% 50%" });
     gsap.set(sparks, { transformOrigin: "0% 100%" });
     gsap.set([bracketL, bracketR], { transformOrigin: "50% 50%" });
+
+    const stickerCenter = () => {
+      const s = sticker.getBoundingClientRect();
+      return { x: s.left + s.width / 2, y: s.top + s.height / 2 };
+    };
+
+    // ── Expressions ──
+    const setLids = (value: number, duration = 0.25) => {
+      lidRest = value;
+      gsap.to(lids, { scaleY: value, duration, ease: "power2.out", overwrite: "auto" });
+    };
+
+    const mouthTo = (scaleX: number, scaleY: number, duration = 0.3, ease = "power2.out") =>
+      gsap.to(mouth, { scaleX, scaleY, duration, ease, overwrite: "auto" });
 
     const blink = (which: "both" | "left" | "right" = "both") => {
       const targets =
@@ -359,7 +426,7 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
       gsap
         .timeline()
         .to(targets, { scaleY: 1, duration: 0.07, ease: "power2.in" })
-        .to(targets, { scaleY: 0, duration: 0.12, ease: "power2.out" }, "+=0.04");
+        .to(targets, { scaleY: () => lidRest, duration: 0.12, ease: "power2.out" }, "+=0.04");
     };
 
     const raiseBrows = () => {
@@ -390,7 +457,11 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
         .to(mouth, { scaleY: 1.7, duration: 0.09, ease: "power1.out" })
         .to(mouth, { scaleY: 0.8, duration: 0.09 })
         .to(mouth, { scaleY: 1.5, duration: 0.09 })
-        .to(mouth, { scaleY: 1, duration: 0.2, ease: "elastic.out(1, 0.5)" });
+        .to(mouth, {
+          scaleY: hovered ? 0.72 : 1,
+          duration: 0.2,
+          ease: "elastic.out(1, 0.5)",
+        });
     };
 
     const boing = () => {
@@ -439,29 +510,49 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
       popSparks();
     };
 
+    // Happy squint + grin while the pointer is on the sticker.
+    const hoverOn = () => {
+      if (hovered) return;
+      hovered = true;
+      mouthTo(1.2, 0.72);
+      setLids(0.26);
+    };
+    const hoverOff = () => {
+      if (!hovered) return;
+      hovered = false;
+      mouthTo(1, 1, 0.6, "elastic.out(1, 0.5)");
+      setLids(0);
+    };
+
+    let lastSurprise = 0;
+    const surprise = () => {
+      const now = performance.now();
+      if (hovered || busyRef.current || now - lastSurprise < 1800) return;
+      lastSurprise = now;
+      gsap
+        .timeline()
+        .to(brows, { y: -8, duration: 0.12, ease: "power2.out" }, 0)
+        .to(mouth, { scaleX: 0.7, scaleY: 1.9, duration: 0.12, ease: "power2.out" }, 0)
+        .to(pupils, { scale: 0.62, duration: 0.12 }, 0)
+        .to(brows, { y: 0, duration: 0.6, ease: "elastic.out(1, 0.4)" }, 0.55)
+        .to(mouth, { scaleX: 1, scaleY: 1, duration: 0.5, ease: "elastic.out(1, 0.5)" }, 0.55)
+        .to(pupils, { scale: 1, duration: 0.4 }, 0.6);
+    };
+
     const boop = () => {
-      if (sticker) {
-        gsap.fromTo(
-          sticker,
-          { scale: 1 },
-          {
-            keyframes: [
-              { scale: 0.95, duration: 0.08, ease: "power2.in" },
-              { scale: 1, duration: 0.6, ease: "elastic.out(1, 0.35)" },
-            ],
-          },
-        );
-      }
+      gsap.fromTo(
+        sticker,
+        { scale: 1 },
+        {
+          keyframes: [
+            { scale: 0.95, duration: 0.08, ease: "power2.in" },
+            { scale: 1, duration: 0.6, ease: "elastic.out(1, 0.35)" },
+          ],
+        },
+      );
       blink();
       raiseBrows();
       popSparks();
-    };
-
-    const stickerCenter = () => {
-      if (!sticker || !burstLayer) return { x: 0, y: 0 };
-      const s = sticker.getBoundingClientRect();
-      const l = burstLayer.getBoundingClientRect();
-      return { x: s.left - l.left + s.width / 2, y: s.top - l.top + s.height / 2 };
     };
 
     const shockwave = () => {
@@ -474,10 +565,8 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
 
     const slap = () => {
       shockwave();
-      if (burstLayer) {
-        const { x, y } = stickerCenter();
-        spawnBurst(burstLayer, x, y, 16, 1.5);
-      }
+      const { x, y } = stickerCenter();
+      spawnBurst(fx, x, y, 16, 1.5);
       blink();
       raiseBrows();
       popSparks();
@@ -487,7 +576,7 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
     // Peeled far enough: toss the sticker off, then slap it back down.
     const fling = () => {
       const peel = peelRef.current;
-      if (!sticker || !peel) return;
+      if (!peel) return;
       const direction = peel.currentDirection;
       const dx =
         direction === "left"
@@ -535,17 +624,15 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
 
     // Too many pokes in a row: spin out with googly eyes.
     const dizzy = () => {
-      if (!sticker) return;
       busyRef.current = true;
       trackEyes = false;
       peelRef.current?.release();
       setHint("whoa… dizzy");
-      if (burstLayer) {
-        const { x, y } = stickerCenter();
-        spawnBurst(burstLayer, x, y, 22, 1.7);
-      }
+      const { x, y } = stickerCenter();
+      spawnBurst(fx, x, y, 22, 1.7);
       shockwave();
       popSparks();
+      const baseRotation = Number(gsap.getProperty(sticker, "rotation")) || 0;
       const spinner = { a: 0 };
       gsap
         .timeline({
@@ -555,8 +642,8 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
             setHint(null);
           },
         })
-        .to(sticker, { rotation: 720, duration: 1.1, ease: "power3.inOut" }, 0)
-        .set(sticker, { rotation: 0 })
+        .to(sticker, { rotation: baseRotation + 720, duration: 1.1, ease: "power3.inOut" }, 0)
+        .set(sticker, { rotation: baseRotation })
         .to(
           spinner,
           {
@@ -583,9 +670,8 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
       fling,
       dizzy,
       burst: () => {
-        if (!burstLayer) return;
         const { x, y } = stickerCenter();
-        spawnBurst(burstLayer, x, y, 8);
+        spawnBurst(fx, x, y, 8);
       },
       blink: () => blink(),
       "wink-left": () => blink("left"),
@@ -599,6 +685,8 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
       "close-left": () => closeTag("left"),
       "close-right": () => closeTag("right"),
       boop,
+      "hover-on": hoverOn,
+      "hover-off": hoverOff,
       "hover-brackets-on": () =>
         gsap.to([bracketL, bracketR], {
           x: (i: number) => (i === 0 ? -12 : 12),
@@ -618,10 +706,13 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
     if (reduced) {
       // Keep everything still; clicks stay as no-ops.
       actionsRef.current = {};
-      return;
+      return () => {
+        fx.remove();
+        fxRef.current = null;
+      };
     }
 
-    // Idle life: blinking, twinkling sparks, breathing brackets.
+    // ── Idle life: blinking, twinkling sparks, breathing brackets ──
     let blinkTimer = 0;
     const scheduleBlink = () => {
       blinkTimer = window.setTimeout(() => {
@@ -651,7 +742,7 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
       },
     );
 
-    // Pupils follow the pointer anywhere on the page.
+    // ── Pupils follow the pointer anywhere on the page ──
     const eyeCenters = [
       { x: BOX.pupilL.cx, y: BOX.pupilL.cy },
       { x: BOX.pupilR.cx, y: BOX.pupilR.cy },
@@ -665,7 +756,41 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
         : null,
     );
 
-    // 3D tilt + foil sheen that follows the pointer across the sticker.
+    // ── Head turn: features shift toward the pointer; scrolling makes them bob ──
+    const face = { nx: 0, ny: 0, bob: 0 };
+    const faceMovers = faceGroups.map(({ key, el }) => ({
+      shift: FACE_SHIFT[key],
+      x: gsap.quickTo(el, "x", { duration: 0.5, ease: "power3.out" }),
+      y: gsap.quickTo(el, "y", { duration: 0.5, ease: "power3.out" }),
+    }));
+    const applyFace = () => {
+      faceMovers.forEach(({ shift, x, y }) => {
+        x(face.nx * shift.x);
+        y(face.ny * shift.y + face.bob * Math.abs(shift.y) * 0.9);
+      });
+    };
+
+    let lastScrollY = window.scrollY;
+    const onScroll = () => {
+      const dy = window.scrollY - lastScrollY;
+      lastScrollY = window.scrollY;
+      gsap.to(face, {
+        bob: clamp(dy * 0.05, -1.6, 1.6),
+        duration: 0.12,
+        overwrite: true,
+        onUpdate: applyFace,
+        onComplete: () => {
+          gsap.to(face, {
+            bob: 0,
+            duration: 0.9,
+            ease: "elastic.out(1, 0.35)",
+            onUpdate: applyFace,
+          });
+        },
+      });
+    };
+
+    // ── 3D tilt + foil sheen that follows the pointer across the sticker ──
     if (tilt) {
       gsap.set(tilt, { transformPerspective: 700, transformOrigin: "50% 50%" });
       const rotateX = gsap.quickTo(tilt, "rotationX", { duration: 0.6, ease: "power3.out" });
@@ -678,93 +803,384 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
       };
     }
 
-    // Left alone for a while, a corner lifts by itself to invite a peel.
+    // ── Idle: look around, then yawn and doze off until the pointer moves ──
     let lastActive = performance.now();
-    let peekTl: gsap.core.Timeline | null = null;
-    const endPeek = () => {
-      if (!peekTl) return;
-      peekTl.kill();
-      peekTl = null;
-      setHint(null);
-      const hovered = stickerRef.current?.hasAttribute("data-hover");
-      if (!hovered && !dragRef.current) peelRef.current?.release();
+    let idleStage = 0;
+    let idleTl: gsap.core.Timeline | null = null;
+    let lastSnore = 0;
+
+    const lookAround = () => {
+      trackEyes = false;
+      idleTl = gsap
+        .timeline({ onComplete: () => (trackEyes = true) })
+        .to(pupils, { x: -PUPIL_RANGE.x, y: 0, duration: 0.4, ease: "power2.inOut" })
+        .to(faceGroups.map((g) => g.el), { x: -3, duration: 0.4, ease: "power2.inOut" }, "<")
+        .to(pupils, { x: PUPIL_RANGE.x, duration: 0.55, ease: "power2.inOut" }, "+=0.5")
+        .to(faceGroups.map((g) => g.el), { x: 3, duration: 0.55, ease: "power2.inOut" }, "<")
+        .add(raiseBrows, "+=0.2")
+        .to(pupils, { x: 0, y: -2, duration: 0.35 }, "+=0.4")
+        .to(faceGroups.map((g) => g.el), { x: 0, duration: 0.35 }, "<");
     };
-    const peek = () => {
+
+    const doze = () => {
+      trackEyes = false;
+      idleTl = gsap
+        .timeline()
+        .to(pupils, { x: 0, y: 2, duration: 0.4 })
+        .to(mouth, { scaleX: 0.85, scaleY: 2.3, duration: 0.8, ease: "sine.inOut" }, 0)
+        .to(lids, { scaleY: 0.6, duration: 0.8, ease: "sine.inOut" }, 0)
+        .to(brows, { y: 3, duration: 0.8 }, 0)
+        .to(mouth, { scaleX: 1, scaleY: 1, duration: 0.6, ease: "sine.inOut" }, "+=0.7")
+        .add(() => setLids(0.62, 0.6));
+    };
+
+    const wake = () => {
+      if (idleStage === 0) return;
+      idleStage = 0;
+      idleTl?.kill();
+      idleTl = null;
+      trackEyes = true;
+      gsap.to(brows, { y: 0, duration: 0.3, overwrite: "auto" });
+      mouthTo(hovered ? 1.2 : 1, hovered ? 0.72 : 1, 0.3);
+      setLids(hovered ? 0.26 : 0, 0.12);
+      window.setTimeout(() => blink(), 140);
+    };
+
+    const idleTimer = window.setInterval(() => {
+      if (busyRef.current || modeRef.current === "carrying" || document.hidden) return;
+      const idle = performance.now() - lastActive;
+      if (idleStage === 0 && idle > IDLE_LOOK_MS) {
+        idleStage = 1;
+        lookAround();
+      } else if (idleStage === 1 && idle > IDLE_SLEEP_MS) {
+        idleStage = 2;
+        doze();
+      } else if (idleStage === 2 && performance.now() - lastSnore > 2600) {
+        lastSnore = performance.now();
+        const rect = sticker.getBoundingClientRect();
+        spawnSnore(fx, rect.right - rect.width * 0.18, rect.top + rect.height * 0.2);
+      }
+    }, 700);
+
+    // ── Peel it off with a right-click, carry it, click anywhere to stick it ──
+    const layer = document.createElement("div");
+    layer.className = styles.placeLayer;
+    document.body.appendChild(layer);
+
+    let grab = { x: 0, y: 0 };
+    let lastClient = { x: 0, y: 0 };
+    let lastMoveAt = 0;
+    let follow: { x: gsap.QuickToFunc; y: gsap.QuickToFunc } | null = null;
+    let swallowClick = false;
+
+    const headerHeight = () => document.querySelector("header")?.offsetHeight ?? 0;
+    const stickerWidth = () => sticker.offsetWidth;
+
+    /** Page coords for the sticker's top-left, kept inside the on-screen bounds. */
+    const boundedTarget = (clientX: number, clientY: number) => {
+      const w = stickerWidth();
+      const left = clamp(
+        clientX - grab.x,
+        BOUNDS_MARGIN,
+        window.innerWidth - w - BOUNDS_MARGIN,
+      );
+      const top = clamp(
+        clientY - grab.y,
+        headerHeight() + BOUNDS_MARGIN,
+        window.innerHeight - w - BOUNDS_MARGIN,
+      );
+      return { x: left + window.scrollX, y: top + window.scrollY };
+    };
+
+    const homeTarget = () => {
+      const r = slot.getBoundingClientRect();
+      return { x: r.left + window.scrollX, y: r.top + window.scrollY, w: r.width };
+    };
+
+    const toLayer = () => {
+      if (sticker.parentElement === layer) return;
+      const r = sticker.getBoundingClientRect();
+      sticker.style.width = `${slot.offsetWidth}px`;
+      layer.appendChild(sticker);
+      gsap.set(sticker, { x: r.left + window.scrollX, y: r.top + window.scrollY });
+      setAway(true);
+    };
+
+    const toSlot = () => {
+      gsap.killTweensOf(sticker, "x,y,rotation,scale");
+      if (sticker.parentElement !== slot) slot.appendChild(sticker);
+      sticker.style.width = "";
+      gsap.set(sticker, { x: 0, y: 0, rotation: 0, scale: 1 });
+      setAway(false);
+    };
+
+    const endCarry = () => {
+      follow = null;
+      sticker.classList.remove(styles.carried);
+      setCarrying(false);
+    };
+
+    const whee = () => {
+      gsap.to(brows, { y: -7, duration: 0.2, overwrite: "auto" });
+      mouthTo(0.75, 1.8, 0.2);
+      gsap.to(pupils, { scale: 0.8, duration: 0.2 });
+    };
+
+    const settle = () => {
+      gsap.to(brows, { y: 0, duration: 0.5, ease: "elastic.out(1, 0.4)", overwrite: "auto" });
+      mouthTo(1, 1, 0.5, "elastic.out(1, 0.5)");
+      gsap.to(pupils, { scale: 1, duration: 0.3 });
+    };
+
+    const pickup = (clientX: number, clientY: number) => {
       const peel = peelRef.current;
-      if (!peel || !sticker) return;
-      const size = sticker.getBoundingClientRect().width;
-      const directions = ["left", "right", "bottom"] as const;
-      const direction = directions[Math.floor(Math.random() * directions.length)];
-      const along = size * (0.55 + Math.random() * 0.3);
-      const state = { depth: 0 };
-      const apply = () => {
-        const d = state.depth;
+      if (!peel) return;
+      wake();
+      hoverOff();
+      tiltToRef.current?.(0, 0);
+      setHint(null);
+      modeRef.current = "lifting";
+      busyRef.current = true;
+
+      const r = sticker.getBoundingClientRect();
+      grab = { x: clientX - r.left, y: clientY - r.top };
+      lastClient = { x: clientX, y: clientY };
+
+      // A quick Sticker.js lift from the nearest edge sells the "peel off" moment.
+      const size = r.width;
+      const local = { x: grab.x, y: grab.y };
+      const distances = {
+        left: local.x,
+        right: size - local.x,
+        top: local.y,
+        bottom: size - local.y,
+      };
+      const direction = (Object.keys(distances) as (keyof typeof distances)[]).reduce(
+        (a, b) => (distances[a] <= distances[b] ? a : b),
+      );
+      const along = direction === "left" || direction === "right" ? local.y : local.x;
+      const lift = { depth: 0 };
+      const applyLift = () => {
+        const d = lift.depth;
         if (direction === "left") peel.update(d, along);
         else if (direction === "right") peel.update(size - d, along);
+        else if (direction === "top") peel.update(along, d);
         else peel.update(along, size - d);
       };
       peel.begin(
         direction === "left" ? 1 : direction === "right" ? size - 1 : along,
-        direction === "bottom" ? size - 1 : along,
+        direction === "top" ? 1 : direction === "bottom" ? size - 1 : along,
         direction,
       );
-      setHint("psst… peel me");
-      peekTl = gsap
-        .timeline({ onComplete: endPeek })
-        .to(state, { depth: size * 0.42, duration: 0.6, ease: "power2.out", onUpdate: apply })
-        .to(state, {
-          depth: size * 0.34,
-          duration: 0.2,
-          ease: "sine.inOut",
-          yoyo: true,
-          repeat: 3,
-          onUpdate: apply,
+      whee();
+
+      gsap
+        .timeline({
+          onComplete: () => {
+            peel.reset();
+            toLayer();
+            sticker.classList.add(styles.carried);
+            setCarrying(true);
+            follow = {
+              x: gsap.quickTo(sticker, "x", { duration: 0.3, ease: "power3.out" }),
+              y: gsap.quickTo(sticker, "y", { duration: 0.3, ease: "power3.out" }),
+            };
+            const target = boundedTarget(lastClient.x, lastClient.y);
+            follow.x(target.x);
+            follow.y(target.y);
+            gsap.to(sticker, { scale: 1.1, rotation: -6, duration: 0.3, ease: "back.out(2)" });
+            modeRef.current = "carrying";
+            busyRef.current = false;
+          },
         })
-        .to({}, { duration: 0.3 });
+        .to(lift, { depth: size * 0.3, duration: 0.2, ease: "power2.out", onUpdate: applyLift });
     };
-    const peekTimer = window.setInterval(() => {
-      const peel = peelRef.current;
-      if (!peel || !sticker || peekTl || peel.active) return;
-      if (busyRef.current || dragRef.current || document.hidden) return;
-      if (performance.now() - lastActive < IDLE_PEEK_MS) return;
-      const rect = sticker.getBoundingClientRect();
-      if (rect.bottom < 0 || rect.top > window.innerHeight) return;
-      lastActive = performance.now();
-      peek();
-    }, 1000);
+
+    const goHome = () => {
+      if (sticker.parentElement !== layer) return;
+      endCarry();
+      modeRef.current = "moving";
+      busyRef.current = true;
+      const home = homeTarget();
+      gsap
+        .timeline({
+          onComplete: () => {
+            toSlot();
+            modeRef.current = "home";
+            busyRef.current = false;
+            shockwave();
+            settle();
+            blink();
+          },
+        })
+        .to(sticker, {
+          x: home.x,
+          y: home.y,
+          rotation: 0,
+          scale: 1,
+          duration: 0.55,
+          ease: "power3.inOut",
+        });
+    };
+
+    const place = (clientX: number, clientY: number) => {
+      const target = boundedTarget(clientX, clientY);
+      const home = homeTarget();
+      const w = stickerWidth();
+      const homeVisible =
+        home.y - window.scrollY < window.innerHeight && home.y + home.w - window.scrollY > 0;
+      const nearHome = Math.hypot(target.x - home.x, target.y - home.y) < w * SNAP_HOME;
+      if (homeVisible && nearHome) {
+        goHome();
+        return;
+      }
+
+      endCarry();
+      modeRef.current = "moving";
+      busyRef.current = true;
+      gsap
+        .timeline({
+          onComplete: () => {
+            modeRef.current = "placed";
+            busyRef.current = false;
+            window.setTimeout(() => setHint(null), 700);
+          },
+        })
+        .to(sticker, {
+          x: target.x,
+          y: target.y,
+          scale: 1.18,
+          rotation: (Math.random() - 0.5) * 16,
+          duration: 0.14,
+          ease: "power2.out",
+        })
+        .to(sticker, { scale: 1, duration: 0.14, ease: "power4.in" })
+        .add(() => {
+          shockwave();
+          const { x, y } = stickerCenter();
+          spawnBurst(fx, x, y, 12, 1.2);
+          settle();
+          blink();
+          setHint("stuck!");
+        })
+        .to(sticker, {
+          keyframes: [
+            { scaleX: 1.06, scaleY: 0.94, duration: 0.07 },
+            { scaleX: 1, scaleY: 1, duration: 0.55, ease: "elastic.out(1, 0.35)" },
+          ],
+        });
+    };
+
+    carryRef.current = { pickup, goHome };
+
+    const followPointer = () => {
+      if (!follow) return;
+      const target = boundedTarget(lastClient.x, lastClient.y);
+      follow.x(target.x);
+      follow.y(target.y);
+    };
+
+    const onCapturePointerDown = (event: PointerEvent) => {
+      if (modeRef.current !== "carrying") return;
+      if (event.pointerType === "mouse" && event.button !== 0) return;
+      event.preventDefault();
+      event.stopPropagation();
+      swallowClick = true;
+      place(event.clientX, event.clientY);
+    };
+
+    const onCaptureClick = (event: MouseEvent) => {
+      if (!swallowClick) return;
+      swallowClick = false;
+      event.preventDefault();
+      event.stopPropagation();
+    };
+
+    const onCaptureContextMenu = (event: MouseEvent) => {
+      if (modeRef.current !== "carrying") return;
+      event.preventDefault();
+      event.stopPropagation();
+      place(event.clientX, event.clientY);
+    };
+
+    const onKey = (event: globalThis.KeyboardEvent) => {
+      if (event.key === "Escape" && modeRef.current === "carrying") goHome();
+    };
 
     const onPointerMove = (event: PointerEvent) => {
-      lastActive = performance.now();
-      endPeek();
+      const now = performance.now();
+      const dt = Math.max(1, now - lastMoveAt);
+      const speed = Math.hypot(event.clientX - lastClient.x, event.clientY - lastClient.y) / dt;
+      const vx = (event.clientX - lastClient.x) / dt;
+      lastMoveAt = now;
+      lastClient = { x: event.clientX, y: event.clientY };
+      lastActive = now;
+      wake();
+
+      if (modeRef.current === "carrying") {
+        followPointer();
+        gsap.to(sticker, {
+          rotation: -6 + clamp(vx * 5, -14, 14),
+          duration: 0.35,
+          ease: "power2.out",
+          overwrite: "auto",
+        });
+        return;
+      }
+      if (speed > SURPRISE_SPEED && dt < 40) surprise();
+
+      const rect = sticker.getBoundingClientRect();
+      if (rect.width < 1) return;
+
+      face.nx = clamp((event.clientX - (rect.left + rect.width / 2)) / (window.innerWidth / 2), -1, 1);
+      face.ny = clamp((event.clientY - (rect.top + rect.height / 2)) / (window.innerHeight / 2), -1, 1);
+      if (trackEyes) applyFace();
+
       if (!trackEyes) return;
-      const rect = stickerRef.current?.getBoundingClientRect();
-      if (!rect || rect.width < 1) return;
       const scale = rect.width / CROP.size;
       eyeCenters.forEach((eye, index) => {
         const mover = movers[index];
         if (!mover) return;
         const ex = rect.left + (eye.x - CROP.x) * scale;
         const ey = rect.top + (eye.y - CROP.y) * scale;
-        const dx = Math.max(-1, Math.min(1, (event.clientX - ex) / 160));
-        const dy = Math.max(-1, Math.min(1, (event.clientY - ey) / 160));
+        const dx = clamp((event.clientX - ex) / 160, -1, 1);
+        const dy = clamp((event.clientY - ey) / 160, -1, 1);
         mover.x(dx * PUPIL_RANGE.x);
         mover.y(dy * PUPIL_RANGE.y);
       });
     };
 
+    const onWindowScroll = () => {
+      onScroll();
+      if (modeRef.current === "carrying") followPointer();
+    };
+
     window.addEventListener("pointermove", onPointerMove, { passive: true });
+    window.addEventListener("scroll", onWindowScroll, { passive: true });
+    window.addEventListener("pointerdown", onCapturePointerDown, true);
+    window.addEventListener("click", onCaptureClick, true);
+    window.addEventListener("contextmenu", onCaptureContextMenu, true);
+    window.addEventListener("keydown", onKey);
 
     return () => {
       window.clearTimeout(blinkTimer);
-      window.clearInterval(peekTimer);
-      peekTl?.kill();
+      window.clearInterval(idleTimer);
+      idleTl?.kill();
       tiltToRef.current = null;
+      carryRef.current = null;
       busyRef.current = false;
+      modeRef.current = "home";
       twinkle.kill();
       breathe.kill();
       gsap.set([q("bracket-left-idle"), q("bracket-right-idle")], { x: 0 });
       window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("scroll", onWindowScroll);
+      window.removeEventListener("pointerdown", onCapturePointerDown, true);
+      window.removeEventListener("click", onCaptureClick, true);
+      window.removeEventListener("contextmenu", onCaptureContextMenu, true);
+      window.removeEventListener("keydown", onKey);
       gsap.killTweensOf([
+        face,
         hair,
         brows,
         mouth,
@@ -774,11 +1190,19 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
         ring,
         bracketL,
         bracketR,
+        ...faceGroups.map((g) => g.el),
         ...pupils,
         ...lids,
         ...glints,
         ...sparks,
       ]);
+      // React only knows the sticker as a child of its slot.
+      sticker.classList.remove(styles.carried);
+      toSlot();
+      setCarrying(false);
+      layer.remove();
+      fx.remove();
+      fxRef.current = null;
     };
   }, []);
 
@@ -788,13 +1212,14 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
 
   const onEnter = (part: Part, ...actions: string[]) => () => {
     // Parts sliding under a still pointer mid-spin/fling aren't real hovers.
-    if (busyRef.current) return;
+    if (!interactive()) return;
     setHint(HINTS[part]);
     run(...actions);
   };
 
   const onLeave = () => {
-    if (!busyRef.current) setHint(null);
+    if (busyRef.current) return;
+    setHint(stickerRef.current?.hasAttribute("data-hover") ? HINTS.face : null);
   };
 
   // A drag that peeled the sticker shouldn't also fire part actions.
@@ -806,13 +1231,10 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
         suppressClickRef.current = false;
         return;
       }
-      if (busyRef.current) return;
+      if (!interactive()) return;
       if (registerHit()) return;
-      const layer = burstRef.current;
-      if (layer && !reducedRef.current) {
-        const rect = layer.getBoundingClientRect();
-        spawnBurst(layer, event.clientX - rect.left, event.clientY - rect.top, 6);
-      }
+      const fx = fxRef.current;
+      if (fx) spawnBurst(fx, event.clientX, event.clientY, 6);
       run(...actions);
     };
 
@@ -831,7 +1253,7 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (event.key !== "Enter" && event.key !== " ") return;
     event.preventDefault();
-    if (busyRef.current || registerHit()) return;
+    if (!interactive() || registerHit()) return;
     run("boop", "burst");
   };
 
@@ -874,76 +1296,87 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
   const artwork = (interactive: boolean) => (
     <>
       <path d={PATH.base} fill={COLOR.cream} />
-      <path
-        data-part={interactive ? "ear" : undefined}
-        className={interactive ? styles.part : undefined}
-        d={PATH.ear}
-        fill={COLOR.cream}
-        onPointerEnter={interactive ? onEnter("ear", "wiggleEar") : undefined}
-        onPointerLeave={interactive ? onLeave : undefined}
-        onClick={interactive ? onPartClick("wiggleEar") : undefined}
-      />
-      <path
-        data-part={interactive ? "hair" : undefined}
-        className={interactive ? styles.part : undefined}
-        d={PATH.hair}
-        fill={COLOR.ink}
-        onPointerEnter={interactive ? onEnter("hair", "boing") : undefined}
-        onPointerLeave={interactive ? onLeave : undefined}
-        onClick={interactive ? onPartClick("boing", "raiseBrows") : undefined}
-      />
-      <path
-        data-part={interactive ? "brows" : undefined}
-        className={interactive ? styles.part : undefined}
-        d={PATH.brows}
-        fill={COLOR.ink}
-        onPointerEnter={interactive ? onEnter("brows", "raiseBrows") : undefined}
-        onPointerLeave={interactive ? onLeave : undefined}
-        onClick={interactive ? onPartClick("raiseBrows") : undefined}
-      />
-      <g
-        className={interactive ? styles.part : undefined}
-        onPointerEnter={interactive ? onEnter("beard") : undefined}
-        onPointerLeave={interactive ? onLeave : undefined}
-        onClick={interactive ? onPartClick("talk") : undefined}
-      >
-        <path d={PATH.beard} fill={COLOR.ink} />
-        <path data-part={interactive ? "mouth" : undefined} d={PATH.mouth} fill={COLOR.cream} />
+      <g data-face={interactive ? "ear" : undefined}>
+        <path
+          data-part={interactive ? "ear" : undefined}
+          className={interactive ? styles.part : undefined}
+          d={PATH.ear}
+          fill={COLOR.cream}
+          onPointerEnter={interactive ? onEnter("ear", "wiggleEar") : undefined}
+          onPointerLeave={interactive ? onLeave : undefined}
+          onClick={interactive ? onPartClick("wiggleEar") : undefined}
+        />
+      </g>
+      <g data-face={interactive ? "hair" : undefined}>
+        <path
+          data-part={interactive ? "hair" : undefined}
+          className={interactive ? styles.part : undefined}
+          d={PATH.hair}
+          fill={COLOR.ink}
+          onPointerEnter={interactive ? onEnter("hair", "boing") : undefined}
+          onPointerLeave={interactive ? onLeave : undefined}
+          onClick={interactive ? onPartClick("boing", "raiseBrows") : undefined}
+        />
+      </g>
+      <g data-face={interactive ? "brows" : undefined}>
+        <path
+          data-part={interactive ? "brows" : undefined}
+          className={interactive ? styles.part : undefined}
+          d={PATH.brows}
+          fill={COLOR.ink}
+          onPointerEnter={interactive ? onEnter("brows", "raiseBrows") : undefined}
+          onPointerLeave={interactive ? onLeave : undefined}
+          onClick={interactive ? onPartClick("raiseBrows") : undefined}
+        />
+      </g>
+      <g data-face={interactive ? "beard" : undefined}>
+        <g
+          className={interactive ? styles.part : undefined}
+          onPointerEnter={interactive ? onEnter("beard") : undefined}
+          onPointerLeave={interactive ? onLeave : undefined}
+          onClick={interactive ? onPartClick("talk") : undefined}
+        >
+          <path d={PATH.beard} fill={COLOR.ink} />
+          <path data-part={interactive ? "mouth" : undefined} d={PATH.mouth} fill={COLOR.cream} />
+        </g>
       </g>
 
-      {/* The traced frame is solid over the lenses, so the eyes draw on top of it. */}
-      <path
-        data-part={interactive ? "glasses" : undefined}
-        className={interactive ? styles.part : undefined}
-        d={PATH.glasses}
-        fill={COLOR.ink}
-        onPointerEnter={interactive ? onEnter("glasses", "glint") : undefined}
-        onPointerLeave={interactive ? onLeave : undefined}
-        onClick={interactive ? onPartClick("blink", "raiseBrows") : undefined}
-      />
+      {/* Glasses and eyes move as one so the lens clips stay aligned. The traced
+          frame is solid over the lenses, so the eyes draw on top of it. */}
+      <g data-face={interactive ? "eyes" : undefined}>
+        <path
+          data-part={interactive ? "glasses" : undefined}
+          className={interactive ? styles.part : undefined}
+          d={PATH.glasses}
+          fill={COLOR.ink}
+          onPointerEnter={interactive ? onEnter("glasses", "glint") : undefined}
+          onPointerLeave={interactive ? onLeave : undefined}
+          onClick={interactive ? onPartClick("blink", "raiseBrows") : undefined}
+        />
 
-      <g
-        className={interactive ? styles.part : undefined}
-        onPointerEnter={interactive ? onEnter("eyes", "glint") : undefined}
-        onPointerLeave={interactive ? onLeave : undefined}
-      >
         <g
-          clipPath={interactive ? "url(#lens-left)" : undefined}
-          onClick={interactive ? onPartClick("wink-left", "raiseBrows") : undefined}
+          className={interactive ? styles.part : undefined}
+          onPointerEnter={interactive ? onEnter("eyes", "glint") : undefined}
+          onPointerLeave={interactive ? onLeave : undefined}
         >
-          <path d={PATH.lensL} fill={COLOR.cream} />
-          <path data-part={interactive ? "pupil-left" : undefined} d={PATH.pupilL} fill={COLOR.ink} />
-          {interactive ? glintBar("left") : null}
-          {interactive ? lid("left") : null}
-        </g>
-        <g
-          clipPath={interactive ? "url(#lens-right)" : undefined}
-          onClick={interactive ? onPartClick("wink-right", "raiseBrows") : undefined}
-        >
-          <path d={PATH.lensR} fill={COLOR.cream} />
-          <path data-part={interactive ? "pupil-right" : undefined} d={PATH.pupilR} fill={COLOR.ink} />
-          {interactive ? glintBar("right") : null}
-          {interactive ? lid("right") : null}
+          <g
+            clipPath={interactive ? "url(#lens-left)" : undefined}
+            onClick={interactive ? onPartClick("wink-left", "raiseBrows") : undefined}
+          >
+            <path d={PATH.lensL} fill={COLOR.cream} />
+            <path data-part={interactive ? "pupil-left" : undefined} d={PATH.pupilL} fill={COLOR.ink} />
+            {interactive ? glintBar("left") : null}
+            {interactive ? lid("left") : null}
+          </g>
+          <g
+            clipPath={interactive ? "url(#lens-right)" : undefined}
+            onClick={interactive ? onPartClick("wink-right", "raiseBrows") : undefined}
+          >
+            <path d={PATH.lensR} fill={COLOR.cream} />
+            <path data-part={interactive ? "pupil-right" : undefined} d={PATH.pupilR} fill={COLOR.ink} />
+            {interactive ? glintBar("right") : null}
+            {interactive ? lid("right") : null}
+          </g>
         </g>
       </g>
     </>
@@ -994,50 +1427,62 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
         </g>
       </svg>
 
-      <div
-        ref={stickerRef}
-        className={styles.sticker}
-        style={stickerPosition}
-        onPointerMove={onStickerPointerMove}
-        onPointerDown={onStickerPointerDown}
-        onPointerUp={endDrag}
-        onPointerCancel={endDrag}
-        onPointerLeave={onStickerPointerLeave}
-        onClick={onPartClick("boop")}
-      >
-        <div ref={tiltRef} className={styles.tilt}>
-          <div ref={maskRef} className={styles.peelMask}>
-            <div ref={moveRef} className={styles.peelMove}>
-              <div className={styles.front}>
-                <svg
-                  className={styles.frontSvg}
-                  viewBox={cropViewBox}
-                  aria-hidden="true"
-                >
-                  <defs>
-                    {lensClip("lens-left", PATH.lensL)}
-                    {lensClip("lens-right", PATH.lensR)}
-                  </defs>
-                  {artwork(true)}
-                </svg>
-                <div className={styles.sheen} aria-hidden="true" />
-                <div ref={depthRef} className={styles.depth} />
-              </div>
-              <div ref={backRef} className={styles.back}>
-                <div className={styles.backClip}>
-                  <svg className={styles.ghost} viewBox={cropViewBox} aria-hidden="true">
-                    {artwork(false)}
+      {/* Children stay static: the sticker node is moved out to the page while
+          it's carried or stuck elsewhere, and returned here afterwards. */}
+      <div ref={slotRef} className={styles.slot} style={slotPosition}>
+        <button
+          type="button"
+          className={`${styles.homeGhost} ${away ? styles.homeGhostVisible : ""}`}
+          onClick={() => carryRef.current?.goHome()}
+          tabIndex={away ? 0 : -1}
+          aria-hidden={!away}
+          aria-label="Put the sticker back"
+        />
+        <div
+          ref={stickerRef}
+          className={styles.sticker}
+          style={maskVars}
+          onPointerEnter={onStickerPointerEnter}
+          onPointerMove={onStickerPointerMove}
+          onPointerDown={onStickerPointerDown}
+          onPointerUp={endDrag}
+          onPointerCancel={endDrag}
+          onPointerLeave={onStickerPointerLeave}
+          onContextMenu={onStickerContextMenu}
+          onClick={onPartClick("boop")}
+        >
+          <div ref={ringRef} className={styles.ring} aria-hidden="true" />
+          <div ref={tiltRef} className={styles.tilt}>
+            <div ref={maskRef} className={styles.peelMask}>
+              <div ref={moveRef} className={styles.peelMove}>
+                <div className={styles.front}>
+                  <svg
+                    className={styles.frontSvg}
+                    viewBox={cropViewBox}
+                    aria-hidden="true"
+                  >
+                    <defs>
+                      {lensClip("lens-left", PATH.lensL)}
+                      {lensClip("lens-right", PATH.lensR)}
+                    </defs>
+                    {artwork(true)}
                   </svg>
-                  <div ref={backShadowRef} className={styles.backShadow} />
+                  <div className={styles.sheen} aria-hidden="true" />
+                  <div ref={depthRef} className={styles.depth} />
+                </div>
+                <div ref={backRef} className={styles.back}>
+                  <div className={styles.backClip}>
+                    <svg className={styles.ghost} viewBox={cropViewBox} aria-hidden="true">
+                      {artwork(false)}
+                    </svg>
+                    <div ref={backShadowRef} className={styles.backShadow} />
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-
-      <div ref={ringRef} className={styles.ring} style={stickerPosition} aria-hidden="true" />
-      <div ref={burstRef} className={styles.burst} aria-hidden="true" />
 
       <svg
         className={`${styles.extras} ${styles.extrasTop}`}
@@ -1063,6 +1508,17 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
       >
         {hint ?? ""}
       </p>
+
+      {carrying
+        ? createPortal(
+            <div className={styles.bounds} aria-hidden="true">
+              <span className={styles.boundsLabel}>
+                Click anywhere to stick it · Esc puts it back
+              </span>
+            </div>,
+            document.body,
+          )
+        : null}
     </div>
   );
 }
