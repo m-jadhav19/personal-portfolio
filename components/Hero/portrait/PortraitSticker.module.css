@@ -35,15 +35,140 @@
 
 /* ─── Sticker (Sticker.js layer stack) ───────────────────────────────────── */
 
-.sticker {
+.slot {
   position: absolute;
   z-index: 2;
+  aspect-ratio: 1 / 1;
+}
+
+.sticker {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
   aspect-ratio: 1 / 1;
   pointer-events: auto;
   touch-action: pan-y pinch-zoom;
   user-select: none;
   -webkit-user-select: none;
+  -webkit-touch-callout: none;
   filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.45));
+  transition: filter 240ms var(--ease);
+}
+
+/* While carried the sticker floats higher and lets clicks through to the page. */
+.carried {
+  pointer-events: none;
+  filter: drop-shadow(0 26px 30px rgba(0, 0, 0, 0.55));
+}
+
+/* Page-level layer a peeled sticker is stuck onto, in document coordinates. */
+.placeLayer {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 900;
+  width: 0;
+  height: 0;
+}
+
+.placeLayer .sticker {
+  z-index: 1;
+}
+
+/* Fixed layer for glyph bursts and snores, wherever the sticker is. */
+.fx {
+  position: fixed;
+  inset: 0;
+  z-index: 1001;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* The bounds a carried sticker is kept inside. */
+.bounds {
+  position: fixed;
+  inset: calc(var(--nav-height, 64px) + 8px) 12px 12px;
+  z-index: 899;
+  border: 1.5px dashed color-mix(in srgb, #f5f0e0 55%, transparent);
+  border-radius: 14px;
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, #2457ff 35%, transparent),
+    inset 0 0 40px color-mix(in srgb, #2457ff 12%, transparent);
+  pointer-events: none;
+  animation: bounds-in 220ms var(--ease) both;
+}
+
+.boundsLabel {
+  position: absolute;
+  left: 50%;
+  bottom: 12px;
+  padding: 0.4rem 0.75rem;
+  transform: translateX(-50%);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--background) 88%, transparent);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--foreground);
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .boundsLabel {
+    width: max-content;
+    max-width: calc(100% - 24px);
+    white-space: normal;
+    text-align: center;
+    line-height: 1.5;
+  }
+}
+
+@keyframes bounds-in {
+  from {
+    opacity: 0;
+    transform: scale(1.015);
+  }
+}
+
+/* The empty spot left behind in the hero once the sticker is peeled away. */
+.homeGhost {
+  position: absolute;
+  inset: 0;
+  padding: 0;
+  border: 0;
+  background: repeating-linear-gradient(
+    135deg,
+    rgba(245, 240, 224, 0.14) 0 6px,
+    transparent 6px 13px
+  );
+  mask-image: var(--sticker-mask);
+  mask-size: 100% 100%;
+  mask-repeat: no-repeat;
+  -webkit-mask-image: var(--sticker-mask);
+  -webkit-mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+  opacity: 0;
+  pointer-events: none;
+  cursor: pointer;
+  transition: opacity 300ms var(--ease);
+}
+
+.homeGhostVisible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.homeGhostVisible:hover,
+.homeGhostVisible:focus-visible {
+  background: repeating-linear-gradient(
+    135deg,
+    rgba(245, 240, 224, 0.26) 0 6px,
+    transparent 6px 13px
+  );
+  outline: none;
 }
 
 .tilt {
@@ -96,8 +221,8 @@
 
 .ring {
   position: absolute;
-  z-index: 1;
-  aspect-ratio: 1 / 1;
+  inset: 0;
+  z-index: -1;
   border: 2px solid #2457ff;
   border-radius: 50%;
   opacity: 0;
@@ -105,12 +230,9 @@
   pointer-events: none;
 }
 
-.burst {
-  position: absolute;
-  inset: 0;
-  z-index: 5;
-  overflow: visible;
-  pointer-events: none;
+.snore {
+  color: #f5f0e0;
+  font-size: clamp(1.1rem, 1.7vw, 1.6rem);
 }
 
 .glyph {
