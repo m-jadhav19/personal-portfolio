@@ -150,11 +150,14 @@ export type DestroyEngine = {
   destroy: () => void;
 };
 
-const MAX_PARTICLES = 180;
-const MAX_ZAPS = 14;
-const MAX_HOLES = 160;
-const MAX_ENEMIES = 14;
-const MAX_PICKUPS = 5;
+const MAX_PARTICLES = 60;
+const MAX_ZAPS = 6;
+const MAX_HOLES = 48;
+const MAX_ENEMIES = 8;
+const MAX_PICKUPS = 4;
+const MAX_ENV_PROPS = 6;
+const MAX_EXPLOSIONS = 10;
+const MAX_BOSS_SHOTS = 12;
 const CHAR_MARGIN = 28;
 const CHAR_HIT_R = 20;
 
@@ -343,21 +346,23 @@ export function createDestroyEngine(
 
   function smashRevealWave(x: number, y: number, radius: number) {
     const cfg = WEAPON_CONFIG.rocket;
-    damageAt(x, y, radius, reducedMotion ? 5 : 10, { awardScore: false });
+    damageAt(x, y, radius, reducedMotion ? 2 : 4, { awardScore: false });
     scatterHoles(
       x,
       y,
-      radius * 0.9,
-      reducedMotion ? 5 : 12,
+      radius * 0.7,
+      reducedMotion ? 2 : 4,
       cfg,
     );
-    explosions.push({
-      x,
-      y,
-      life: 0.42,
-      maxLife: 0.42,
-    });
-    const crater = Math.max(18, radius * 0.35);
+    if (explosions.length < MAX_EXPLOSIONS) {
+      explosions.push({
+        x,
+        y,
+        life: 0.28,
+        maxLife: 0.28,
+      });
+    }
+    const crater = Math.max(14, radius * 0.28);
     const bits = spawnDebris(
       {
         left: x - crater,
@@ -365,12 +370,12 @@ export function createDestroyEngine(
         width: crater * 2,
         height: crater * 2,
       },
-      reducedMotion ? 10 : 22,
-      ["#fdba74", "#38bdf8", "#f97316", "#fde047", "#c084fc", "#a1a1aa"],
+      reducedMotion ? 4 : 8,
+      ["#fdba74", "#38bdf8", "#f97316", "#fde047", "#a1a1aa"],
     );
     particles = particles.concat(bits).slice(-MAX_PARTICLES);
     audio.play("boom");
-    options.onShake?.(0.9);
+    options.onShake?.(0.55);
   }
 
   function finishBossReveal() {
@@ -401,10 +406,10 @@ export function createDestroyEngine(
         y,
         startSize,
         t: 0,
-        duration: reducedMotion ? 0.5 : 1.2,
-        waveTimer: 0,
-        wavesLeft: reducedMotion ? 2 : 4,
-        flashMarks: [0.05, 0.28, 0.55, 0.82],
+        duration: reducedMotion ? 0.4 : 0.85,
+        waveTimer: 0.18,
+        wavesLeft: reducedMotion ? 1 : 2,
+        flashMarks: [0.08, 0.45],
         prev: {
           transform: el.style.transform,
           transition: el.style.transition,
@@ -449,8 +454,8 @@ export function createDestroyEngine(
     }
 
     el.style.transform = `translate(${wobble}px, ${lift}px) scale(${scale})`;
-    el.style.filter = `saturate(${1 + ease * 0.8}) contrast(${1 + ease * 0.35}) brightness(${1 + (1 - ease) * impactFlash})`;
-    el.style.opacity = String(1 - ease * 0.08);
+    // Skip per-frame CSS filters — they force expensive layer repaints.
+    el.style.opacity = String(1 - ease * 0.12);
 
     if (
       bossReveal.flashMarks.length &&
@@ -523,7 +528,7 @@ export function createDestroyEngine(
       if (e.hp <= 0) {
         const bits = spawnDebris(
           { left: e.x - 6, top: e.y - 6, width: 12, height: 12 },
-          reducedMotion ? 3 : 8,
+          reducedMotion ? 2 : 4,
           ["#92400e", "#4ade80", "#94a3b8", "#fde047"],
         );
         particles = particles.concat(bits).slice(-MAX_PARTICLES);
@@ -554,10 +559,12 @@ export function createDestroyEngine(
         if (result.killed) {
           killed += 1;
           addScore(500);
-          explosions.push({ x: boss.x, y: boss.y, life: 0.55, maxLife: 0.55 });
+          if (explosions.length < MAX_EXPLOSIONS) {
+            explosions.push({ x: boss.x, y: boss.y, life: 0.4, maxLife: 0.4 });
+          }
           const bits = spawnDebris(
             { left: boss.x - 30, top: boss.y - 30, width: 60, height: 60 },
-            reducedMotion ? 10 : 28,
+            reducedMotion ? 6 : 12,
             ["#fdba74", "#38bdf8", "#f97316", "#fde047", "#c084fc"],
           );
           particles = particles.concat(bits).slice(-MAX_PARTICLES);
@@ -598,11 +605,13 @@ export function createDestroyEngine(
       if (prop.hp > 0) continue;
       const bits = spawnDebris(
         { left: prop.x - 8, top: prop.y - 8, width: 16, height: 16 },
-        reducedMotion ? 4 : 10,
+        reducedMotion ? 2 : 4,
         ["#a16207", "#b91c1c", "#166534", "#78716c", "#fde68a"],
       );
       particles = particles.concat(bits).slice(-MAX_PARTICLES);
-      explosions.push({ x: prop.x, y: prop.y, life: 0.2, maxLife: 0.2 });
+      if (explosions.length < MAX_EXPLOSIONS) {
+        explosions.push({ x: prop.x, y: prop.y, life: 0.16, maxLife: 0.16 });
+      }
       addScore(ENV_PROP_STATS[prop.kind].score);
       envProps.splice(i, 1);
       smashed += 1;
@@ -612,14 +621,20 @@ export function createDestroyEngine(
   }
 
   function resize() {
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    // Cap DPR — full 2x canvases are a common freeze source on laptops.
+    const dpr = Math.min(window.devicePixelRatio || 1, 1.25);
     const w = window.innerWidth;
     const h = window.innerHeight;
-    canvas.width = Math.floor(w * dpr);
-    canvas.height = Math.floor(h * dpr);
+    const nextW = Math.floor(w * dpr);
+    const nextH = Math.floor(h * dpr);
+    if (canvas.width !== nextW || canvas.height !== nextH) {
+      canvas.width = nextW;
+      canvas.height = nextH;
+    }
     canvas.style.width = `${w}px`;
     canvas.style.height = `${h}px`;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.imageSmoothingEnabled = false;
     targets.invalidate();
   }
 
@@ -727,7 +742,7 @@ export function createDestroyEngine(
     opts?: { awardScore?: boolean },
   ) {
     const damaged = targets.applyDamage(x, y, radius, hits);
-    const particleBudget = reducedMotion ? 4 : 14;
+    const particleBudget = reducedMotion ? 2 : 4;
     for (const d of damaged) {
       const next = spawnDebris(d.box, particleBudget);
       particles = particles.concat(next).slice(-MAX_PARTICLES);
@@ -763,7 +778,7 @@ export function createDestroyEngine(
 
     if (destroyed === 0 && slain === 0) {
       // Empty space — surface crater + sparks
-      const sparkCount = reducedMotion ? 4 : 10;
+      const sparkCount = reducedMotion ? 2 : 4;
       const crater = Math.max(8, radius * 0.35);
       const sparks = spawnDebris(
         {
@@ -795,14 +810,16 @@ export function createDestroyEngine(
   function boom(x: number, y: number, cfg: WeaponConfig) {
     const radius = cfg.radius;
     const hits = cfg.hits;
-    explosions.push({ x, y, life: 0.35, maxLife: 0.35 });
+    if (explosions.length < MAX_EXPLOSIONS) {
+      explosions.push({ x, y, life: 0.28, maxLife: 0.28 });
+    }
     const destroyed = damageAt(x, y, radius, hits);
     hurtEnemiesAt(x, y, radius, Math.max(2, hits));
     scatterHoles(
       x,
       y,
-      radius * 0.85,
-      Math.max(4, Math.round(radius / 12)),
+      radius * 0.7,
+      Math.max(2, Math.min(6, Math.round(radius / 18))),
       cfg,
     );
     // Empty-space blast still scars the surface.
@@ -814,7 +831,7 @@ export function createDestroyEngine(
           width: radius * 0.6,
           height: radius * 0.6,
         },
-        reducedMotion ? 8 : 18,
+        reducedMotion ? 3 : 6,
         ["#a1a1aa", "#52525b", "#f97316", "#fde047"],
       );
       particles = particles.concat(sparks).slice(-MAX_PARTICLES);
@@ -958,11 +975,6 @@ export function createDestroyEngine(
       clampCharacter(pointer.x - dragOffset.x, pointer.y - dragOffset.y);
       walkPhase += 0.45;
     }
-  }
-
-  // Trackpad / mouse aim backup — some devices update mousemove more reliably.
-  function onMouseMove(event: MouseEvent) {
-    syncPointer(event.clientX, event.clientY);
   }
 
   function onPointerDown(event: PointerEvent) {
@@ -1153,12 +1165,12 @@ export function createDestroyEngine(
         }
         p.spin += dt;
         p.life -= dt;
-        // Mild pull sparks while drifting
-        if (!reducedMotion && Math.random() < 0.25) {
+        // Occasional pull spark — keep rare to avoid particle storms.
+        if (!reducedMotion && Math.random() < 0.06) {
           const sparks = spawnDebris(
             { left: p.x - 8, top: p.y - 8, width: 16, height: 16 },
-            2,
-            ["#c084fc", "#67e8f9", "#f5d0fe"],
+            1,
+            ["#c084fc", "#67e8f9"],
           );
           particles = particles.concat(sparks).slice(-MAX_PARTICLES);
         }
@@ -1223,7 +1235,7 @@ export function createDestroyEngine(
           spawnEnemyAtEdge(window.innerWidth, window.innerHeight),
         );
       }
-      enemySpawnTimer = 0.9 + Math.random() * 2.4;
+      enemySpawnTimer = 1.6 + Math.random() * 2.8;
     }
 
     for (let i = enemies.length - 1; i >= 0; i--) {
@@ -1275,6 +1287,7 @@ export function createDestroyEngine(
         reducedMotion,
       );
       for (const shot of newShots) {
+        if (bossShots.length >= MAX_BOSS_SHOTS) break;
         bossShots.push(shot);
         if (newShots.length && shot === newShots[0]) audio.play("bossAttack");
       }
@@ -1335,31 +1348,14 @@ export function createDestroyEngine(
     if (boss) drawPortraitBoss(ctx, boss, bossPortrait);
     for (const s of bossShots) drawBossShot(ctx, s);
 
-    // Fighting-game style impact frames for Mogambo's entrance.
+    // Light entrance flash — avoid "lighter" compositing (GPU heavy).
     if (impactFlash > 0) {
-      const frame = Math.floor(impactFlash * 36) % 2 === 0;
-      const a = Math.min(0.78, impactFlash * 1.6);
-      ctx.save();
-      ctx.globalCompositeOperation = "lighter";
-      ctx.fillStyle = frame
-        ? `rgba(255, 255, 255, ${a})`
-        : `rgba(253, 120, 40, ${a * 0.85})`;
+      const a = Math.min(0.35, impactFlash * 0.9);
+      ctx.fillStyle =
+        Math.floor(impactFlash * 20) % 2 === 0
+          ? `rgba(255, 255, 255, ${a})`
+          : `rgba(253, 140, 60, ${a})`;
       ctx.fillRect(0, 0, w, h);
-      if (bossReveal) {
-        ctx.globalCompositeOperation = "source-over";
-        ctx.strokeStyle = `rgba(253, 186, 116, ${0.35 + a * 0.4})`;
-        ctx.lineWidth = 4;
-        ctx.beginPath();
-        ctx.arc(
-          bossReveal.x,
-          bossReveal.y,
-          40 + (1 - bossReveal.t / bossReveal.duration) * 90,
-          0,
-          Math.PI * 2,
-        );
-        ctx.stroke();
-      }
-      ctx.restore();
     }
 
     for (const p of projectiles) {
@@ -1408,13 +1404,13 @@ export function createDestroyEngine(
     envProps = spawnEnvProps(
       window.innerWidth,
       window.innerHeight,
-      reducedMotion ? 6 : 12,
+      reducedMotion ? 3 : MAX_ENV_PROPS,
     );
     emitScore();
     emitBoss();
     lastTs = performance.now();
     window.addEventListener("pointermove", onPointerMove);
-    window.addEventListener("mousemove", onMouseMove, { passive: true });
+    // pointermove already covers mouse/trackpad — avoid double listeners.
     window.addEventListener("pointerdown", onPointerDown);
     window.addEventListener("pointerup", onPointerUp);
     window.addEventListener("pointercancel", onPointerUp);
@@ -1434,7 +1430,6 @@ export function createDestroyEngine(
     clearMoveKeys();
     cancelAnimationFrame(raf);
     window.removeEventListener("pointermove", onPointerMove);
-    window.removeEventListener("mousemove", onMouseMove);
     window.removeEventListener("pointerdown", onPointerDown);
     window.removeEventListener("pointerup", onPointerUp);
     window.removeEventListener("pointercancel", onPointerUp);
@@ -1485,7 +1480,7 @@ export function createDestroyEngine(
     envProps = spawnEnvProps(
       window.innerWidth,
       window.innerHeight,
-      reducedMotion ? 6 : 12,
+      reducedMotion ? 3 : MAX_ENV_PROPS,
     );
     emitHealth();
     emitBuffs();

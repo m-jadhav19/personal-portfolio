@@ -63,8 +63,8 @@ test("randomEnemyKind returns a known kind", () => {
 });
 
 test("spawnEnvProps scatters destructible 8-bit props", () => {
-  const props = spawnEnvProps(1000, 800, 8);
-  assert.equal(props.length, 8);
+  const props = spawnEnvProps(1000, 800, 6);
+  assert.equal(props.length, 6);
   for (const prop of props) {
     assert.ok(["crate", "barrel", "bush", "rock"].includes(prop.kind));
     assert.equal(prop.hp, ENV_PROP_STATS[prop.kind].hp);
