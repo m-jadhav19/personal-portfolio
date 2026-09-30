@@ -11,6 +11,8 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 
+import { isDestroyEggActive } from "@/lib/easterEggs/destroy/isActive";
+import { getDestroyWatchTarget } from "@/lib/easterEggs/destroy/watchTarget";
 import { scrollByDelta } from "@/lib/lenis";
 import { StickerPeel } from "@/lib/sticker";
 
@@ -1254,6 +1256,36 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
       if (modeRef.current === "carrying" || modeRef.current === "placed") goHome();
     };
 
+    const lookAtPoint = (clientX: number, clientY: number) => {
+      const rect = sticker.getBoundingClientRect();
+      if (rect.width < 1) return;
+
+      face.nx = clamp(
+        (clientX - (rect.left + rect.width / 2)) / (window.innerWidth / 2),
+        -1,
+        1,
+      );
+      face.ny = clamp(
+        (clientY - (rect.top + rect.height / 2)) / (window.innerHeight / 2),
+        -1,
+        1,
+      );
+      if (trackEyes) applyFace();
+
+      if (!trackEyes) return;
+      const scale = rect.width / CROP.size;
+      eyeCenters.forEach((eye, index) => {
+        const mover = movers[index];
+        if (!mover) return;
+        const ex = rect.left + (eye.x - CROP.x) * scale;
+        const ey = rect.top + (eye.y - CROP.y) * scale;
+        const dx = clamp((clientX - ex) / 160, -1, 1);
+        const dy = clamp((clientY - ey) / 160, -1, 1);
+        mover.x(dx * PUPIL_RANGE.x);
+        mover.y(dy * PUPIL_RANGE.y);
+      });
+    };
+
     const onPointerMove = (event: PointerEvent) => {
       if (press?.id === event.pointerId) {
         // Moving before the hold completes is a scroll or an edge peel, not a pickup.
@@ -1271,6 +1303,10 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
       const vx = (event.clientX - lastClient.x) / dt;
       lastMoveAt = now;
       lastClient = { x: event.clientX, y: event.clientY };
+
+      // In Destroy mode the sticker stares at the character instead of the pointer.
+      if (isDestroyEggActive()) return;
+
       lastActive = now;
       wake();
 
@@ -1285,27 +1321,20 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
         return;
       }
       if (speed > SURPRISE_SPEED && dt < 40) surprise();
-
-      const rect = sticker.getBoundingClientRect();
-      if (rect.width < 1) return;
-
-      face.nx = clamp((event.clientX - (rect.left + rect.width / 2)) / (window.innerWidth / 2), -1, 1);
-      face.ny = clamp((event.clientY - (rect.top + rect.height / 2)) / (window.innerHeight / 2), -1, 1);
-      if (trackEyes) applyFace();
-
-      if (!trackEyes) return;
-      const scale = rect.width / CROP.size;
-      eyeCenters.forEach((eye, index) => {
-        const mover = movers[index];
-        if (!mover) return;
-        const ex = rect.left + (eye.x - CROP.x) * scale;
-        const ey = rect.top + (eye.y - CROP.y) * scale;
-        const dx = clamp((event.clientX - ex) / 160, -1, 1);
-        const dy = clamp((event.clientY - ey) / 160, -1, 1);
-        mover.x(dx * PUPIL_RANGE.x);
-        mover.y(dy * PUPIL_RANGE.y);
-      });
+      lookAtPoint(event.clientX, event.clientY);
     };
+
+    let destroyLookRaf = 0;
+    const tickDestroyLook = () => {
+      destroyLookRaf = requestAnimationFrame(tickDestroyLook);
+      if (!isDestroyEggActive() || busyRef.current) return;
+      const target = getDestroyWatchTarget();
+      if (!target) return;
+      lastActive = performance.now();
+      if (idleStage !== 0) wake();
+      lookAtPoint(target.x, target.y);
+    };
+    destroyLookRaf = requestAnimationFrame(tickDestroyLook);
 
     const onWindowScroll = () => {
       onScroll();
@@ -1324,6 +1353,7 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
     sticker.addEventListener("pointerdown", onTouchPressStart);
 
     return () => {
+      cancelAnimationFrame(destroyLookRaf);
       cancelPress();
       stopEdgeScroll();
       window.clearTimeout(hintTimer);
