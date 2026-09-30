@@ -1,8 +1,9 @@
-/** Floating portrait boss for destroy mode. */
+/** Floating portrait boss for destroy mode — DOOM-style billboard enemy. */
 
 export const BOSS_NAME = "Mogambo";
 export const BOSS_MAX_HP = 120;
 export const BOSS_RADIUS = 52;
+export const BOSS_DRAW_SIZE = 96;
 export const BOSS_PORTRAIT_SRC = "/images/mandar-portrait.png";
 
 export type BossProjectile = {
@@ -16,14 +17,22 @@ export type BossProjectile = {
 export type PortraitBoss = {
   x: number;
   y: number;
+  /** Spawn / home anchor — float & retreat seek this, never a fixed screen orbit. */
+  homeX: number;
+  homeY: number;
+  /** Portrait pixel size at the moment of summon (for emerge shrink). */
+  startSize: number;
+  /** 0 → 1 DOOM emerge (shrink into gameplay size at home). */
+  emerge: number;
   hp: number;
   maxHp: number;
   phase: number;
   hitFlash: number;
-  /** charge | float | retreat */
-  mode: "float" | "charge" | "retreat";
+  /** emerge | float | charge | retreat */
+  mode: "emerge" | "float" | "charge" | "retreat";
   modeTimer: number;
   attackTimer: number;
+  facing: 1 | -1;
   radius: number;
   damage: number;
   alive: boolean;
@@ -32,18 +41,29 @@ export type PortraitBoss = {
 export function createPortraitBoss(
   width: number,
   height: number,
-  origin?: { x: number; y: number },
+  origin?: { x: number; y: number; size?: number },
 ): PortraitBoss {
+  const x = origin?.x ?? width * 0.62;
+  const y = origin?.y ?? height * 0.42;
+  const startSize = Math.max(
+    BOSS_DRAW_SIZE,
+    origin?.size ?? BOSS_DRAW_SIZE * 2.4,
+  );
   return {
-    x: origin?.x ?? width * 0.62,
-    y: origin?.y ?? height * 0.42,
+    x,
+    y,
+    homeX: x,
+    homeY: y,
+    startSize,
+    emerge: 0,
     hp: BOSS_MAX_HP,
     maxHp: BOSS_MAX_HP,
     phase: 0,
     hitFlash: 0,
-    mode: "float",
-    modeTimer: 2.4,
-    attackTimer: 1.6,
+    mode: "emerge",
+    modeTimer: 0.95,
+    attackTimer: 2.2,
+    facing: 1,
     radius: BOSS_RADIUS,
     damage: 18,
     alive: true,
@@ -55,6 +75,22 @@ export function loadBossPortrait(): HTMLImageElement {
   img.decoding = "async";
   img.src = BOSS_PORTRAIT_SRC;
   return img;
+}
+
+function seek(
+  boss: PortraitBoss,
+  tx: number,
+  ty: number,
+  speed: number,
+  dt: number,
+) {
+  const dx = tx - boss.x;
+  const dy = ty - boss.y;
+  const dist = Math.hypot(dx, dy) || 1;
+  const step = Math.min(dist, speed * dt);
+  boss.x += (dx / dist) * step;
+  boss.y += (dy / dist) * step;
+  return dist - step;
 }
 
 export function updatePortraitBoss(
@@ -73,45 +109,72 @@ export function updatePortraitBoss(
   boss.modeTimer -= dt;
   boss.attackTimer -= dt;
 
-  const cx = width * 0.58;
-  const cy = height * 0.4;
+  // Billboard faces the player (classic DOOM left/right frames).
+  if (Math.abs(target.x - boss.x) > 8) {
+    boss.facing = target.x >= boss.x ? 1 : -1;
+  }
+
+  if (boss.mode === "emerge") {
+    const duration = reducedMotion ? 0.35 : 0.95;
+    boss.emerge = Math.min(1, boss.emerge + dt / duration);
+    // Hold the spawn point — no teleport while transforming.
+    const settle = 1 - (1 - boss.emerge) ** 2;
+    boss.x = boss.homeX;
+    boss.y = boss.homeY - settle * (reducedMotion ? 10 : 22);
+    if (boss.emerge >= 1) {
+      boss.x = boss.homeX;
+      boss.y = boss.homeY;
+      boss.mode = "float";
+      boss.modeTimer = 2.2 + Math.random() * 1.2;
+    }
+    return shots;
+  }
 
   if (boss.mode === "float") {
-    const orbit = reducedMotion ? 28 : 54;
-    boss.x = cx + Math.cos(boss.phase * 0.7) * orbit;
-    boss.y = cy + Math.sin(boss.phase * 1.1) * (orbit * 0.55);
+    // Soft strafe/bob around home — never hard-snap to a screen orbit.
+    const strafe = reducedMotion ? 14 : 36;
+    const bob = reducedMotion ? 6 : 14;
+    const tx = boss.homeX + Math.cos(boss.phase * 0.85) * strafe;
+    const ty =
+      boss.homeY +
+      Math.sin(boss.phase * 2.4) * bob +
+      Math.sin(boss.phase * 0.55) * (strafe * 0.2);
+    seek(boss, tx, ty, reducedMotion ? 70 : 120, dt);
     if (boss.modeTimer <= 0) {
       boss.mode = "charge";
-      boss.modeTimer = 0.85;
+      boss.modeTimer = reducedMotion ? 0.7 : 0.95;
     }
   } else if (boss.mode === "charge") {
-    const dx = target.x - boss.x;
-    const dy = target.y - boss.y;
-    const dist = Math.hypot(dx, dy) || 1;
-    const speed = reducedMotion ? 160 : 260;
-    boss.x += (dx / dist) * speed * dt;
-    boss.y += (dy / dist) * speed * dt;
-    if (boss.modeTimer <= 0 || dist < 36) {
+    const left = seek(
+      boss,
+      target.x,
+      target.y,
+      reducedMotion ? 170 : 270,
+      dt,
+    );
+    if (boss.modeTimer <= 0 || left < 36) {
       boss.mode = "retreat";
-      boss.modeTimer = 1.1;
+      boss.modeTimer = 1.0;
     }
   } else {
-    const dx = cx - boss.x;
-    const dy = cy - boss.y;
-    const dist = Math.hypot(dx, dy) || 1;
-    boss.x += (dx / dist) * 140 * dt;
-    boss.y += (dy / dist) * 140 * dt;
-    if (boss.modeTimer <= 0 || dist < 24) {
+    // Retreat toward home (where the head tore out), then resume float.
+    const left = seek(
+      boss,
+      boss.homeX,
+      boss.homeY,
+      reducedMotion ? 130 : 190,
+      dt,
+    );
+    if (boss.modeTimer <= 0 || left < 20) {
       boss.mode = "float";
       boss.modeTimer = 2 + Math.random() * 1.6;
     }
   }
 
-  // Keep on screen
   boss.x = Math.min(width - 40, Math.max(40, boss.x));
   boss.y = Math.min(height - 60, Math.max(70, boss.y));
 
-  // Volley of ink shots toward the player
+  // No shooting while emerging — wait until he is "in the arena".
   if (boss.attackTimer <= 0) {
     const base = Math.atan2(target.y - boss.y, target.x - boss.x);
     const count = reducedMotion ? 2 : 3;
@@ -133,11 +196,23 @@ export function updatePortraitBoss(
   return shots;
 }
 
+export function bossDrawSize(boss: PortraitBoss): number {
+  if (boss.emerge >= 1) return BOSS_DRAW_SIZE;
+  const ease = 1 - (1 - boss.emerge) ** 3;
+  // DOOM-ish squash: grow slightly then settle into gameplay size.
+  const overshoot = Math.sin(ease * Math.PI) * 0.08;
+  return (
+    boss.startSize * (1 - ease) + BOSS_DRAW_SIZE * (ease + overshoot)
+  );
+}
+
 export function hurtBoss(
   boss: PortraitBoss,
   damage: number,
 ): { killed: boolean; hit: boolean } {
-  if (!boss.alive) return { killed: false, hit: false };
+  if (!boss.alive || boss.mode === "emerge") {
+    return { killed: false, hit: false };
+  }
   boss.hp = Math.max(0, boss.hp - damage);
   boss.hitFlash = 0.22;
   if (boss.hp <= 0) {
@@ -155,78 +230,103 @@ export function drawPortraitBoss(
   if (!boss.alive) return;
   const ox = Math.round(boss.x);
   const oy = Math.round(boss.y);
-  const bob = Math.sin(boss.phase * 3) * 3;
-  const pulse = 1 + Math.sin(boss.phase * 5) * 0.03;
-  const size = 96 * pulse;
+  const size = bossDrawSize(boss);
+  // Idle bob like a DOOM imp — quieter while emerging.
+  const bobAmp = boss.mode === "emerge" ? 1.5 : 3.5;
+  const bob = Math.sin(boss.phase * 3.2) * bobAmp;
+  const pulse =
+    boss.mode === "emerge"
+      ? 1
+      : 1 + Math.sin(boss.phase * 5) * 0.025;
 
-  // Shadow
-  ctx.fillStyle = "rgba(0,0,0,0.35)";
+  const drawW = size * pulse;
+  const drawH = size * pulse;
+
+  // Ground shadow scales with emerge so the handoff never "pops" size.
+  ctx.fillStyle = `rgba(0,0,0,${0.2 + boss.emerge * 0.2})`;
   ctx.beginPath();
-  ctx.ellipse(ox, oy + size * 0.55, size * 0.34, 10, 0, 0, Math.PI * 2);
+  ctx.ellipse(
+    ox,
+    oy + drawH * 0.52,
+    drawW * 0.32,
+    Math.max(6, drawH * 0.08),
+    0,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
 
-  // Aura ring (boss tell)
-  ctx.save();
-  ctx.strokeStyle =
-    boss.mode === "charge"
-      ? "rgba(239, 68, 68, 0.85)"
-      : "rgba(253, 186, 116, 0.7)";
-  ctx.lineWidth = 3;
-  ctx.beginPath();
-  ctx.arc(ox, oy + bob, size * 0.58, 0, Math.PI * 2);
-  ctx.stroke();
-  ctx.restore();
+  // Charge tell ring (skip during emerge)
+  if (boss.mode !== "emerge") {
+    ctx.save();
+    ctx.strokeStyle =
+      boss.mode === "charge"
+        ? "rgba(239, 68, 68, 0.85)"
+        : "rgba(253, 186, 116, 0.55)";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(ox, oy + bob, drawW * 0.56, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+  }
 
   ctx.save();
   if (boss.hitFlash > 0) {
     const blink = Math.floor(boss.hitFlash * 24) % 2 === 0;
     ctx.globalAlpha = blink ? 0.4 : 1;
   }
+  // Fade in slightly at the start of emerge so the DOM→canvas cut is soft.
+  if (boss.emerge < 0.12) {
+    ctx.globalAlpha = Math.min(ctx.globalAlpha, boss.emerge / 0.12);
+  }
 
   const imgReady =
-    portrait &&
-    portrait.complete &&
-    portrait.naturalWidth > 0;
+    portrait && portrait.complete && portrait.naturalWidth > 0;
+
+  ctx.translate(ox, oy + bob);
+  // Flip like DOOM directional sprites.
+  ctx.scale(boss.facing, 1);
+  ctx.imageSmoothingEnabled = false;
 
   if (imgReady) {
     ctx.beginPath();
-    ctx.arc(ox, oy + bob, size * 0.5, 0, Math.PI * 2);
+    ctx.arc(0, 0, drawW * 0.5, 0, Math.PI * 2);
     ctx.closePath();
     ctx.clip();
-    ctx.drawImage(
-      portrait,
-      ox - size / 2,
-      oy + bob - size / 2,
-      size,
-      size,
-    );
+    ctx.drawImage(portrait, -drawW / 2, -drawH / 2, drawW, drawH);
   } else {
-    // Fallback face blob
     ctx.fillStyle = "#fdba74";
     ctx.beginPath();
-    ctx.arc(ox, oy + bob, size * 0.45, 0, Math.PI * 2);
+    ctx.arc(0, 0, drawW * 0.45, 0, Math.PI * 2);
     ctx.fill();
     ctx.fillStyle = "#111";
-    ctx.fillRect(ox - 14, oy + bob - 8, 8, 8);
-    ctx.fillRect(ox + 6, oy + bob - 8, 8, 8);
+    ctx.fillRect(-14, -8, 8, 8);
+    ctx.fillRect(6, -8, 8, 8);
   }
   ctx.restore();
 
-  // Floating brackets vibe
-  ctx.save();
-  ctx.strokeStyle = "#38bdf8";
-  ctx.lineWidth = 3;
-  ctx.beginPath();
-  ctx.moveTo(ox - size * 0.62, oy + bob - 18);
-  ctx.lineTo(ox - size * 0.72, oy + bob);
-  ctx.lineTo(ox - size * 0.62, oy + bob + 18);
-  ctx.moveTo(ox + size * 0.62, oy + bob - 18);
-  ctx.lineTo(ox + size * 0.72, oy + bob);
-  ctx.lineTo(ox + size * 0.62, oy + bob + 18);
-  ctx.stroke();
-  ctx.restore();
+  // Brackets only once he has mostly shrunk into boss form.
+  if (boss.emerge > 0.55) {
+    const a = Math.min(1, (boss.emerge - 0.55) / 0.35);
+    ctx.save();
+    ctx.globalAlpha = a;
+    ctx.strokeStyle = "#38bdf8";
+    ctx.lineWidth = 3;
+    const bracketY = oy + bob;
+    ctx.beginPath();
+    ctx.moveTo(ox - drawW * 0.62, bracketY - 18);
+    ctx.lineTo(ox - drawW * 0.72, bracketY);
+    ctx.lineTo(ox - drawW * 0.62, bracketY + 18);
+    ctx.moveTo(ox + drawW * 0.62, bracketY - 18);
+    ctx.lineTo(ox + drawW * 0.72, bracketY);
+    ctx.lineTo(ox + drawW * 0.62, bracketY + 18);
+    ctx.stroke();
+    ctx.restore();
+  }
 
-  drawBossHealthBar(ctx, boss, ox, oy + bob - size * 0.62);
+  if (boss.emerge >= 1) {
+    drawBossHealthBar(ctx, boss, ox, oy + bob - drawH * 0.62);
+  }
 }
 
 export function drawBossHealthBar(

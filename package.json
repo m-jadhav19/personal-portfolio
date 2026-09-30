@@ -9,7 +9,8 @@
     "start": "next start",
     "lint": "next lint",
     "generate:thumbnails": "tsx scripts/generate-project-thumbnails.ts",
-    "generate:destroy-sprites": "python3 scripts/generate-destroy-sprites.py"
+    "generate:destroy-sprites": "python3 scripts/generate-destroy-sprites.py",
+    "crop:destroy-sprites": "python3 scripts/crop-destroy-spritesheet.py"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",

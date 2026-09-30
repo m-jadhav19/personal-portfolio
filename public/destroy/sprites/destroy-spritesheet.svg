@@ -1,0 +1,296 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="384" height="448" viewBox="0 0 384 448" shape-rendering="crispEdges">
+<!-- Transparent sprite sheet. Static assets first, then 3-frame enemy animations. -->
+<g transform="translate(8,14)">
+
+<g>
+<rect x="15" y="2" width="13" height="3" fill="#4b261f"/>
+<rect x="11" y="5" width="19" height="8" fill="#b96843"/>
+<rect x="14" y="7" width="13" height="7" fill="#f0ad76"/>
+<rect x="25" y="8" width="4" height="2" fill="#171522"/>
+<rect x="10" y="6" width="5" height="3" fill="#e43b30"/>
+<rect x="8" y="9" width="7" height="3" fill="#e43b30"/>
+<rect x="12" y="13" width="14" height="3" fill="#171522"/>
+<rect x="9" y="14" width="9" height="4" fill="#34452c"/>
+<rect x="18" y="15" width="10" height="7" fill="#34452c"/>
+<rect x="24" y="16" width="8" height="5" fill="#222c24"/>
+<rect x="28" y="15" width="11" height="5" fill="#5b6678"/>
+<rect x="37" y="16" width="8" height="3" fill="#242a35"/>
+<rect x="39" y="16" width="4" height="2" fill="#e43b30"/>
+<rect x="13" y="18" width="7" height="7" fill="#4a5d34"/>
+<rect x="20" y="20" width="7" height="7" fill="#3c4d2c"/>
+</g>
+
+<rect x="12" y="24" width="6" height="8" fill="#20283a"/>
+<rect x="9" y="31" width="11" height="3" fill="#171522"/>
+<rect x="22" y="25" width="6" height="7" fill="#20283a"/>
+<rect x="24" y="31" width="11" height="3" fill="#171522"/>
+
+</g>
+<g transform="translate(72,14)">
+
+<g>
+<rect x="15" y="2" width="13" height="3" fill="#4b261f"/>
+<rect x="11" y="5" width="19" height="8" fill="#b96843"/>
+<rect x="14" y="7" width="13" height="7" fill="#f0ad76"/>
+<rect x="25" y="8" width="4" height="2" fill="#171522"/>
+<rect x="10" y="6" width="5" height="3" fill="#e43b30"/>
+<rect x="8" y="9" width="7" height="3" fill="#e43b30"/>
+<rect x="12" y="13" width="14" height="3" fill="#171522"/>
+<rect x="9" y="14" width="9" height="4" fill="#34452c"/>
+<rect x="18" y="15" width="10" height="7" fill="#34452c"/>
+<rect x="24" y="16" width="8" height="5" fill="#222c24"/>
+<rect x="28" y="15" width="11" height="5" fill="#5b6678"/>
+<rect x="37" y="16" width="8" height="3" fill="#242a35"/>
+<rect x="39" y="16" width="4" height="2" fill="#e43b30"/>
+<rect x="13" y="18" width="7" height="7" fill="#4a5d34"/>
+<rect x="20" y="20" width="7" height="7" fill="#3c4d2c"/>
+</g>
+
+<rect x="12" y="24" width="6" height="7" fill="#20283a"/>
+<rect x="8" y="30" width="11" height="4" fill="#171522"/>
+<rect x="23" y="25" width="6" height="6" fill="#20283a"/>
+<rect x="27" y="30" width="10" height="4" fill="#171522"/>
+
+</g>
+<g transform="translate(136,14)">
+
+<g>
+<rect x="15" y="2" width="13" height="3" fill="#4b261f"/>
+<rect x="11" y="5" width="19" height="8" fill="#b96843"/>
+<rect x="14" y="7" width="13" height="7" fill="#f0ad76"/>
+<rect x="25" y="8" width="4" height="2" fill="#171522"/>
+<rect x="10" y="6" width="5" height="3" fill="#e43b30"/>
+<rect x="8" y="9" width="7" height="3" fill="#e43b30"/>
+<rect x="12" y="13" width="14" height="3" fill="#171522"/>
+<rect x="9" y="14" width="9" height="4" fill="#34452c"/>
+<rect x="18" y="15" width="10" height="7" fill="#34452c"/>
+<rect x="24" y="16" width="8" height="5" fill="#222c24"/>
+<rect x="28" y="15" width="11" height="5" fill="#5b6678"/>
+<rect x="37" y="16" width="8" height="3" fill="#242a35"/>
+<rect x="39" y="16" width="4" height="2" fill="#e43b30"/>
+<rect x="13" y="18" width="7" height="7" fill="#4a5d34"/>
+<rect x="20" y="20" width="7" height="7" fill="#3c4d2c"/>
+</g>
+
+<rect x="13" y="24" width="6" height="6" fill="#20283a"/>
+<rect x="7" y="29" width="11" height="4" fill="#171522"/>
+<rect x="22" y="25" width="6" height="8" fill="#20283a"/>
+<rect x="25" y="32" width="11" height="3" fill="#171522"/>
+
+</g>
+<g transform="translate(209,24)">
+
+<rect x="3" y="5" width="18" height="6" fill="#596579"/>
+<rect x="8" y="3" width="10" height="3" fill="#2a3140"/>
+<rect x="20" y="6" width="8" height="3" fill="#171522"/>
+<rect x="13" y="11" width="4" height="3" fill="#252c38"/>
+<rect x="17" y="6" width="6" height="2" fill="#e43b30"/>
+<rect x="1" y="7" width="4" height="2" fill="#171522"/>
+
+</g>
+<g transform="translate(279,27)">
+
+<rect x="2" y="3" width="14" height="3" fill="#ff3d36"/>
+<rect x="5" y="4" width="9" height="1" fill="#fff08a"/>
+<rect x="0" y="4" width="3" height="1" fill="#e85cff"/>
+<rect x="15" y="2" width="2" height="5" fill="#ff6b24"/>
+
+</g>
+<g transform="translate(340,20)">
+
+<polygon points="5,8 17,5 22,10 17,17 5,15" fill="#aeb8c8"/>
+<polygon points="17,5 22,10 17,17" fill="#e43b30"/>
+<rect x="3" y="9" width="4" height="5" fill="#596579"/>
+<rect x="6" y="5" width="3" height="4" fill="#d43a2f"/>
+<rect x="7" y="15" width="4" height="4" fill="#d43a2f"/>
+<rect x="0" y="10" width="4" height="3" fill="#f07b2d"/>
+<rect x="1" y="8" width="2" height="2" fill="#ffd34d"/>
+
+</g>
+<g transform="translate(17,85)">
+
+<rect x="8" y="2" width="13" height="2" fill="#5f19c9"/>
+<rect x="5" y="4" width="19" height="3" fill="#8d28ff"/>
+<rect x="3" y="7" width="6" height="7" fill="#6f1ce0"/>
+<rect x="7" y="14" width="16" height="4" fill="#8d28ff"/>
+<rect x="18" y="7" width="8" height="9" fill="#4a12a8"/>
+<rect x="11" y="6" width="10" height="3" fill="#e85cff"/>
+<rect x="9" y="9" width="10" height="3" fill="#c04cff"/>
+<rect x="13" y="12" width="7" height="3" fill="#e85cff"/>
+<rect x="1" y="8" width="2" height="3" fill="#e85cff"/>
+<rect x="25" y="5" width="3" height="3" fill="#e85cff"/>
+<rect x="23" y="17" width="3" height="2" fill="#9b42ff"/>
+
+</g>
+<g transform="translate(81,82)">
+
+<polygon points="13,1 17,5 21,2 21,7 27,7 24,11 29,14 24,16 26,22 20,20 18,26 14,21 9,24 9,19 3,20 6,15 1,12 7,9 5,5 11,6" fill="#8c241c"/>
+<polygon points="12,5 17,4 20,8 25,9 21,13 24,17 19,18 17,23 13,19 8,20 9,15 5,12 10,10" fill="#f07b2d"/>
+<polygon points="13,8 18,7 21,11 19,15 21,17 16,18 12,15 9,13 12,11" fill="#ffd34d"/>
+<rect x="15" y="10" width="4" height="5" fill="#fff4a0"/>
+
+</g>
+<g transform="translate(139,84)">
+
+<rect x="4" y="8" width="25" height="8" fill="#4e5b70"/><rect x="10" y="5" width="12" height="4" fill="#273142"/>
+<rect x="28" y="10" width="9" height="4" fill="#171522"/><rect x="17" y="11" width="7" height="3" fill="#e43b30"/>
+<rect x="12" y="16" width="5" height="5" fill="#252c38"/><rect x="2" y="10" width="5" height="4" fill="#171522"/>
+
+</g>
+<g transform="translate(203,81)">
+
+<polygon points="8,12 27,7 36,14 27,22 8,19" fill="#9da9bb"/><polygon points="27,7 36,14 27,22" fill="#e43b30"/>
+<rect x="5" y="14" width="6" height="5" fill="#4c596c"/><rect x="10" y="9" width="4" height="5" fill="#e43b30"/>
+<rect x="11" y="19" width="5" height="5" fill="#e43b30"/><rect x="1" y="15" width="5" height="3" fill="#f07b2d"/>
+
+</g>
+<g transform="translate(267,82)">
+
+<rect x="12" y="2" width="18" height="3" fill="#6d1ce0"/><rect x="7" y="5" width="28" height="4" fill="#922cff"/>
+<rect x="4" y="9" width="8" height="9" fill="#5c14bd"/><rect x="10" y="18" width="23" height="5" fill="#7b21e7"/>
+<rect x="29" y="8" width="8" height="12" fill="#45109a"/><rect x="15" y="8" width="14" height="3" fill="#e85cff"/>
+<rect x="12" y="12" width="13" height="4" fill="#b943ff"/><rect x="18" y="16" width="8" height="3" fill="#e85cff"/>
+
+</g>
+<g transform="translate(331,81)">
+
+<rect x="7" y="11" width="23" height="8" fill="#53637a"/><rect x="12" y="7" width="10" height="4" fill="#2a3445"/>
+<rect x="29" y="13" width="7" height="4" fill="#171522"/><rect x="16" y="19" width="5" height="5" fill="#26303e"/>
+<polygon points="31,4 26,13 31,13 25,23 37,12 32,12 36,4" fill="#4db8ff"/>
+<rect x="33" y="6" width="2" height="4" fill="#eafaff"/>
+
+</g>
+<g transform="translate(20,149)">
+
+<rect x="5" y="2" width="14" height="17" fill="#e7e7e1"/><rect x="2" y="6" width="20" height="11" fill="#f4f3ec"/>
+<rect x="9" y="6" width="6" height="11" fill="#d62d32"/><rect x="6" y="9" width="12" height="5" fill="#d62d32"/>
+<rect x="7" y="2" width="10" height="2" fill="#b5b8bb"/><rect x="5" y="18" width="14" height="2" fill="#9fa3a8"/>
+
+</g>
+<g transform="translate(84,151)">
+
+<polygon points="12,1 21,4 20,12 12,17 4,12 3,4" fill="#1769cf"/>
+<polygon points="12,3 18,5 17,11 12,14 7,11 6,5" fill="#48b9ff"/>
+<polygon points="10,5 15,5 15,9 12,12 9,10" fill="#bdf4ff"/>
+
+</g>
+<g transform="translate(148,149)">
+
+<rect x="3" y="11" width="5" height="8" fill="#f0b52b"/><rect x="9" y="6" width="5" height="13" fill="#ffdd3f"/><rect x="15" y="10" width="5" height="9" fill="#f04b30"/>
+<rect x="4" y="2" width="4" height="8" fill="#4caf50"/><polygon points="4,2 10,5 4,8" fill="#75e85e"/>
+<polygon points="13,3 18,6 13,9" fill="#4caf50"/><rect x="12" y="1" width="3" height="7" fill="#76e85f"/>
+
+</g>
+<g transform="translate(212,149)">
+
+<rect x="2" y="1" width="20" height="19" fill="#7b4828"/><rect x="4" y="3" width="16" height="15" fill="#b8783d"/>
+<polygon points="5,4 8,4 19,16 19,19 16,19 5,8" fill="#704021"/>
+<polygon points="19,4 16,4 5,16 5,19 8,19 19,8" fill="#704021"/>
+<rect x="2" y="1" width="20" height="3" fill="#d08b48"/><rect x="2" y="18" width="20" height="3" fill="#5c351f"/>
+
+</g>
+<g transform="translate(276,149)">
+
+<rect x="5" y="2" width="14" height="17" fill="#8e2028"/><rect x="7" y="4" width="10" height="13" fill="#e3322f"/>
+<rect x="4" y="2" width="16" height="3" fill="#bfc0b7"/><rect x="4" y="16" width="16" height="3" fill="#6f7470"/>
+<rect x="8" y="8" width="8" height="6" fill="#ffd34d"/><polygon points="12,7 15,12 12,15 9,12" fill="#e94b25"/>
+
+</g>
+<g transform="translate(340,151)">
+
+<polygon points="1,16 3,10 7,9 8,5 12,3 16,5 19,4 22,8 23,15" fill="#245b2b"/>
+<rect x="3" y="10" width="18" height="7" fill="#347d32"/><rect x="7" y="7" width="5" height="5" fill="#56a83b"/>
+<rect x="14" y="6" width="5" height="5" fill="#63b73f"/><rect x="5" y="13" width="5" height="3" fill="#5ca83a"/>
+
+</g>
+<g transform="translate(20,215)">
+
+<polygon points="2,15 5,9 10,7 13,2 19,4 22,10 20,16" fill="#5b5960"/>
+<polygon points="5,12 9,8 13,8 15,4 19,6 20,11 17,14" fill="#8b8990"/>
+<rect x="8" y="8" width="5" height="3" fill="#a6a1a0"/><rect x="4" y="14" width="14" height="2" fill="#414047"/>
+
+</g>
+<g transform="translate(84,212)">
+
+<polygon points="8,3 16,4 21,9 20,17 15,21 8,20 3,15 4,8" fill="#4e4850"/>
+<polygon points="8,6 15,6 18,10 17,16 13,18 7,17 5,13 6,9" fill="#1a1820"/>
+<rect x="9" y="7" width="5" height="2" fill="#82747a"/><rect x="4" y="10" width="2" height="4" fill="#6b6269"/>
+
+</g>
+<g transform="translate(148,212)">
+
+<polygon points="10,2 15,5 20,5 19,10 22,14 17,16 15,21 10,18 5,20 5,15 2,12 6,9 5,5" fill="#575059"/>
+<polygon points="9,7 15,6 18,10 16,15 11,17 7,13" fill="#17161d"/>
+<rect x="10" y="7" width="5" height="2" fill="#8a7c82"/><rect x="17" y="11" width="3" height="2" fill="#756a70"/>
+
+</g>
+<g transform="translate(212,213)">
+
+<polygon points="6,5 12,2 18,5 21,10 18,17 12,19 6,17 3,12" fill="#514b52"/>
+<polygon points="8,7 13,5 18,9 17,14 12,16 7,13" fill="#18171e"/>
+<rect x="9" y="6" width="4" height="2" fill="#85777e"/><rect x="17" y="9" width="2" height="4" fill="#71666c"/>
+
+</g>
+<g transform="translate(276,215)">
+
+<path d="M3 4h4l2 4 3-2 2 5 4-2 3 5" stroke="#302c33" stroke-width="2" fill="none"/>
+<path d="M9 8l-3 5M14 11l-2 5M18 9l4-3" stroke="#6d6269" stroke-width="1" fill="none"/>
+
+</g>
+<g transform="translate(346,218)">
+
+<rect x="0" y="0" width="12" height="12" fill="#2a2a31"/>
+<rect x="1" y="1" width="10" height="1" fill="#3b3b43"/>
+<rect x="1" y="10" width="10" height="1" fill="#1c1c22"/>
+<rect x="1" y="2" width="1" height="8" fill="#34343b"/>
+
+</g>
+<g transform="translate(20,279)"><g transform="translate(0,0)">
+<rect x="7" y="4" width="11" height="9" fill="#713e27"/><rect x="9" y="2" width="7" height="4" fill="#a85b2c"/>
+<rect x="5" y="7" width="15" height="6" fill="#8b4a27"/><rect x="17" y="8" width="5" height="3" fill="#e43b30"/>
+<rect x="2" y="13" width="5" height="2" fill="#171522"/><rect x="8" y="13" width="3" height="4" fill="#171522"/>
+<rect x="15" y="13" width="3" height="3" fill="#171522"/><rect x="19" y="12" width="4" height="2" fill="#171522"/>
+<rect x="4" y="4" width="2" height="4" fill="#171522"/><rect x="18" y="3" width="2" height="5" fill="#171522"/></g></g>
+<g transform="translate(84,279)"><g transform="translate(0,1)">
+<rect x="7" y="3" width="11" height="9" fill="#713e27"/><rect x="9" y="1" width="7" height="4" fill="#a85b2c"/>
+<rect x="5" y="6" width="15" height="6" fill="#8b4a27"/><rect x="17" y="7" width="5" height="3" fill="#e43b30"/>
+<rect x="3" y="12" width="4" height="3" fill="#171522"/><rect x="9" y="12" width="3" height="4" fill="#171522"/>
+<rect x="14" y="12" width="3" height="4" fill="#171522"/><rect x="19" y="13" width="4" height="2" fill="#171522"/>
+<rect x="4" y="3" width="2" height="4" fill="#171522"/><rect x="18" y="2" width="2" height="5" fill="#171522"/></g></g>
+<g transform="translate(148,279)"><g transform="translate(0,0)">
+<rect x="7" y="4" width="11" height="9" fill="#713e27"/><rect x="9" y="2" width="7" height="4" fill="#a85b2c"/>
+<rect x="5" y="7" width="15" height="6" fill="#8b4a27"/><rect x="17" y="8" width="5" height="3" fill="#e43b30"/>
+<rect x="4" y="12" width="4" height="2" fill="#171522"/><rect x="8" y="13" width="3" height="4" fill="#171522"/>
+<rect x="15" y="13" width="3" height="4" fill="#171522"/><rect x="18" y="13" width="5" height="2" fill="#171522"/>
+<rect x="4" y="4" width="2" height="4" fill="#171522"/><rect x="18" y="3" width="2" height="5" fill="#171522"/></g></g>
+<rect x="192" y="256" width="192" height="64" fill="none"/>
+<g transform="translate(20,343)"><g transform="translate(0,0)">
+<rect x="6" y="6" width="13" height="8" fill="#687991"/><rect x="9" y="4" width="8" height="3" fill="#3c4c65"/>
+<rect x="3" y="5" width="5" height="2" fill="#27364d"/><rect x="17" y="5" width="5" height="2" fill="#27364d"/>
+<rect x="19" y="8" width="4" height="4" fill="#e43b30"/><rect x="10" y="8" width="5" height="3" fill="#9db7d4"/>
+<rect x="2" y="13" width="7" height="2" fill="#171522"/><rect x="16" y="13" width="7" height="2" fill="#171522"/></g></g>
+<g transform="translate(84,343)"><g transform="translate(0,1)">
+<rect x="6" y="5" width="13" height="8" fill="#687991"/><rect x="9" y="3" width="8" height="3" fill="#3c4c65"/>
+<rect x="1" y="4" width="7" height="2" fill="#27364d"/><rect x="17" y="4" width="7" height="2" fill="#27364d"/>
+<rect x="19" y="7" width="4" height="4" fill="#e43b30"/><rect x="10" y="7" width="5" height="3" fill="#9db7d4"/>
+<rect x="3" y="12" width="6" height="2" fill="#171522"/><rect x="16" y="12" width="6" height="2" fill="#171522"/></g></g>
+<g transform="translate(148,343)"><g transform="translate(0,0)">
+<rect x="6" y="6" width="13" height="8" fill="#687991"/><rect x="9" y="4" width="8" height="3" fill="#3c4c65"/>
+<rect x="4" y="4" width="4" height="2" fill="#27364d"/><rect x="17" y="4" width="5" height="3" fill="#27364d"/>
+<rect x="19" y="8" width="4" height="4" fill="#e43b30"/><rect x="10" y="8" width="5" height="3" fill="#9db7d4"/>
+<rect x="2" y="13" width="7" height="2" fill="#171522"/><rect x="16" y="13" width="7" height="2" fill="#171522"/></g></g>
+<rect x="192" y="320" width="192" height="64" fill="none"/>
+<g transform="translate(20,407)"><g><polygon points="3,15 5,9 9,5 17,4 21,8 22,15" fill="#2f8f3c"/>
+<rect x="7" y="8" width="11" height="7" fill="#51c94e"/><rect x="10" y="6" width="7" height="3" fill="#72e55d"/>
+<rect x="6" y="10" width="3" height="3" fill="#c8ff73"/><rect x="17" y="11" width="3" height="3" fill="#183d20"/>
+<rect x="2" y="15" width="20" height="2" fill="#174e29"/></g></g>
+<g transform="translate(84,407)"><g><polygon points="2,16 4,9 8,4 12,3 17,4 21,8 23,16" fill="#2f8f3c"/>
+<rect x="6" y="8" width="13" height="8" fill="#51c94e"/><rect x="9" y="5" width="8" height="3" fill="#72e55d"/>
+<rect x="5" y="10" width="3" height="3" fill="#c8ff73"/><rect x="17" y="11" width="3" height="3" fill="#183d20"/>
+<rect x="1" y="16" width="22" height="2" fill="#174e29"/></g></g>
+<g transform="translate(148,407)"><g><polygon points="4,15 6,7 10,4 17,5 20,8 22,15" fill="#2f8f3c"/>
+<rect x="7" y="8" width="11" height="7" fill="#51c94e"/><rect x="10" y="6" width="7" height="3" fill="#72e55d"/>
+<rect x="7" y="10" width="3" height="3" fill="#c8ff73"/><rect x="16" y="11" width="3" height="3" fill="#183d20"/>
+<rect x="3" y="15" width="19" height="2" fill="#174e29"/></g></g>
+<rect x="192" y="384" width="192" height="64" fill="none"/>
+</svg>

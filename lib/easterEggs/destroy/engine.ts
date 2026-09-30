@@ -36,6 +36,10 @@ import {
   type TargetRegistry,
 } from "./targets";
 import {
+  earliestCircleHit,
+  sampleSegment,
+} from "./collision";
+import {
   createBulletHole,
   drawBlasterBolt,
   drawBulletHole,
@@ -63,23 +67,15 @@ import {
   type WeaponId,
 } from "./weapons";
 
-type BossReveal = {
-  el: HTMLElement;
+/** Screen FX while the canvas boss emerges from the portrait (no DOM transforms). */
+type BossIntroFx = {
   x: number;
   y: number;
-  startSize: number;
   t: number;
   duration: number;
   waveTimer: number;
   wavesLeft: number;
   flashMarks: number[];
-  prev: {
-    transform: string;
-    transition: string;
-    filter: string;
-    opacity: string;
-    willChange: string;
-  };
 };
 
 type Vec = { x: number; y: number };
@@ -97,16 +93,16 @@ type Projectile =
       kind: "rocket";
       x: number;
       y: number;
-      tx: number;
-      ty: number;
+      vx: number;
+      vy: number;
       life: number;
     }
   | {
       kind: "vortex";
       x: number;
       y: number;
-      tx: number;
-      ty: number;
+      vx: number;
+      vy: number;
       life: number;
       spin: number;
     };
@@ -217,7 +213,7 @@ export function createDestroyEngine(
   let envProps: EnvProp[] = [];
   const bossShots: BossProjectile[] = [];
   let boss: PortraitBoss | null = null;
-  let bossReveal: BossReveal | null = null;
+  let bossIntroFx: BossIntroFx | null = null;
   let impactFlash = 0;
   const bossPortrait = loadBossPortrait();
   let portraitDomHidden: HTMLElement | null = null;
@@ -271,7 +267,11 @@ export function createDestroyEngine(
   }
 
   function portraitEl() {
-    return document.querySelector<HTMLElement>("[data-intro='portrait']");
+    // Prefer the live sticker (may be peeled/placed elsewhere), then the stage.
+    return (
+      document.querySelector<HTMLElement>("[data-destroy-portrait='sticker']") ??
+      document.querySelector<HTMLElement>("[data-intro='portrait']")
+    );
   }
 
   function portraitOrigin(el?: HTMLElement | null) {
@@ -299,24 +299,22 @@ export function createDestroyEngine(
       filter: node.style.filter,
       willChange: node.style.willChange,
     };
+    // Instant hide — canvas boss takes over at this exact rect (no CSS shrink teleport).
+    node.style.transition = "none";
     node.style.opacity = "0";
     node.style.visibility = "hidden";
     node.style.pointerEvents = "none";
-    node.style.transform = "";
-    node.style.filter = "";
-    node.removeAttribute("data-mogambo-reveal");
   }
 
   function restorePortraitDom() {
-    cancelBossReveal(false);
+    bossIntroFx = null;
     if (!portraitDomHidden) {
       const el = portraitEl();
       if (el) {
-        el.style.transform = "";
-        el.style.filter = "";
+        el.style.opacity = "";
+        el.style.visibility = "";
+        el.style.pointerEvents = "";
         el.style.transition = "";
-        el.style.willChange = "";
-        el.removeAttribute("data-mogambo-reveal");
       }
       return;
     }
@@ -327,21 +325,7 @@ export function createDestroyEngine(
     portraitDomHidden.style.transition = portraitDomPrev.transition;
     portraitDomHidden.style.filter = portraitDomPrev.filter;
     portraitDomHidden.style.willChange = portraitDomPrev.willChange;
-    portraitDomHidden.removeAttribute("data-mogambo-reveal");
     portraitDomHidden = null;
-  }
-
-  function cancelBossReveal(hideAfter: boolean) {
-    if (!bossReveal) return;
-    const { el, prev } = bossReveal;
-    el.style.transform = prev.transform;
-    el.style.transition = prev.transition;
-    el.style.filter = prev.filter;
-    el.style.opacity = prev.opacity;
-    el.style.willChange = prev.willChange;
-    el.removeAttribute("data-mogambo-reveal");
-    bossReveal = null;
-    if (hideAfter) hidePortraitDom(el);
   }
 
   function smashRevealWave(x: number, y: number, radius: number) {
@@ -378,20 +362,8 @@ export function createDestroyEngine(
     options.onShake?.(0.55);
   }
 
-  function finishBossReveal() {
-    if (!bossReveal) return;
-    const { x, y, el } = bossReveal;
-    cancelBossReveal(true);
-    hidePortraitDom(el);
-    boss = createPortraitBoss(window.innerWidth, window.innerHeight, { x, y });
-    impactFlash = Math.max(impactFlash, 0.45);
-    options.onShake?.(1);
-    emitBoss();
-    emitScore();
-  }
-
   function beginBossReveal() {
-    if (bossSummoned || bossReveal) return;
+    if (bossSummoned || boss || bossIntroFx) return;
     bossSummoned = true;
     const el = portraitEl();
     const origin = portraitOrigin(el);
@@ -399,84 +371,66 @@ export function createDestroyEngine(
     const y = origin?.y ?? window.innerHeight * 0.42;
     const startSize = origin?.size ?? 280;
 
-    if (el) {
-      bossReveal = {
-        el,
-        x,
-        y,
-        startSize,
-        t: 0,
-        duration: reducedMotion ? 0.4 : 0.85,
-        waveTimer: 0.18,
-        wavesLeft: reducedMotion ? 1 : 2,
-        flashMarks: [0.08, 0.45],
-        prev: {
-          transform: el.style.transform,
-          transition: el.style.transition,
-          filter: el.style.filter,
-          opacity: el.style.opacity,
-          willChange: el.style.willChange,
-        },
-      };
-      el.dataset.mogamboReveal = "true";
-      el.style.transition = "none";
-      el.style.willChange = "transform, filter, opacity";
-      el.style.transformOrigin = "center center";
-    } else {
-      // No portrait node — drop straight into the canvas boss.
-      boss = createPortraitBoss(window.innerWidth, window.innerHeight, { x, y });
-      emitBoss();
-    }
+    // Capture once, hide the sticker, hand off to a canvas DOOM emerge at that spot.
+    // No CSS scale/translate — that was reading back a moving rect and teleporting.
+    if (el) hidePortraitDom(el);
+
+    boss = createPortraitBoss(window.innerWidth, window.innerHeight, {
+      x,
+      y,
+      size: startSize,
+    });
+    bossIntroFx = {
+      x,
+      y,
+      t: 0,
+      duration: reducedMotion ? 0.35 : 0.95,
+      waveTimer: 0.12,
+      wavesLeft: reducedMotion ? 1 : 3,
+      flashMarks: [0.05, 0.4, 0.75],
+    };
 
     audio.play("bossIntro");
     impactFlash = 0.55;
     options.onShake?.(1);
     smashRevealWave(x, y, Math.min(160, startSize * 0.55));
+    emitBoss();
     emitScore();
   }
 
-  function updateBossReveal(dt: number) {
-    if (!bossReveal) return;
-    bossReveal.t += dt;
-    const p = Math.min(1, bossReveal.t / bossReveal.duration);
-    const ease = 1 - (1 - p) ** 3;
-    const endScale = Math.min(0.42, 96 / Math.max(96, bossReveal.startSize));
-    const scale = 1 - ease * (1 - endScale);
-    const lift = -ease * (reducedMotion ? 18 : 48);
-    const wobble = Math.sin(bossReveal.t * 28) * (1 - ease) * 2.5;
+  function updateBossIntroFx(dt: number) {
+    if (!bossIntroFx) return;
+    bossIntroFx.t += dt;
+    const p = Math.min(1, bossIntroFx.t / bossIntroFx.duration);
 
-    const { el } = bossReveal;
-    // Keep tracking the live center as it shrinks/lifts.
-    const rect = el.getBoundingClientRect();
-    if (rect.width > 4) {
-      bossReveal.x = rect.left + rect.width / 2;
-      bossReveal.y = rect.top + rect.height / 2;
+    // Keep FX locked to the boss home (where the sticker was), not a drifting rect.
+    if (boss) {
+      bossIntroFx.x = boss.homeX;
+      bossIntroFx.y = boss.homeY;
     }
-
-    el.style.transform = `translate(${wobble}px, ${lift}px) scale(${scale})`;
-    // Skip per-frame CSS filters — they force expensive layer repaints.
-    el.style.opacity = String(1 - ease * 0.12);
 
     if (
-      bossReveal.flashMarks.length &&
-      p >= bossReveal.flashMarks[0]
+      bossIntroFx.flashMarks.length &&
+      p >= bossIntroFx.flashMarks[0]
     ) {
-      bossReveal.flashMarks.shift();
+      bossIntroFx.flashMarks.shift();
       impactFlash = Math.max(impactFlash, 0.28);
-      options.onShake?.(0.75);
+      options.onShake?.(0.65);
     }
 
-    bossReveal.waveTimer -= dt;
-    if (bossReveal.waveTimer <= 0 && bossReveal.wavesLeft > 0) {
-      const radius = 70 + bossReveal.wavesLeft * 28;
-      smashRevealWave(bossReveal.x, bossReveal.y, radius);
-      bossReveal.wavesLeft -= 1;
-      bossReveal.waveTimer = reducedMotion ? 0.16 : 0.22;
+    bossIntroFx.waveTimer -= dt;
+    if (bossIntroFx.waveTimer <= 0 && bossIntroFx.wavesLeft > 0) {
+      const radius = 55 + bossIntroFx.wavesLeft * 24;
+      smashRevealWave(bossIntroFx.x, bossIntroFx.y, radius);
+      bossIntroFx.wavesLeft -= 1;
+      bossIntroFx.waveTimer = reducedMotion ? 0.14 : 0.2;
     }
 
-    if (impactFlash > 0) impactFlash = Math.max(0, impactFlash - dt);
-
-    if (p >= 1) finishBossReveal();
+    if (p >= 1) {
+      bossIntroFx = null;
+      impactFlash = Math.max(impactFlash, 0.35);
+      options.onShake?.(0.85);
+    }
   }
 
   function spawnBoss() {
@@ -484,7 +438,7 @@ export function createDestroyEngine(
   }
 
   function maybeSummonBoss() {
-    if (bossSummoned || bossReveal || dead || paused) return;
+    if (bossSummoned || boss || bossIntroFx || dead || paused) return;
     if (score >= BOSS_SCORE_THRESHOLD) spawnBoss();
   }
 
@@ -846,28 +800,127 @@ export function createDestroyEngine(
     return projectiles.filter((p) => p.kind === kind).length;
   }
 
+  function livingCircles() {
+    const circles: { x: number; y: number; radius: number }[] = [];
+    for (const e of enemies) circles.push(e);
+    for (const prop of envProps) circles.push(prop);
+    if (boss?.alive) circles.push(boss);
+    return circles;
+  }
+
+  /**
+   * Move a projectile along a segment and stop on the first solid hit
+   * (enemy / prop / boss / DOM). Returns true if the shot was consumed.
+   */
+  function resolveFlight(
+    x0: number,
+    y0: number,
+    x1: number,
+    y1: number,
+    cfg: WeaponConfig,
+    mode: "impact" | "boom",
+  ): { consumed: boolean; x: number; y: number } {
+    const entityHit = earliestCircleHit(
+      x0,
+      y0,
+      x1,
+      y1,
+      livingCircles(),
+      mode === "boom" ? 6 : 4,
+    );
+
+    let hitX = x1;
+    let hitY = y1;
+    let consumed = false;
+
+    if (entityHit) {
+      hitX = entityHit.x;
+      hitY = entityHit.y;
+      consumed = true;
+    } else {
+      // Probe the page along the path — anything under the bolt takes the hit.
+      const samples = sampleSegment(
+        x0,
+        y0,
+        x1,
+        y1,
+        reducedMotion ? 2 : 4,
+      );
+      for (const sample of samples) {
+        const n = damageAt(sample.x, sample.y, mode === "boom" ? 10 : 0, 1, {
+          awardScore: true,
+        });
+        if (n > 0) {
+          hitX = sample.x;
+          hitY = sample.y;
+          consumed = true;
+          break;
+        }
+      }
+    }
+
+    if (consumed) {
+      if (mode === "boom") boom(hitX, hitY, cfg);
+      else impactAt(hitX, hitY, cfg);
+    }
+
+    return { consumed, x: hitX, y: hitY };
+  }
+
+  /** Hitscan beam: damage every entity the ray crosses, plus DOM samples. */
+  function raycastBeam(
+    x0: number,
+    y0: number,
+    x1: number,
+    y1: number,
+    cfg: WeaponConfig,
+  ) {
+    const circles = livingCircles();
+    const hits: { t: number; x: number; y: number }[] = [];
+    for (const c of circles) {
+      const hit = earliestCircleHit(x0, y0, x1, y1, [c], 4);
+      if (hit) hits.push(hit);
+    }
+    hits.sort((a, b) => a.t - b.t);
+
+    const seen = new Set<string>();
+    for (const hit of hits.slice(0, cfg.hits)) {
+      const key = `${Math.round(hit.x)},${Math.round(hit.y)}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      impactAt(hit.x, hit.y, cfg, {
+        radius: Math.max(16, cfg.radius * 0.35),
+        hits: 1,
+        holeScale: 0.7,
+      });
+    }
+
+    // Always land at the aim tip, and nick DOM under the beam.
+    impactAt(x1, y1, cfg);
+    for (const sample of sampleSegment(x0, y0, x1, y1, reducedMotion ? 2 : 3)) {
+      damageAt(sample.x, sample.y, 0, 1);
+    }
+  }
+
   function fire() {
     if (paused || hidden || dragging || dead) return;
     const id = currentWeapon();
     const cfg = WEAPON_CONFIG[id];
     const aim = Math.atan2(pointer.y - character.y, pointer.x - character.x);
-    const tx = pointer.x;
-    const ty = pointer.y;
     const liveBonus = rapidTimer > 0 ? 4 : 0;
+    const muzzleX = character.x + Math.cos(aim) * 28;
+    const muzzleY = character.y + Math.sin(aim) * 8;
 
     if (id === "blaster") {
       if (countKind("blaster") >= cfg.maxLive + liveBonus) return;
-      const speed = 1200;
-      // Hole + destroy/surface at the aim point immediately.
-      impactAt(tx, ty, cfg);
-      const dist = Math.hypot(tx - character.x, ty - character.y);
+      const speed = 980;
       projectiles.push({
         kind: "blaster",
-        x: character.x + Math.cos(aim) * 28,
-        y: character.y + Math.sin(aim) * 8,
+        x: muzzleX,
+        y: muzzleY,
         vx: Math.cos(aim) * speed,
         vy: Math.sin(aim) * speed,
-        life: Math.max(0.08, dist / speed + 0.04),
+        life: 0.7,
       });
       audio.play("shoot");
       return;
@@ -875,13 +928,14 @@ export function createDestroyEngine(
 
     if (id === "rocket") {
       if (countKind("rocket") >= cfg.maxLive) return;
+      const speed = 520;
       projectiles.push({
         kind: "rocket",
-        x: tx + (Math.random() * 40 - 20),
-        y: -28,
-        tx,
-        ty,
-        life: 2.5,
+        x: character.x + Math.cos(aim) * 22,
+        y: character.y + Math.sin(aim) * 10,
+        vx: Math.cos(aim) * speed,
+        vy: Math.sin(aim) * speed,
+        life: 1.8,
       });
       audio.play("rocket");
       return;
@@ -889,43 +943,56 @@ export function createDestroyEngine(
 
     if (id === "vortex") {
       if (countKind("vortex") >= cfg.maxLive) return;
+      const speed = 340;
       projectiles.push({
         kind: "vortex",
         x: character.x + Math.cos(aim) * 20,
         y: character.y + Math.sin(aim) * 12,
-        tx,
-        ty,
-        life: 1.15,
+        vx: Math.cos(aim) * speed,
+        vy: Math.sin(aim) * speed,
+        life: 1.2,
         spin: 0,
       });
       audio.play("vortex");
       return;
     }
 
-    // Arc gun — chain lightning from gun to aim + nearby forks
+    // Arc gun — hitscan beam along the aim line, then side forks.
     if (zapArcs.length >= cfg.maxLive) return;
-    impactAt(tx, ty, cfg);
-    const forks = reducedMotion ? 2 : 4;
+    const reach = Math.min(
+      420,
+      Math.hypot(pointer.x - muzzleX, pointer.y - muzzleY) + 40,
+    );
+    const tipX = muzzleX + Math.cos(aim) * reach;
+    const tipY = muzzleY + Math.sin(aim) * reach;
+    raycastBeam(muzzleX, muzzleY, tipX, tipY, cfg);
+    zapArcs.push({
+      x0: muzzleX,
+      y0: muzzleY,
+      x1: tipX,
+      y1: tipY,
+      life: 0.2,
+      maxLife: 0.28,
+    });
+    const forks = reducedMotion ? 1 : 2;
     for (let i = 0; i < forks && zapArcs.length < MAX_ZAPS; i++) {
-      const ang = Math.random() * Math.PI * 2;
-      const dist = 18 + Math.random() * cfg.radius;
-      const fx = tx + Math.cos(ang) * dist;
-      const fy = ty + Math.sin(ang) * dist;
+      const ang = aim + (Math.random() - 0.5) * 0.9;
+      const dist = 24 + Math.random() * cfg.radius;
+      const fx = tipX + Math.cos(ang) * dist;
+      const fy = tipY + Math.sin(ang) * dist;
       zapArcs.push({
-        x0: i === 0 ? character.x : tx,
-        y0: i === 0 ? character.y : ty,
-        x1: i === 0 ? tx : fx,
-        y1: i === 0 ? ty : fy,
-        life: 0.18 + Math.random() * 0.1,
-        maxLife: 0.28,
+        x0: tipX,
+        y0: tipY,
+        x1: fx,
+        y1: fy,
+        life: 0.14 + Math.random() * 0.08,
+        maxLife: 0.22,
       });
-      if (i > 0) {
-        impactAt(fx, fy, cfg, {
-          holeScale: 0.45,
-          radius: cfg.radius * 0.45,
-          hits: 1,
-        });
-      }
+      impactAt(fx, fy, cfg, {
+        holeScale: 0.45,
+        radius: cfg.radius * 0.4,
+        hits: 1,
+      });
     }
     audio.play("zap");
   }
@@ -1091,8 +1158,8 @@ export function createDestroyEngine(
 
   function update(dt: number) {
     setDestroyWatchTarget(character.x, character.y);
-    updateBossReveal(dt);
-    if (impactFlash > 0 && !bossReveal) {
+    updateBossIntroFx(dt);
+    if (impactFlash > 0 && !bossIntroFx) {
       impactFlash = Math.max(0, impactFlash - dt * 1.8);
     }
 
@@ -1128,13 +1195,30 @@ export function createDestroyEngine(
       walkPhase += dt * 2.2;
     }
 
-    // Projectiles — blaster bolts are visual tracers (impact already applied).
+    // Projectiles — collide with anything along the flight path.
     for (let i = projectiles.length - 1; i >= 0; i--) {
       const p = projectiles[i];
+      const x0 = p.x;
+      const y0 = p.y;
+      const x1 = p.x + p.vx * dt;
+      const y1 = p.y + p.vy * dt;
+      p.life -= dt;
+
       if (p.kind === "blaster") {
-        p.x += p.vx * dt;
-        p.y += p.vy * dt;
-        p.life -= dt;
+        const result = resolveFlight(
+          x0,
+          y0,
+          x1,
+          y1,
+          WEAPON_CONFIG.blaster,
+          "impact",
+        );
+        if (result.consumed) {
+          projectiles.splice(i, 1);
+          continue;
+        }
+        p.x = x1;
+        p.y = y1;
         if (
           p.life <= 0 ||
           p.x < -40 ||
@@ -1144,40 +1228,70 @@ export function createDestroyEngine(
         ) {
           projectiles.splice(i, 1);
         }
-      } else if (p.kind === "rocket") {
-        const dist = Math.hypot(p.tx - p.x, p.ty - p.y);
-        const step = 560 * dt;
-        if (dist <= step || p.y >= p.ty) {
-          boom(p.tx, p.ty, WEAPON_CONFIG.rocket);
+        continue;
+      }
+
+      if (p.kind === "rocket") {
+        const result = resolveFlight(
+          x0,
+          y0,
+          x1,
+          y1,
+          WEAPON_CONFIG.rocket,
+          "boom",
+        );
+        if (result.consumed) {
           projectiles.splice(i, 1);
-        } else {
-          p.x += ((p.tx - p.x) / dist) * step * 0.4;
-          p.y += step;
-          p.life -= dt;
-          if (p.life <= 0) projectiles.splice(i, 1);
+          continue;
         }
-      } else if (p.kind === "vortex") {
-        const dist = Math.hypot(p.tx - p.x, p.ty - p.y);
-        const step = 220 * dt;
-        if (dist > 1) {
-          p.x += ((p.tx - p.x) / dist) * step;
-          p.y += ((p.ty - p.y) / dist) * step;
-        }
-        p.spin += dt;
-        p.life -= dt;
-        // Occasional pull spark — keep rare to avoid particle storms.
-        if (!reducedMotion && Math.random() < 0.06) {
-          const sparks = spawnDebris(
-            { left: p.x - 8, top: p.y - 8, width: 16, height: 16 },
-            1,
-            ["#c084fc", "#67e8f9"],
-          );
-          particles = particles.concat(sparks).slice(-MAX_PARTICLES);
-        }
-        if (p.life <= 0 || dist < 10) {
-          boom(p.x, p.y, WEAPON_CONFIG.vortex);
+        p.x = x1;
+        p.y = y1;
+        if (
+          p.life <= 0 ||
+          p.x < -60 ||
+          p.y < -60 ||
+          p.x > window.innerWidth + 60 ||
+          p.y > window.innerHeight + 60
+        ) {
+          boom(p.x, p.y, WEAPON_CONFIG.rocket);
           projectiles.splice(i, 1);
         }
+        continue;
+      }
+
+      // Vortex — same ballistic path, bigger boom on contact / timeout.
+      p.spin += dt;
+      if (!reducedMotion && Math.random() < 0.06) {
+        const sparks = spawnDebris(
+          { left: p.x - 8, top: p.y - 8, width: 16, height: 16 },
+          1,
+          ["#c084fc", "#67e8f9"],
+        );
+        particles = particles.concat(sparks).slice(-MAX_PARTICLES);
+      }
+      const result = resolveFlight(
+        x0,
+        y0,
+        x1,
+        y1,
+        WEAPON_CONFIG.vortex,
+        "boom",
+      );
+      if (result.consumed) {
+        projectiles.splice(i, 1);
+        continue;
+      }
+      p.x = x1;
+      p.y = y1;
+      if (
+        p.life <= 0 ||
+        p.x < -60 ||
+        p.y < -60 ||
+        p.x > window.innerWidth + 60 ||
+        p.y > window.innerHeight + 60
+      ) {
+        boom(p.x, p.y, WEAPON_CONFIG.vortex);
+        projectiles.splice(i, 1);
       }
     }
 
@@ -1291,7 +1405,11 @@ export function createDestroyEngine(
         bossShots.push(shot);
         if (newShots.length && shot === newShots[0]) audio.play("bossAttack");
       }
-      if (Math.hypot(boss.x - character.x, boss.y - character.y) < CHAR_HIT_R + boss.radius * 0.55) {
+      if (
+        boss.mode !== "emerge" &&
+        Math.hypot(boss.x - character.x, boss.y - character.y) <
+          CHAR_HIT_R + boss.radius * 0.55
+      ) {
         takeDamage(boss.damage, boss.x, boss.y);
       }
       bossEmitTimer -= dt;
@@ -1362,8 +1480,7 @@ export function createDestroyEngine(
       if (p.kind === "blaster") {
         drawBlasterBolt(ctx, p.x, p.y, Math.atan2(p.vy, p.vx), atlas);
       } else if (p.kind === "rocket") {
-        const ang = Math.atan2(p.ty - p.y, p.tx - p.x);
-        drawRocket(ctx, p.x, p.y, ang, atlas);
+        drawRocket(ctx, p.x, p.y, Math.atan2(p.vy, p.vx), atlas);
       } else if (p.kind === "vortex") {
         drawVortex(ctx, p.x, p.y, p.spin, atlas);
       }
@@ -1466,7 +1583,7 @@ export function createDestroyEngine(
     score = 0;
     bossSummoned = false;
     boss = null;
-    bossReveal = null;
+    bossIntroFx = null;
     impactFlash = 0;
     dead = false;
     hurtFlash = 0;
@@ -1496,7 +1613,7 @@ export function createDestroyEngine(
     restorePortraitDom();
     clearDestroyWatchTarget();
     boss = null;
-    bossReveal = null;
+    bossIntroFx = null;
     impactFlash = 0;
     bossSummoned = false;
     score = 0;

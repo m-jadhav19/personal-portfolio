@@ -1,5 +1,6 @@
 import {
   HOLE_VARIANTS,
+  characterAnimFrame,
   drawSprite,
   type DestroySpriteAtlas,
   type HoleVariant,
@@ -73,12 +74,7 @@ export function drawCharacter(
   }
 
   const moving = Math.abs(Math.sin(walkPhase)) > 0.2;
-  const frame =
-    !moving
-      ? "characterIdle"
-      : Math.floor(walkPhase * 2) % 2 === 0
-        ? "characterWalkA"
-        : "characterWalkB";
+  const frame = characterAnimFrame(moving, walkPhase);
 
   ctx.save();
   if (hurt > 0) {
@@ -87,7 +83,11 @@ export function drawCharacter(
     ctx.globalAlpha = blink ? 0.35 : 1;
   }
 
-  const body = atlas?.get(frame) ?? null;
+  // Sheet characters include a baked-in rifle; face left/right from aim.
+  const body =
+    atlas?.get(frame) ??
+    atlas?.get(moving ? "characterWalkA" : "characterIdle") ??
+    null;
   const drewBody = drawSprite(ctx, body, ox, oy, { facing, scale: 1 });
 
   if (!drewBody) {
@@ -126,23 +126,23 @@ export function drawCharacter(
       2 * s,
       "#111",
     );
-  }
 
-  const gun = atlas?.get("gun") ?? null;
-  const gx = ox + Math.cos(aimAngle) * 18;
-  const gy = oy + Math.sin(aimAngle) * 6;
-  const drewGun = drawSprite(ctx, gun, gx, gy, {
-    rotation: aimAngle,
-    scale: 1,
-  });
+    const gun = atlas?.get("gun") ?? null;
+    const gx = ox + Math.cos(aimAngle) * 18;
+    const gy = oy + Math.sin(aimAngle) * 6;
+    const drewGun = drawSprite(ctx, gun, gx, gy, {
+      rotation: aimAngle,
+      scale: 1,
+    });
 
-  if (!drewGun) {
-    ctx.save();
-    ctx.translate(gx, gy);
-    ctx.rotate(aimAngle);
-    drawPixelRect(ctx, 0, -3, 28, 6, "#38bdf8");
-    drawPixelRect(ctx, 24, -5, 8, 10, "#e0f2fe");
-    ctx.restore();
+    if (!drewGun) {
+      ctx.save();
+      ctx.translate(gx, gy);
+      ctx.rotate(aimAngle);
+      drawPixelRect(ctx, 0, -3, 28, 6, "#38bdf8");
+      drawPixelRect(ctx, 24, -5, 8, 10, "#e0f2fe");
+      ctx.restore();
+    }
   }
   ctx.restore();
 
