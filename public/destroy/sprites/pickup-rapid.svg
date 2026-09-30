@@ -1,54 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="21" viewBox="0 0 24 21" shape-rendering="crispEdges">
-<rect x="3" y="0" width="3" height="3" fill="#7c2d12"/>
-<rect x="6" y="0" width="3" height="3" fill="#7c2d12"/>
-<rect x="9" y="0" width="3" height="3" fill="#7c2d12"/>
-<rect x="12" y="0" width="3" height="3" fill="#7c2d12"/>
-<rect x="15" y="0" width="3" height="3" fill="#7c2d12"/>
-<rect x="18" y="0" width="3" height="3" fill="#7c2d12"/>
-<rect x="0" y="3" width="3" height="3" fill="#7c2d12"/>
-<rect x="3" y="3" width="3" height="3" fill="#7c2d12"/>
-<rect x="6" y="3" width="3" height="3" fill="#fdba74"/>
-<rect x="9" y="3" width="3" height="3" fill="#fdba74"/>
-<rect x="12" y="3" width="3" height="3" fill="#fdba74"/>
-<rect x="15" y="3" width="3" height="3" fill="#fdba74"/>
-<rect x="18" y="3" width="3" height="3" fill="#7c2d12"/>
-<rect x="21" y="3" width="3" height="3" fill="#7c2d12"/>
-<rect x="0" y="6" width="3" height="3" fill="#7c2d12"/>
-<rect x="3" y="6" width="3" height="3" fill="#7c2d12"/>
-<rect x="6" y="6" width="3" height="3" fill="#fdba74"/>
-<rect x="9" y="6" width="3" height="3" fill="#facc15"/>
-<rect x="12" y="6" width="3" height="3" fill="#facc15"/>
-<rect x="15" y="6" width="3" height="3" fill="#fdba74"/>
-<rect x="18" y="6" width="3" height="3" fill="#7c2d12"/>
-<rect x="21" y="6" width="3" height="3" fill="#7c2d12"/>
-<rect x="0" y="9" width="3" height="3" fill="#7c2d12"/>
-<rect x="3" y="9" width="3" height="3" fill="#7c2d12"/>
-<rect x="6" y="9" width="3" height="3" fill="#fdba74"/>
-<rect x="9" y="9" width="3" height="3" fill="#fdba74"/>
-<rect x="12" y="9" width="3" height="3" fill="#fdba74"/>
-<rect x="15" y="9" width="3" height="3" fill="#fdba74"/>
-<rect x="18" y="9" width="3" height="3" fill="#7c2d12"/>
-<rect x="21" y="9" width="3" height="3" fill="#7c2d12"/>
-<rect x="0" y="12" width="3" height="3" fill="#7c2d12"/>
-<rect x="3" y="12" width="3" height="3" fill="#7c2d12"/>
-<rect x="6" y="12" width="3" height="3" fill="#fdba74"/>
-<rect x="9" y="12" width="3" height="3" fill="#facc15"/>
-<rect x="12" y="12" width="3" height="3" fill="#facc15"/>
-<rect x="15" y="12" width="3" height="3" fill="#fdba74"/>
-<rect x="18" y="12" width="3" height="3" fill="#7c2d12"/>
-<rect x="21" y="12" width="3" height="3" fill="#7c2d12"/>
-<rect x="0" y="15" width="3" height="3" fill="#7c2d12"/>
-<rect x="3" y="15" width="3" height="3" fill="#7c2d12"/>
-<rect x="6" y="15" width="3" height="3" fill="#fdba74"/>
-<rect x="9" y="15" width="3" height="3" fill="#fdba74"/>
-<rect x="12" y="15" width="3" height="3" fill="#fdba74"/>
-<rect x="15" y="15" width="3" height="3" fill="#fdba74"/>
-<rect x="18" y="15" width="3" height="3" fill="#7c2d12"/>
-<rect x="21" y="15" width="3" height="3" fill="#7c2d12"/>
-<rect x="3" y="18" width="3" height="3" fill="#7c2d12"/>
-<rect x="6" y="18" width="3" height="3" fill="#7c2d12"/>
-<rect x="9" y="18" width="3" height="3" fill="#7c2d12"/>
-<rect x="12" y="18" width="3" height="3" fill="#7c2d12"/>
-<rect x="15" y="18" width="3" height="3" fill="#7c2d12"/>
-<rect x="18" y="18" width="3" height="3" fill="#7c2d12"/>
+
+<rect x="3" y="11" width="5" height="8" fill="#f0b52b"/><rect x="9" y="6" width="5" height="13" fill="#ffdd3f"/><rect x="15" y="10" width="5" height="9" fill="#f04b30"/>
+<rect x="4" y="2" width="4" height="8" fill="#4caf50"/><polygon points="4,2 10,5 4,8" fill="#75e85e"/>
+<polygon points="13,3 18,6 13,9" fill="#4caf50"/><rect x="12" y="1" width="3" height="7" fill="#76e85f"/>
+
 </svg>

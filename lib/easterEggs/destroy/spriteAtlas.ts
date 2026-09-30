@@ -16,8 +16,17 @@ export const DESTROY_SPRITE_PATHS = {
   iconVortex: "/destroy/sprites/icon-vortex.svg",
   iconZap: "/destroy/sprites/icon-zap.svg",
   enemyRoach: "/destroy/sprites/enemy-roach.svg",
+  enemyRoach1: "/destroy/sprites/enemy-roach-1.svg",
+  enemyRoach2: "/destroy/sprites/enemy-roach-2.svg",
+  enemyRoach3: "/destroy/sprites/enemy-roach-3.svg",
   enemyDrone: "/destroy/sprites/enemy-drone.svg",
+  enemyDrone1: "/destroy/sprites/enemy-drone-1.svg",
+  enemyDrone2: "/destroy/sprites/enemy-drone-2.svg",
+  enemyDrone3: "/destroy/sprites/enemy-drone-3.svg",
   enemySlime: "/destroy/sprites/enemy-slime.svg",
+  enemySlime1: "/destroy/sprites/enemy-slime-1.svg",
+  enemySlime2: "/destroy/sprites/enemy-slime-2.svg",
+  enemySlime3: "/destroy/sprites/enemy-slime-3.svg",
   pickupHealth: "/destroy/sprites/pickup-health.svg",
   pickupShield: "/destroy/sprites/pickup-shield.svg",
   pickupRapid: "/destroy/sprites/pickup-rapid.svg",
@@ -29,6 +38,18 @@ export const DESTROY_SPRITE_PATHS = {
 } as const;
 
 export type DestroySpriteId = keyof typeof DESTROY_SPRITE_PATHS;
+
+/** Matches sprite-manifest.json animation timing (120ms / frame). */
+export const ENEMY_FRAME_MS = 120;
+
+export const ENEMY_ANIM_FRAMES: Record<
+  "roach" | "drone" | "slime",
+  readonly DestroySpriteId[]
+> = {
+  roach: ["enemyRoach1", "enemyRoach2", "enemyRoach3"],
+  drone: ["enemyDrone1", "enemyDrone2", "enemyDrone3"],
+  slime: ["enemySlime1", "enemySlime2", "enemySlime3"],
+};
 
 export type DestroySpriteAtlas = {
   ready: Promise<void>;
@@ -103,6 +124,17 @@ export function drawSprite(
   ctx.drawImage(img, -w / 2, -h / 2, w, h);
   ctx.restore();
   return true;
+}
+
+export function enemyAnimFrame(
+  kind: "roach" | "drone" | "slime",
+  phaseSeconds: number,
+): DestroySpriteId {
+  const frames = ENEMY_ANIM_FRAMES[kind];
+  const idx =
+    Math.floor((Math.max(0, phaseSeconds) * 1000) / ENEMY_FRAME_MS) %
+    frames.length;
+  return frames[idx];
 }
 
 export const HOLE_VARIANTS = ["holeA", "holeB", "holeC"] as const;
