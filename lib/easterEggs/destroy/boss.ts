@@ -181,7 +181,6 @@ export function drawPortraitBoss(
   if (boss.hitFlash > 0) {
     const blink = Math.floor(boss.hitFlash * 24) % 2 === 0;
     ctx.globalAlpha = blink ? 0.4 : 1;
-    ctx.filter = blink ? "brightness(1.8) saturate(0.3)" : "none";
   }
 
   const imgReady =

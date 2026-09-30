@@ -1325,12 +1325,16 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
     };
 
     let destroyLookRaf = 0;
-    const tickDestroyLook = () => {
+    let lastDestroyLook = 0;
+    const tickDestroyLook = (now: number) => {
       destroyLookRaf = requestAnimationFrame(tickDestroyLook);
       if (!isDestroyEggActive() || busyRef.current) return;
+      // ~12fps eye tracking is plenty and avoids GSAP thrash every frame.
+      if (now - lastDestroyLook < 80) return;
+      lastDestroyLook = now;
       const target = getDestroyWatchTarget();
       if (!target) return;
-      lastActive = performance.now();
+      lastActive = now;
       if (idleStage !== 0) wake();
       lookAtPoint(target.x, target.y);
     };
