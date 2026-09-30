@@ -18,9 +18,11 @@ import { StickerPeel } from "@/lib/sticker";
 
 import {
   PORTRAIT_BOXES as BOX,
+  MOUTH_REST,
   PORTRAIT_COLORS as COLOR,
-  PORTRAIT_LIP as LIP,
   PORTRAIT_PATHS as PATH,
+  mouthPath,
+  type MouthShape,
   PORTRAIT_VIEWBOX as VB,
 } from "./portraitPaths";
 import styles from "./PortraitSticker.module.css";
@@ -97,6 +99,24 @@ const HOLD_HINT = "hold to peel me off";
 /** Touch-carrying near the top/bottom edge scrolls the page this fast (px per frame). */
 const EDGE_SCROLL_ZONE = 72;
 const EDGE_SCROLL_SPEED = 14;
+
+const MOUTH = {
+  rest: MOUTH_REST,
+  grin: { smile: 1.6, open: 0.32, width: 1.1, round: 0, tilt: 0 },
+  oof: { smile: 0.2, open: 0.55, width: 0.5, round: 0.8, tilt: 0 },
+  o: { smile: 0, open: 1, width: 0.36, round: 1, tilt: 0 },
+  yawn: { smile: -0.2, open: 1.5, width: 0.55, round: 1, tilt: 0 },
+  sleepy: { smile: 0.15, open: 0, width: 0.78, round: 0, tilt: 0 },
+  whee: { smile: 0.9, open: 0.9, width: 0.62, round: 0.7, tilt: 0 },
+  smirk: { smile: 1.1, open: 0, width: 0.95, round: 0, tilt: 1 },
+  woozy: { smile: -0.5, open: 0.2, width: 0.8, round: 0.3, tilt: 0 },
+} satisfies Record<string, MouthShape>;
+const MOUTH_KEYS = Object.keys(MOUTH_REST) as (keyof MouthShape)[];
+/** How far the mouth corners skew toward the pointer as the head turns. */
+const MOUTH_LOOK = 0.35;
+
+type MouthTarget = Partial<MouthShape> | "rest";
+type MouthStep = [target: MouthTarget, duration: number, ease?: string, position?: gsap.Position];
 
 type Mode = "home" | "lifting" | "carrying" | "moving" | "placed";
 type CarryInput = "mouse" | "touch";
@@ -388,6 +408,7 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
     const lids = [q("lid-left"), q("lid-right")];
     const glints = [q("glint-left"), q("glint-right")];
     const mouth = q("mouth");
+    const mouthLine = q<SVGPathElement>("mouth-line");
     const ear = q("ear");
     const sparks = [q("spark-a"), q("spark-b")];
     const bracketL = q("bracket-left");
@@ -435,8 +456,40 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
       gsap.to(lids, { scaleY: value, duration, ease: "power2.out", overwrite: "auto" });
     };
 
-    const mouthTo = (scaleX: number, scaleY: number, duration = 0.3, ease = "power2.out") =>
-      gsap.to(mouth, { scaleX, scaleY, duration, ease, overwrite: "auto" });
+    // The lip line is redrawn from one shape; the skin around it stretches as it opens.
+    const lip: MouthShape = { ...MOUTH.rest };
+    const lipLook = { tilt: 0 };
+    const drawMouth = () => {
+      mouthLine?.setAttribute("d", mouthPath({ ...lip, tilt: lip.tilt + lipLook.tilt }));
+      gsap.set(mouth, { scaleY: 1 + lip.open * 0.2 });
+    };
+    const lookMouth = gsap.quickTo(lipLook, "tilt", {
+      duration: 0.5,
+      ease: "power3.out",
+      onUpdate: drawMouth,
+    });
+    const restMouth = (): MouthShape =>
+      hovered ? MOUTH.grin : idleStage === 2 ? MOUTH.sleepy : MOUTH.rest;
+    // "rest" resolves when the step starts, so a queued return lands on the current mood.
+    const mouthVars = (target: MouthTarget, duration: number, ease: string) => ({
+      ...(target === "rest"
+        ? Object.fromEntries(MOUTH_KEYS.map((key) => [key, () => restMouth()[key]]))
+        : target),
+      duration,
+      ease,
+      onUpdate: drawMouth,
+    });
+    /** Plays a mouth-only sequence, replacing whatever the mouth was doing. */
+    const mouthSeq = (...steps: MouthStep[]) => {
+      gsap.killTweensOf(lip);
+      const tl = gsap.timeline();
+      steps.forEach(([target, duration, ease = "power2.out", position]) =>
+        tl.to(lip, mouthVars(target, duration, ease), position),
+      );
+      return tl;
+    };
+    const mouthTo = (target: MouthTarget, duration = 0.3, ease = "power2.out") =>
+      mouthSeq([target, duration, ease]);
 
     const blink = (which: "both" | "left" | "right" = "both") => {
       const targets =
@@ -470,16 +523,13 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
     };
 
     const talk = () => {
-      gsap
-        .timeline()
-        .to(mouth, { scaleY: 1.7, duration: 0.09, ease: "power1.out" })
-        .to(mouth, { scaleY: 0.8, duration: 0.09 })
-        .to(mouth, { scaleY: 1.5, duration: 0.09 })
-        .to(mouth, {
-          scaleY: hovered ? 0.72 : 1,
-          duration: 0.2,
-          ease: "elastic.out(1, 0.5)",
-        });
+      mouthSeq(
+        [{ open: 0.75, width: 0.72, round: 0.5, smile: 0.5 }, 0.09, "power1.out"],
+        [{ open: 0.12, width: 0.9, round: 0.1 }, 0.09],
+        [{ open: 0.6, width: 0.62, round: 0.6 }, 0.09],
+        [{ open: 0.2, width: 0.85, round: 0.2 }, 0.08],
+        ["rest", 0.45, "elastic.out(1, 0.5)"],
+      );
     };
 
     const boing = () => {
@@ -532,13 +582,13 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
     const hoverOn = () => {
       if (hovered) return;
       hovered = true;
-      mouthTo(1.2, 0.72);
+      mouthTo(MOUTH.grin, 0.35, "back.out(2)");
       setLids(0.26);
     };
     const hoverOff = () => {
       if (!hovered) return;
       hovered = false;
-      mouthTo(1, 1, 0.6, "elastic.out(1, 0.5)");
+      mouthTo(MOUTH.rest, 0.6, "elastic.out(1, 0.5)");
       setLids(0);
     };
 
@@ -547,13 +597,12 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
       const now = performance.now();
       if (hovered || busyRef.current || now - lastSurprise < 1800) return;
       lastSurprise = now;
+      mouthSeq([MOUTH.o, 0.12], ["rest", 0.5, "elastic.out(1, 0.5)", 0.55]);
       gsap
         .timeline()
         .to(brows, { y: -8, duration: 0.12, ease: "power2.out" }, 0)
-        .to(mouth, { scaleX: 0.7, scaleY: 1.9, duration: 0.12, ease: "power2.out" }, 0)
         .to(pupils, { scale: 0.62, duration: 0.12 }, 0)
         .to(brows, { y: 0, duration: 0.6, ease: "elastic.out(1, 0.4)" }, 0.55)
-        .to(mouth, { scaleX: 1, scaleY: 1, duration: 0.5, ease: "elastic.out(1, 0.5)" }, 0.55)
         .to(pupils, { scale: 1, duration: 0.4 }, 0.6);
     };
 
@@ -571,6 +620,16 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
       blink();
       raiseBrows();
       popSparks();
+      mouthSeq([MOUTH.oof, 0.08, "power2.in"], ["rest", 0.55, "elastic.out(1, 0.45)", "+=0.08"]);
+    };
+
+    // Winking pulls a lopsided smirk up on the same side.
+    const wink = (side: "left" | "right") => {
+      blink(side);
+      mouthSeq(
+        [{ ...MOUTH.smirk, tilt: side === "left" ? -1 : 1 }, 0.14, "back.out(2)"],
+        ["rest", 0.5, "elastic.out(1, 0.5)", "+=0.45"],
+      );
     };
 
     const shockwave = () => {
@@ -682,6 +741,16 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
         )
         .add(() => blink(), 1.2)
         .to(pupils, { x: 0, y: 0, duration: 0.3 }, 1.6);
+      const wobble: MouthStep[] = [1, -1, 1, -1, 1, -1].map((tilt) => [
+        { tilt },
+        0.2,
+        "sine.inOut",
+      ]);
+      mouthSeq(
+        [{ ...MOUTH.woozy, tilt: -1 }, 0.2],
+        ...wobble,
+        ["rest", 0.5, "elastic.out(1, 0.5)"],
+      );
     };
 
     actionsRef.current = {
@@ -692,8 +761,8 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
         spawnBurst(fx, x, y, 8);
       },
       blink: () => blink(),
-      "wink-left": () => blink("left"),
-      "wink-right": () => blink("right"),
+      "wink-left": () => wink("left"),
+      "wink-right": () => wink("right"),
       raiseBrows,
       popSparks,
       talk,
@@ -786,6 +855,7 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
         x(face.nx * shift.x);
         y(face.ny * shift.y + face.bob * Math.abs(shift.y) * 0.9);
       });
+      lookMouth(face.nx * MOUTH_LOOK);
     };
 
     let lastScrollY = window.scrollY;
@@ -846,11 +916,10 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
       idleTl = gsap
         .timeline()
         .to(pupils, { x: 0, y: 2, duration: 0.4 })
-        .to(mouth, { scaleX: 0.85, scaleY: 2.3, duration: 0.8, ease: "sine.inOut" }, 0)
         .to(lids, { scaleY: 0.85, duration: 0.8, ease: "sine.inOut" }, 0)
         .to(brows, { y: 3, duration: 0.8 }, 0)
-        .to(mouth, { scaleX: 1, scaleY: 1, duration: 0.6, ease: "sine.inOut" }, "+=0.7")
-        .to(lids, { scaleY: lidRest, duration: 0.6, ease: "sine.inOut" }, "<");
+        .to(lids, { scaleY: lidRest, duration: 0.6, ease: "sine.inOut" }, "+=0.7");
+      mouthSeq([MOUTH.yawn, 0.8, "sine.inOut"], [MOUTH.sleepy, 0.6, "sine.inOut", "+=0.7"]);
     };
 
     const wake = () => {
@@ -860,7 +929,7 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
       idleTl = null;
       trackEyes = true;
       gsap.to(brows, { y: 0, duration: 0.3, overwrite: "auto" });
-      mouthTo(hovered ? 1.2 : 1, hovered ? 0.72 : 1, 0.3);
+      mouthTo("rest", 0.3);
       setLids(hovered ? 0.26 : 0, 0.12);
       window.setTimeout(() => blink(), 140);
     };
@@ -957,13 +1026,13 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
 
     const whee = () => {
       gsap.to(brows, { y: -7, duration: 0.2, overwrite: "auto" });
-      mouthTo(0.75, 1.8, 0.2);
+      mouthTo(MOUTH.whee, 0.2);
       gsap.to(pupils, { scale: 0.8, duration: 0.2 });
     };
 
     const settle = () => {
       gsap.to(brows, { y: 0, duration: 0.5, ease: "elastic.out(1, 0.4)", overwrite: "auto" });
-      mouthTo(1, 1, 0.5, "elastic.out(1, 0.5)");
+      mouthTo("rest", 0.5, "elastic.out(1, 0.5)");
       gsap.to(pupils, { scale: 1, duration: 0.3 });
     };
 
@@ -1387,6 +1456,8 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
         hair,
         brows,
         mouth,
+        lip,
+        lipLook,
         ear,
         sticker,
         tilt,
@@ -1541,25 +1612,16 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
           onClick={interactive ? onPartClick("talk") : undefined}
         >
           <path d={PATH.beard} fill={COLOR.ink} />
-          <g data-part={interactive ? "mouth" : undefined}>
-            <path d={PATH.mouth} fill={COLOR.cream} />
-            <path d={LIP.lower} fill={COLOR.lip} />
-            <path
-              d={LIP.shine}
-              fill="none"
-              stroke={COLOR.cream}
-              strokeWidth={1.4}
-              strokeLinecap="round"
-              opacity={0.55}
-            />
-            <path
-              d={LIP.line}
-              fill="none"
-              stroke={COLOR.ink}
-              strokeWidth={2.4}
-              strokeLinecap="round"
-            />
-          </g>
+          <path data-part={interactive ? "mouth" : undefined} d={PATH.mouth} fill={COLOR.cream} />
+          <path
+            data-part={interactive ? "mouth-line" : undefined}
+            d={mouthPath(MOUTH_REST)}
+            fill={COLOR.ink}
+            stroke={COLOR.ink}
+            strokeWidth={2.4}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
         </g>
       </g>
 

@@ -5,9 +5,10 @@ import { useEffect, useRef } from "react";
 
 import {
   PORTRAIT_BOXES as BOX,
+  MOUTH_REST,
   PORTRAIT_COLORS as COLOR,
-  PORTRAIT_LIP as LIP,
   PORTRAIT_PATHS as PATH,
+  mouthPath,
 } from "@/components/Hero/portrait/portraitPaths";
 
 import styles from "./Navigation.module.css";
@@ -86,7 +87,14 @@ export function HeaderSticker({ docked, onClick }: HeaderStickerProps) {
         <path d={PATH.brows} fill={COLOR.ink} />
         <path d={PATH.beard} fill={COLOR.ink} />
         <path d={PATH.mouth} fill={COLOR.cream} />
-        <path d={LIP.lower} fill={COLOR.lip} />
+        <path
+          d={mouthPath(MOUTH_REST)}
+          fill={COLOR.ink}
+          stroke={COLOR.ink}
+          strokeWidth={5}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
         <path d={PATH.glasses} fill={COLOR.ink} />
         <path d={PATH.lensL} fill={COLOR.cream} />
         <path d={PATH.lensR} fill={COLOR.cream} />
