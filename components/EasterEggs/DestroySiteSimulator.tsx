@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { BOSS_NAME } from "@/lib/easterEggs/destroy/boss";
+import { BOSS_SCORE_THRESHOLD } from "@/lib/easterEggs/destroy/combat";
 import { createDestroyEngine, type DestroyEngine } from "@/lib/easterEggs/destroy/engine";
 import {
   WEAPON_ICON_SRC,
@@ -28,9 +30,21 @@ export function DestroySiteSimulator({ onExit }: DestroySiteSimulatorProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const engineRef = useRef<DestroyEngine | null>(null);
   const [paused, setPaused] = useState(false);
+  const [dead, setDead] = useState(false);
   const [weaponIndex, setWeaponIndex] = useState(0);
   const [muted, setMuted] = useState(readSessionMuted);
   const [shaking, setShaking] = useState(false);
+  const [health, setHealth] = useState(100);
+  const [maxHealth, setMaxHealth] = useState(100);
+  const [score, setScore] = useState(0);
+  const [scoreThreshold, setScoreThreshold] = useState(BOSS_SCORE_THRESHOLD);
+  const [bossSummoned, setBossSummoned] = useState(false);
+  const [buffs, setBuffs] = useState({ shield: 0, rapid: 0 });
+  const [boss, setBoss] = useState<{
+    hp: number;
+    maxHp: number;
+    alive: boolean;
+  } | null>(null);
 
   const leaveMode = useCallback(() => {
     // Soft-restore + teardown happen in the mount effect cleanup.
@@ -42,12 +56,13 @@ export function DestroySiteSimulator({ onExit }: DestroySiteSimulatorProps) {
   }, []);
 
   const togglePause = useCallback(() => {
+    if (dead) return;
     setPaused((prev) => {
       const next = !prev;
       engineRef.current?.setPaused(next);
       return next;
     });
-  }, []);
+  }, [dead]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -67,6 +82,21 @@ export function DestroySiteSimulator({ onExit }: DestroySiteSimulatorProps) {
       reducedMotion,
       initialMuted: readSessionMuted(),
       onWeaponChange: (index) => setWeaponIndex(index),
+      onHealthChange: (hp, max) => {
+        setHealth(hp);
+        setMaxHealth(max);
+      },
+      onScoreChange: (nextScore, threshold, summoned) => {
+        setScore(nextScore);
+        setScoreThreshold(threshold);
+        setBossSummoned(summoned);
+      },
+      onBuffChange: (next) => setBuffs(next),
+      onBossChange: (next) => setBoss(next),
+      onDeath: () => {
+        setDead(true);
+        setPaused(true);
+      },
       onShake: () => {
         if (reducedMotion) return;
         setShaking(true);
@@ -82,10 +112,14 @@ export function DestroySiteSimulator({ onExit }: DestroySiteSimulatorProps) {
       if (event.key !== "Escape") return;
       event.preventDefault();
       event.stopPropagation();
-      setPaused((prev) => {
-        const next = !prev;
-        engine.setPaused(next);
-        return next;
+      setDead((isDead) => {
+        if (isDead) return isDead;
+        setPaused((prev) => {
+          const next = !prev;
+          engine.setPaused(next);
+          return next;
+        });
+        return isDead;
       });
     };
 
@@ -118,7 +152,23 @@ export function DestroySiteSimulator({ onExit }: DestroySiteSimulatorProps) {
 
   const repair = () => {
     engineRef.current?.repair();
+    setDead(false);
+    setPaused(false);
+    setScore(0);
+    setBossSummoned(false);
+    setBoss(null);
+    engineRef.current?.setPaused(false);
   };
+
+  const healthPct = Math.max(0, Math.min(100, (health / maxHealth) * 100));
+  const scorePct = Math.max(
+    0,
+    Math.min(100, (score / Math.max(1, scoreThreshold)) * 100),
+  );
+  const bossPct =
+    boss && boss.maxHp > 0
+      ? Math.max(0, Math.min(100, (boss.hp / boss.maxHp) * 100))
+      : 0;
 
   return (
     <div className={`${styles.root} ${shaking ? styles.shake : ""}`}>
@@ -127,6 +177,30 @@ export function DestroySiteSimulator({ onExit }: DestroySiteSimulatorProps) {
         className={styles.canvas}
         aria-hidden="true"
       />
+
+      {boss?.alive ? (
+        <div
+          className={styles.bossBar}
+          data-destroy-ignore
+          data-cursor="hide"
+          aria-label={`${BOSS_NAME} health ${Math.round(boss.hp)} of ${boss.maxHp}`}
+        >
+          <div className={styles.bossBarLabel}>
+            <span>{BOSS_NAME.toUpperCase()}</span>
+            <span>
+              {Math.ceil(boss.hp)}/{boss.maxHp}
+            </span>
+          </div>
+          <div className={styles.bossBarTrack}>
+            <div
+              className={`${styles.bossBarFill} ${
+                bossPct < 30 ? styles.bossBarFillLow : ""
+              }`}
+              style={{ width: `${bossPct}%` }}
+            />
+          </div>
+        </div>
+      ) : null}
 
       <header
         className={styles.hud}
@@ -139,6 +213,62 @@ export function DestroySiteSimulator({ onExit }: DestroySiteSimulatorProps) {
           <p className={styles.hint}>
             click fire · WASD / RMB move · 1–4 · Esc
           </p>
+        </div>
+
+        <div
+          className={styles.healthBlock}
+          aria-label={`Health ${Math.round(health)} of ${maxHealth}`}
+        >
+          <div className={styles.healthLabelRow}>
+            <span>HP</span>
+            <span>
+              {Math.ceil(health)}/{maxHealth}
+            </span>
+          </div>
+          <div className={styles.healthTrack}>
+            <div
+              className={`${styles.healthFill} ${
+                healthPct < 30 ? styles.healthFillLow : ""
+              }`}
+              style={{ width: `${healthPct}%` }}
+            />
+          </div>
+          <div className={styles.buffRow}>
+            {buffs.shield > 0 ? (
+              <span className={styles.buff}>SHD {buffs.shield.toFixed(0)}s</span>
+            ) : null}
+            {buffs.rapid > 0 ? (
+              <span className={styles.buff}>RAP {buffs.rapid.toFixed(0)}s</span>
+            ) : null}
+          </div>
+        </div>
+
+        <div
+          className={styles.scoreBlock}
+          aria-label={
+            bossSummoned
+              ? `Score ${score}`
+              : `Score ${score} of ${scoreThreshold} until ${BOSS_NAME}`
+          }
+        >
+          <div className={styles.healthLabelRow}>
+            <span>SCORE</span>
+            <span>
+              {bossSummoned
+                ? score
+                : `${Math.min(score, scoreThreshold)}/${scoreThreshold}`}
+            </span>
+          </div>
+          {!bossSummoned ? (
+            <div className={styles.scoreTrack}>
+              <div
+                className={styles.scoreFill}
+                style={{ width: `${scorePct}%` }}
+              />
+            </div>
+          ) : (
+            <p className={styles.scoreHint}>{BOSS_NAME.toUpperCase()}</p>
+          )}
         </div>
 
         <div className={styles.weapons} role="group" aria-label="Weapons">
@@ -184,6 +314,7 @@ export function DestroySiteSimulator({ onExit }: DestroySiteSimulatorProps) {
             className={`${styles.btn} ${styles.btnPrimary}`}
             onClick={togglePause}
             data-cursor="hide"
+            disabled={dead}
           >
             Pause
           </button>
@@ -203,27 +334,33 @@ export function DestroySiteSimulator({ onExit }: DestroySiteSimulatorProps) {
             aria-labelledby="destroy-pause-title"
           >
             <h2 id="destroy-pause-title" className={styles.pauseTitle}>
-              Paused — destroy mode
+              {dead ? "Overrun — you were destroyed" : "Paused — destroy mode"}
             </h2>
             <p className={styles.pauseSub}>
-              Repair restores the page in place. Leave mode exits without a
-              reload. Exit hard-resets the site.
+              {dead
+                ? "Repair restores the page, resets score, and revives you. Reach the score threshold to wake Mogambo."
+                : bossSummoned
+                  ? "Mogambo is loose. Repair restores the page and resets score. Leave mode exits without a reload."
+                  : `Rack up ${scoreThreshold} points to pull Mogambo from the portrait. Repair restores the page in place.`}
             </p>
             <div className={styles.pauseActions}>
-              <button
-                type="button"
-                className={styles.pauseBtn}
-                onClick={togglePause}
-                autoFocus
-              >
-                Resume
-              </button>
+              {!dead ? (
+                <button
+                  type="button"
+                  className={styles.pauseBtn}
+                  onClick={togglePause}
+                  autoFocus
+                >
+                  Resume
+                </button>
+              ) : null}
               <button
                 type="button"
                 className={styles.pauseBtn}
                 onClick={repair}
+                autoFocus={dead}
               >
-                Repair site
+                {dead ? "Revive + repair" : "Repair site"}
               </button>
               <button
                 type="button"

@@ -47,7 +47,7 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 0.65rem;
-  width: min(720px, calc(100vw - 1.5rem));
+  width: min(820px, calc(100vw - 1.5rem));
   padding: 0.55rem 0.7rem;
   border: 2px solid #1a1035;
   background: linear-gradient(180deg, #2a2240 0%, #1a142c 100%);
@@ -80,6 +80,129 @@
   margin: 0;
   font-size: 0.62rem;
   color: #a8a29e;
+}
+
+.bossBar {
+  position: fixed;
+  top: 4.6rem;
+  left: 50%;
+  z-index: 10072;
+  transform: translateX(-50%);
+  width: min(420px, calc(100vw - 2rem));
+  padding: 0.4rem 0.55rem 0.5rem;
+  border: 2px solid #1a1035;
+  background: linear-gradient(180deg, #2a2240 0%, #1a142c 100%);
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+  color: #f4f4f0;
+  font-family: var(--font-body, ui-monospace, monospace);
+}
+
+.bossBarLabel {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.25rem;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #fdba74;
+}
+
+.bossBarTrack {
+  width: 100%;
+  height: 0.7rem;
+  border: 1px solid rgba(253, 186, 116, 0.5);
+  background: rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+
+.bossBarFill {
+  height: 100%;
+  background: linear-gradient(90deg, #c2410c 0%, #fdba74 100%);
+  transition: width 100ms steps(2, end);
+}
+
+.bossBarFillLow {
+  background: linear-gradient(90deg, #7f1d1d 0%, #ef4444 100%);
+}
+
+.healthBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 7.5rem;
+}
+
+.scoreBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 6.5rem;
+}
+
+.scoreTrack {
+  width: 100%;
+  height: 0.55rem;
+  border: 1px solid rgba(56, 189, 248, 0.45);
+  background: rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+}
+
+.scoreFill {
+  height: 100%;
+  background: linear-gradient(90deg, #0369a1 0%, #38bdf8 100%);
+  transition: width 120ms steps(2, end);
+}
+
+.scoreHint {
+  margin: 0;
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #fdba74;
+}
+
+.healthLabelRow {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #fdba74;
+}
+
+.healthTrack {
+  width: 100%;
+  height: 0.55rem;
+  border: 1px solid rgba(253, 186, 116, 0.45);
+  background: rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+}
+
+.healthFill {
+  height: 100%;
+  background: linear-gradient(90deg, #16a34a 0%, #4ade80 100%);
+  transition: width 120ms steps(2, end);
+}
+
+.healthFillLow {
+  background: linear-gradient(90deg, #b91c1c 0%, #f97316 100%);
+}
+
+.buffRow {
+  display: flex;
+  gap: 0.3rem;
+  min-height: 0.7rem;
+}
+
+.buff {
+  font-size: 0.52rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #93c5fd;
+  background: rgba(30, 58, 138, 0.45);
+  border: 1px solid rgba(147, 197, 253, 0.35);
+  padding: 0.05rem 0.25rem;
 }
 
 .weapons {
