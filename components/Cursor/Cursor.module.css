@@ -137,15 +137,24 @@
   margin-top: -10px;
 }
 
-/* Grab hand over the portrait sticker; the reticle pinches shut while grabbing. */
-.rootHand .center {
-  width: 1.35rem;
-  height: 1.35rem;
+/* Pixel grab / grabbing fists inside the reticle (no difference blend — outline must stay). */
+.rootHand {
+  mix-blend-mode: normal;
+  color: #fff;
 }
 
-/* On the svg, not .center: an individual `scale` there would also scale its translate. */
-.rootGrabbing .hand {
-  scale: 0.86;
+.rootHand .center {
+  width: 1.55rem;
+  height: 1.55rem;
+}
+
+.rootHand .corner {
+  border-color: #fff;
+}
+
+.rootGrabbing .center {
+  width: 1.7rem;
+  height: 1.7rem;
 }
 
 .rootGrabbing .corner {
@@ -167,7 +176,11 @@
   display: block;
   width: 100%;
   height: 100%;
-  transition: scale 160ms ease;
+  object-fit: contain;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  pointer-events: none;
+  user-select: none;
 }
 
 .rootGlitch .corner {

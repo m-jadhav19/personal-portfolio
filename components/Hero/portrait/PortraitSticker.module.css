@@ -49,7 +49,7 @@
   aspect-ratio: 1 / 1;
   pointer-events: auto;
   touch-action: pan-y pinch-zoom;
-  cursor: grab;
+  cursor: url("/cursors/grab.png") 16 16, grab;
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
@@ -403,5 +403,5 @@
 }
 
 .sticker .part {
-  cursor: grab;
+  cursor: url("/cursors/grab.png") 16 16, grab;
 }
