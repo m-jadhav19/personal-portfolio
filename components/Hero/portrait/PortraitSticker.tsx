@@ -1257,6 +1257,11 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
       const dist = Math.hypot(dx, dy);
       if (!drag.peeling) {
         if (dist < DRAG_THRESHOLD || !canGrab()) return false;
+        // The sticker is `pan-y`: a mostly vertical finger drag is the page scrolling.
+        if (drag.input === "touch" && Math.abs(dy) > Math.abs(dx)) {
+          dragRef.current = null;
+          return false;
+        }
         drag.peeling = true;
         cancelPress();
         suppressClickRef.current = true;
