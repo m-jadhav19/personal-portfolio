@@ -1,0 +1,279 @@
+{
+  "sheet_width": 384,
+  "sheet_height": 448,
+  "cell_size": 64,
+  "static": {
+    "character-idle.svg": {
+      "x": 8,
+      "y": 14,
+      "width": 48,
+      "height": 36,
+      "row": 0,
+      "col": 0
+    },
+    "character-walk-a.svg": {
+      "x": 72,
+      "y": 14,
+      "width": 48,
+      "height": 36,
+      "row": 0,
+      "col": 1
+    },
+    "character-walk-b.svg": {
+      "x": 136,
+      "y": 14,
+      "width": 48,
+      "height": 36,
+      "row": 0,
+      "col": 2
+    },
+    "gun.svg": {
+      "x": 209,
+      "y": 24,
+      "width": 30,
+      "height": 15,
+      "row": 0,
+      "col": 3
+    },
+    "blaster-bolt.svg": {
+      "x": 279,
+      "y": 27,
+      "width": 18,
+      "height": 9,
+      "row": 0,
+      "col": 4
+    },
+    "rocket.svg": {
+      "x": 340,
+      "y": 20,
+      "width": 24,
+      "height": 24,
+      "row": 0,
+      "col": 5
+    },
+    "vortex.svg": {
+      "x": 17,
+      "y": 85,
+      "width": 30,
+      "height": 21,
+      "row": 1,
+      "col": 0
+    },
+    "explosion.svg": {
+      "x": 81,
+      "y": 82,
+      "width": 30,
+      "height": 27,
+      "row": 1,
+      "col": 1
+    },
+    "icon-blaster.svg": {
+      "x": 139,
+      "y": 84,
+      "width": 42,
+      "height": 24,
+      "row": 1,
+      "col": 2
+    },
+    "icon-rocket.svg": {
+      "x": 203,
+      "y": 81,
+      "width": 42,
+      "height": 30,
+      "row": 1,
+      "col": 3
+    },
+    "icon-vortex.svg": {
+      "x": 267,
+      "y": 82,
+      "width": 42,
+      "height": 27,
+      "row": 1,
+      "col": 4
+    },
+    "icon-zap.svg": {
+      "x": 331,
+      "y": 81,
+      "width": 42,
+      "height": 30,
+      "row": 1,
+      "col": 5
+    },
+    "pickup-health.svg": {
+      "x": 20,
+      "y": 149,
+      "width": 24,
+      "height": 21,
+      "row": 2,
+      "col": 0
+    },
+    "pickup-shield.svg": {
+      "x": 84,
+      "y": 151,
+      "width": 24,
+      "height": 18,
+      "row": 2,
+      "col": 1
+    },
+    "pickup-rapid.svg": {
+      "x": 148,
+      "y": 149,
+      "width": 24,
+      "height": 21,
+      "row": 2,
+      "col": 2
+    },
+    "env-crate.svg": {
+      "x": 212,
+      "y": 149,
+      "width": 24,
+      "height": 21,
+      "row": 2,
+      "col": 3
+    },
+    "env-barrel.svg": {
+      "x": 276,
+      "y": 149,
+      "width": 24,
+      "height": 21,
+      "row": 2,
+      "col": 4
+    },
+    "env-bush.svg": {
+      "x": 340,
+      "y": 151,
+      "width": 24,
+      "height": 18,
+      "row": 2,
+      "col": 5
+    },
+    "env-rock.svg": {
+      "x": 20,
+      "y": 215,
+      "width": 24,
+      "height": 18,
+      "row": 3,
+      "col": 0
+    },
+    "hole-a.svg": {
+      "x": 84,
+      "y": 212,
+      "width": 24,
+      "height": 24,
+      "row": 3,
+      "col": 1
+    },
+    "hole-b.svg": {
+      "x": 148,
+      "y": 212,
+      "width": 24,
+      "height": 24,
+      "row": 3,
+      "col": 2
+    },
+    "hole-c.svg": {
+      "x": 212,
+      "y": 213,
+      "width": 24,
+      "height": 21,
+      "row": 3,
+      "col": 3
+    },
+    "crack.svg": {
+      "x": 276,
+      "y": 215,
+      "width": 24,
+      "height": 18,
+      "row": 3,
+      "col": 4
+    },
+    "env-tile.svg": {
+      "x": 346,
+      "y": 218,
+      "width": 12,
+      "height": 12,
+      "row": 3,
+      "col": 5
+    }
+  },
+  "animations": {
+    "enemy-roach": [
+      {
+        "frame": 0,
+        "x": 20,
+        "y": 279,
+        "width": 24,
+        "height": 18,
+        "duration_ms": 120
+      },
+      {
+        "frame": 1,
+        "x": 84,
+        "y": 279,
+        "width": 24,
+        "height": 18,
+        "duration_ms": 120
+      },
+      {
+        "frame": 2,
+        "x": 148,
+        "y": 279,
+        "width": 24,
+        "height": 18,
+        "duration_ms": 120
+      }
+    ],
+    "enemy-drone": [
+      {
+        "frame": 0,
+        "x": 20,
+        "y": 343,
+        "width": 24,
+        "height": 18,
+        "duration_ms": 120
+      },
+      {
+        "frame": 1,
+        "x": 84,
+        "y": 343,
+        "width": 24,
+        "height": 18,
+        "duration_ms": 120
+      },
+      {
+        "frame": 2,
+        "x": 148,
+        "y": 343,
+        "width": 24,
+        "height": 18,
+        "duration_ms": 120
+      }
+    ],
+    "enemy-slime": [
+      {
+        "frame": 0,
+        "x": 20,
+        "y": 407,
+        "width": 24,
+        "height": 18,
+        "duration_ms": 120
+      },
+      {
+        "frame": 1,
+        "x": 84,
+        "y": 407,
+        "width": 24,
+        "height": 18,
+        "duration_ms": 120
+      },
+      {
+        "frame": 2,
+        "x": 148,
+        "y": 407,
+        "width": 24,
+        "height": 18,
+        "duration_ms": 120
+      }
+    ]
+  }
+}

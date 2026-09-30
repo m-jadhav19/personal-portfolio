@@ -5,6 +5,7 @@ import {
   ENV_SPRITE,
   PICKUP_SPRITE,
   drawSprite,
+  enemyAnimFrame,
   type DestroySpriteAtlas,
 } from "./spriteAtlas";
 
@@ -213,7 +214,9 @@ export function drawPixelEnemy(
   ctx.save();
   if (flash) ctx.globalAlpha = 0.55 + Math.sin(enemy.hitFlash * 40) * 0.45;
 
-  const sprite = atlas?.get(ENEMY_SPRITE[enemy.kind]) ?? null;
+  const animId = enemyAnimFrame(enemy.kind, enemy.phase);
+  const sprite =
+    atlas?.get(animId) ?? atlas?.get(ENEMY_SPRITE[enemy.kind]) ?? null;
   const drew = drawSprite(ctx, sprite, ox, oy + bob, {
     facing: enemy.facing,
     scale: 1,

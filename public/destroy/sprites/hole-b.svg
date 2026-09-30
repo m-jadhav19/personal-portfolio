@@ -1,43 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" shape-rendering="crispEdges">
-<rect x="9" y="0" width="3" height="3" fill="#52525b"/>
-<rect x="12" y="0" width="3" height="3" fill="#0a0a0a"/>
-<rect x="3" y="3" width="3" height="3" fill="#52525b"/>
-<rect x="6" y="3" width="3" height="3" fill="#3f3f46"/>
-<rect x="9" y="3" width="3" height="3" fill="#0a0a0a"/>
-<rect x="12" y="3" width="3" height="3" fill="#0a0a0a"/>
-<rect x="15" y="3" width="3" height="3" fill="#171717"/>
-<rect x="18" y="3" width="3" height="3" fill="#52525b"/>
-<rect x="0" y="6" width="3" height="3" fill="#52525b"/>
-<rect x="3" y="6" width="3" height="3" fill="#171717"/>
-<rect x="6" y="6" width="3" height="3" fill="#0a0a0a"/>
-<rect x="9" y="6" width="3" height="3" fill="#0a0a0a"/>
-<rect x="12" y="6" width="3" height="3" fill="#0a0a0a"/>
-<rect x="15" y="6" width="3" height="3" fill="#0a0a0a"/>
-<rect x="18" y="6" width="3" height="3" fill="#0a0a0a"/>
-<rect x="3" y="9" width="3" height="3" fill="#0a0a0a"/>
-<rect x="6" y="9" width="3" height="3" fill="#0a0a0a"/>
-<rect x="9" y="9" width="3" height="3" fill="#0a0a0a"/>
-<rect x="12" y="9" width="3" height="3" fill="#0a0a0a"/>
-<rect x="15" y="9" width="3" height="3" fill="#0a0a0a"/>
-<rect x="18" y="9" width="3" height="3" fill="#0a0a0a"/>
-<rect x="21" y="9" width="3" height="3" fill="#52525b"/>
-<rect x="0" y="12" width="3" height="3" fill="#52525b"/>
-<rect x="3" y="12" width="3" height="3" fill="#171717"/>
-<rect x="6" y="12" width="3" height="3" fill="#0a0a0a"/>
-<rect x="9" y="12" width="3" height="3" fill="#0a0a0a"/>
-<rect x="12" y="12" width="3" height="3" fill="#0a0a0a"/>
-<rect x="15" y="12" width="3" height="3" fill="#0a0a0a"/>
-<rect x="18" y="12" width="3" height="3" fill="#0a0a0a"/>
-<rect x="21" y="12" width="3" height="3" fill="#171717"/>
-<rect x="3" y="15" width="3" height="3" fill="#3f3f46"/>
-<rect x="6" y="15" width="3" height="3" fill="#0a0a0a"/>
-<rect x="9" y="15" width="3" height="3" fill="#0a0a0a"/>
-<rect x="12" y="15" width="3" height="3" fill="#0a0a0a"/>
-<rect x="15" y="15" width="3" height="3" fill="#0a0a0a"/>
-<rect x="18" y="15" width="3" height="3" fill="#52525b"/>
-<rect x="6" y="18" width="3" height="3" fill="#52525b"/>
-<rect x="9" y="18" width="3" height="3" fill="#0a0a0a"/>
-<rect x="12" y="18" width="3" height="3" fill="#171717"/>
-<rect x="15" y="18" width="3" height="3" fill="#52525b"/>
-<rect x="12" y="21" width="3" height="3" fill="#52525b"/>
+
+<polygon points="10,2 15,5 20,5 19,10 22,14 17,16 15,21 10,18 5,20 5,15 2,12 6,9 5,5" fill="#575059"/>
+<polygon points="9,7 15,6 18,10 16,15 11,17 7,13" fill="#17161d"/>
+<rect x="10" y="7" width="5" height="2" fill="#8a7c82"/><rect x="17" y="11" width="3" height="2" fill="#756a70"/>
+
 </svg>
