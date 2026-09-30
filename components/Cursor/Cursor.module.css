@@ -137,37 +137,47 @@
   margin-top: -10px;
 }
 
-/* Grab hand over the portrait sticker; the reticle pinches shut while grabbing. */
+/* --------------------------------
+   GRABBER — mechanical four-prong claw
+-------------------------------- */
+
+/* Difference blend makes the claw and brackets disagree on light vs dark. */
+.rootHand {
+  mix-blend-mode: normal;
+  color: #f5f5f0;
+  filter: drop-shadow(0 0 0.45px #000) drop-shadow(0 0 0.45px #000);
+}
+
 .rootHand .center {
-  width: 1.35rem;
-  height: 1.35rem;
+  width: 1.3rem;
+  height: 1.3rem;
 }
 
-/* On the svg, not .center: an individual `scale` there would also scale its translate. */
-.rootGrabbing .hand {
-  scale: 0.86;
-}
-
-.rootGrabbing .corner {
-  width: 5px;
-  height: 5px;
-}
-
-.rootGrabbing .tr,
-.rootGrabbing .br {
-  margin-left: -5px;
-}
-
-.rootGrabbing .bl,
-.rootGrabbing .br {
-  margin-top: -5px;
-}
-
-.hand {
+.grabber {
   display: block;
   width: 100%;
   height: 100%;
-  transition: scale 160ms ease;
+  overflow: visible;
+}
+
+/* State hooks — paths swap in JSX; kept so the class names stay in the CSS module. */
+.grabberOpen,
+.grabberClosed {
+  transform: none;
+}
+
+.grabberArms {
+  transform-origin: center;
+}
+
+/* Brackets stay readable but secondary to the grabber. */
+.rootHand .corner {
+  opacity: 0.85;
+  transition: opacity 160ms ease;
+}
+
+.rootGrabbing .corner {
+  opacity: 0.55;
 }
 
 .rootGlitch .corner {
@@ -184,4 +194,5 @@
   .root {
     display: none;
   }
+
 }
