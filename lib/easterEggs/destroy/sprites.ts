@@ -32,6 +32,13 @@ export function drawPixelRect(
   ctx.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h));
 }
 
+export type CharacterDrawOpts = {
+  hurtFlash?: number;
+  shielded?: boolean;
+  knockX?: number;
+  knockY?: number;
+};
+
 /** Orange stick-figure mercenary with a directional gun arm. */
 export function drawCharacter(
   ctx: CanvasRenderingContext2D,
@@ -41,15 +48,29 @@ export function drawCharacter(
   aimAngle: number,
   walkPhase: number,
   atlas?: DestroySpriteAtlas | null,
+  opts?: CharacterDrawOpts,
 ) {
-  const ox = Math.round(x);
-  const oy = Math.round(y);
+  const hurt = opts?.hurtFlash ?? 0;
+  const knockX = opts?.knockX ?? 0;
+  const knockY = opts?.knockY ?? 0;
+  const ox = Math.round(x + knockX);
+  const oy = Math.round(y + knockY);
 
   // Shadow
   ctx.fillStyle = "rgba(0,0,0,0.25)";
   ctx.beginPath();
   ctx.ellipse(ox, oy + 28, 18, 5, 0, 0, Math.PI * 2);
   ctx.fill();
+
+  if (opts?.shielded) {
+    ctx.save();
+    ctx.strokeStyle = "rgba(147, 197, 253, 0.85)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.ellipse(ox, oy, 22, 26, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+  }
 
   const moving = Math.abs(Math.sin(walkPhase)) > 0.2;
   const frame =
@@ -59,15 +80,23 @@ export function drawCharacter(
         ? "characterWalkA"
         : "characterWalkB";
 
+  ctx.save();
+  if (hurt > 0) {
+    // Impact frames: blink + red wash
+    const blink = Math.floor(hurt * 20) % 2 === 0;
+    ctx.globalAlpha = blink ? 0.35 : 1;
+    ctx.filter = blink ? "saturate(0.2) brightness(1.6)" : "none";
+  }
+
   const body = atlas?.get(frame) ?? null;
   const drewBody = drawSprite(ctx, body, ox, oy, { facing, scale: 1 });
 
   if (!drewBody) {
     // Procedural fallback
     const s = 2;
-    const bodyC = "#e85d04";
+    const bodyC = hurt > 0 ? "#fecaca" : "#e85d04";
     const dark = "#9a3412";
-    const skin = "#fdba74";
+    const skin = hurt > 0 ? "#fee2e2" : "#fdba74";
     const boot = "#431407";
     const legSwing = Math.sin(walkPhase) * 3 * s;
     drawPixelRect(
@@ -114,6 +143,17 @@ export function drawCharacter(
     ctx.rotate(aimAngle);
     drawPixelRect(ctx, 0, -3, 28, 6, "#38bdf8");
     drawPixelRect(ctx, 24, -5, 8, 10, "#e0f2fe");
+    ctx.restore();
+  }
+  ctx.restore();
+
+  if (hurt > 0) {
+    ctx.save();
+    ctx.globalAlpha = Math.min(0.55, hurt * 1.2);
+    ctx.fillStyle = "#ef4444";
+    ctx.beginPath();
+    ctx.ellipse(ox, oy, 20, 24, 0, 0, Math.PI * 2);
+    ctx.fill();
     ctx.restore();
   }
 }

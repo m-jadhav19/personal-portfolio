@@ -28,9 +28,13 @@ export function DestroySiteSimulator({ onExit }: DestroySiteSimulatorProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const engineRef = useRef<DestroyEngine | null>(null);
   const [paused, setPaused] = useState(false);
+  const [dead, setDead] = useState(false);
   const [weaponIndex, setWeaponIndex] = useState(0);
   const [muted, setMuted] = useState(readSessionMuted);
   const [shaking, setShaking] = useState(false);
+  const [health, setHealth] = useState(100);
+  const [maxHealth, setMaxHealth] = useState(100);
+  const [buffs, setBuffs] = useState({ shield: 0, rapid: 0 });
 
   const leaveMode = useCallback(() => {
     // Soft-restore + teardown happen in the mount effect cleanup.
@@ -42,12 +46,13 @@ export function DestroySiteSimulator({ onExit }: DestroySiteSimulatorProps) {
   }, []);
 
   const togglePause = useCallback(() => {
+    if (dead) return;
     setPaused((prev) => {
       const next = !prev;
       engineRef.current?.setPaused(next);
       return next;
     });
-  }, []);
+  }, [dead]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -67,6 +72,15 @@ export function DestroySiteSimulator({ onExit }: DestroySiteSimulatorProps) {
       reducedMotion,
       initialMuted: readSessionMuted(),
       onWeaponChange: (index) => setWeaponIndex(index),
+      onHealthChange: (hp, max) => {
+        setHealth(hp);
+        setMaxHealth(max);
+      },
+      onBuffChange: (next) => setBuffs(next),
+      onDeath: () => {
+        setDead(true);
+        setPaused(true);
+      },
       onShake: () => {
         if (reducedMotion) return;
         setShaking(true);
@@ -82,10 +96,14 @@ export function DestroySiteSimulator({ onExit }: DestroySiteSimulatorProps) {
       if (event.key !== "Escape") return;
       event.preventDefault();
       event.stopPropagation();
-      setPaused((prev) => {
-        const next = !prev;
-        engine.setPaused(next);
-        return next;
+      setDead((isDead) => {
+        if (isDead) return isDead;
+        setPaused((prev) => {
+          const next = !prev;
+          engine.setPaused(next);
+          return next;
+        });
+        return isDead;
       });
     };
 
@@ -118,7 +136,12 @@ export function DestroySiteSimulator({ onExit }: DestroySiteSimulatorProps) {
 
   const repair = () => {
     engineRef.current?.repair();
+    setDead(false);
+    setPaused(false);
+    engineRef.current?.setPaused(false);
   };
+
+  const healthPct = Math.max(0, Math.min(100, (health / maxHealth) * 100));
 
   return (
     <div className={`${styles.root} ${shaking ? styles.shake : ""}`}>
@@ -139,6 +162,34 @@ export function DestroySiteSimulator({ onExit }: DestroySiteSimulatorProps) {
           <p className={styles.hint}>
             click fire · WASD / RMB move · 1–4 · Esc
           </p>
+        </div>
+
+        <div
+          className={styles.healthBlock}
+          aria-label={`Health ${Math.round(health)} of ${maxHealth}`}
+        >
+          <div className={styles.healthLabelRow}>
+            <span>HP</span>
+            <span>
+              {Math.ceil(health)}/{maxHealth}
+            </span>
+          </div>
+          <div className={styles.healthTrack}>
+            <div
+              className={`${styles.healthFill} ${
+                healthPct < 30 ? styles.healthFillLow : ""
+              }`}
+              style={{ width: `${healthPct}%` }}
+            />
+          </div>
+          <div className={styles.buffRow}>
+            {buffs.shield > 0 ? (
+              <span className={styles.buff}>SHD {buffs.shield.toFixed(0)}s</span>
+            ) : null}
+            {buffs.rapid > 0 ? (
+              <span className={styles.buff}>RAP {buffs.rapid.toFixed(0)}s</span>
+            ) : null}
+          </div>
         </div>
 
         <div className={styles.weapons} role="group" aria-label="Weapons">
@@ -184,6 +235,7 @@ export function DestroySiteSimulator({ onExit }: DestroySiteSimulatorProps) {
             className={`${styles.btn} ${styles.btnPrimary}`}
             onClick={togglePause}
             data-cursor="hide"
+            disabled={dead}
           >
             Pause
           </button>
@@ -203,27 +255,31 @@ export function DestroySiteSimulator({ onExit }: DestroySiteSimulatorProps) {
             aria-labelledby="destroy-pause-title"
           >
             <h2 id="destroy-pause-title" className={styles.pauseTitle}>
-              Paused — destroy mode
+              {dead ? "Overrun — you were destroyed" : "Paused — destroy mode"}
             </h2>
             <p className={styles.pauseSub}>
-              Repair restores the page in place. Leave mode exits without a
-              reload. Exit hard-resets the site.
+              {dead
+                ? "Repair restores the page and revives you. Enemies keep coming — grab health and power-ups."
+                : "Repair restores the page in place. Leave mode exits without a reload. Exit hard-resets the site."}
             </p>
             <div className={styles.pauseActions}>
-              <button
-                type="button"
-                className={styles.pauseBtn}
-                onClick={togglePause}
-                autoFocus
-              >
-                Resume
-              </button>
+              {!dead ? (
+                <button
+                  type="button"
+                  className={styles.pauseBtn}
+                  onClick={togglePause}
+                  autoFocus
+                >
+                  Resume
+                </button>
+              ) : null}
               <button
                 type="button"
                 className={styles.pauseBtn}
                 onClick={repair}
+                autoFocus={dead}
               >
-                Repair site
+                {dead ? "Revive + repair" : "Repair site"}
               </button>
               <button
                 type="button"

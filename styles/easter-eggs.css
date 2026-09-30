@@ -77,6 +77,14 @@ html[data-easter-egg="destroy"] body {
   overscroll-behavior: none;
 }
 
+/* Front marquee rows normally ignore pointer events so portrait stays clickable.
+   In destroy mode they must take hits (bottom role line included). */
+html[data-easter-egg="destroy"] [data-intro="marquee-line"],
+html[data-easter-egg="destroy"] [data-intro="marquee-line"] *,
+html[data-easter-egg="destroy"] [data-destroy-target] {
+  pointer-events: auto !important;
+}
+
 html[data-easter-egg="broken-ux"] * {
   scroll-behavior: auto !important;
 }
