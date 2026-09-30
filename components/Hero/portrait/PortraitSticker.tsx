@@ -353,11 +353,11 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
     peelRef.current?.release();
   };
 
-  const onStickerPointerLeave = () => {
+  const onStickerPointerLeave = (event: React.PointerEvent) => {
     stickerRef.current?.removeAttribute("data-hover");
     tiltToRef.current?.(0, 0);
     run("hover-off");
-    if (!busyRef.current) setHint(null);
+    if (event.pointerType === "mouse" && !busyRef.current) setHint(null);
     if (dragRef.current || busyRef.current) return;
     peelRef.current?.release();
   };
@@ -1378,15 +1378,16 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
     for (const name of names) actionsRef.current[name]?.();
   };
 
-  const onEnter = (part: Part, ...actions: string[]) => () => {
+  // Touch taps fire enter/leave too; those shouldn't flash hover hints over the tap's own.
+  const onEnter = (part: Part, ...actions: string[]) => (event: React.PointerEvent) => {
     // Parts sliding under a still pointer mid-spin/fling aren't real hovers.
-    if (!interactive()) return;
+    if (event.pointerType !== "mouse" || !interactive()) return;
     setHint(HINTS[part]);
     run(...actions);
   };
 
-  const onLeave = () => {
-    if (busyRef.current) return;
+  const onLeave = (event: React.PointerEvent) => {
+    if (event.pointerType !== "mouse" || busyRef.current) return;
     setHint(stickerRef.current?.hasAttribute("data-hover") ? HINTS.face : null);
   };
 
@@ -1572,8 +1573,8 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
             d={PATH.bracketL}
             fill={COLOR.cobalt}
             onPointerEnter={onEnter("bracket-left", "hover-brackets-on")}
-            onPointerLeave={() => {
-              onLeave();
+            onPointerLeave={(event) => {
+              onLeave(event);
               run("hover-brackets-off");
             }}
             onClick={onPartClick("close-left")}
@@ -1586,8 +1587,8 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
             d={PATH.bracketR}
             fill={COLOR.cobalt}
             onPointerEnter={onEnter("bracket-right", "hover-brackets-on")}
-            onPointerLeave={() => {
-              onLeave();
+            onPointerLeave={(event) => {
+              onLeave(event);
               run("hover-brackets-off");
             }}
             onClick={onPartClick("close-right")}
