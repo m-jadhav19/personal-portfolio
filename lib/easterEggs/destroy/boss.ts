@@ -1,5 +1,6 @@
 /** Floating portrait boss for destroy mode. */
 
+export const BOSS_NAME = "Mogambo";
 export const BOSS_MAX_HP = 120;
 export const BOSS_RADIUS = 52;
 export const BOSS_PORTRAIT_SRC = "/images/mandar-portrait.png";
@@ -246,7 +247,7 @@ export function drawBossHealthBar(
   ctx.fillStyle = "#fdba74";
   ctx.font = "bold 9px monospace";
   ctx.textAlign = "center";
-  ctx.fillText("PORTRAIT BOSS", x, top - 3);
+  ctx.fillText(BOSS_NAME.toUpperCase(), x, top - 3);
   ctx.fillStyle = "#3f3f46";
   ctx.fillRect(left, top + 2, w, h);
   ctx.fillStyle = pct < 0.3 ? "#ef4444" : "#e85d04";

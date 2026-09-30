@@ -246,6 +246,7 @@ export function createDestroyEngine(
   function spawnBoss() {
     boss = createPortraitBoss(window.innerWidth, window.innerHeight);
     hidePortraitDom();
+    audio.play("bossIntro");
     emitBoss();
   }
 
@@ -306,7 +307,7 @@ export function createDestroyEngine(
       if (Math.hypot(boss.x - x, boss.y - y) <= radius + boss.radius) {
         const result = hurtBoss(boss, Math.max(1, damage));
         if (result.hit) {
-          audio.play("hit");
+          audio.play("bossHit");
           emitBoss();
         }
         if (result.killed) {
@@ -318,7 +319,7 @@ export function createDestroyEngine(
             ["#fdba74", "#38bdf8", "#f97316", "#fde047", "#c084fc"],
           );
           particles = particles.concat(bits).slice(-MAX_PARTICLES);
-          audio.play("boom");
+          audio.play("bossDeath");
           options.onShake?.(1);
           // Boss loot shower
           for (const kind of ["health", "shield", "rapid"] as const) {
@@ -975,7 +976,7 @@ export function createDestroyEngine(
       );
       for (const shot of newShots) {
         bossShots.push(shot);
-        if (newShots.length && shot === newShots[0]) audio.play("vortex");
+        if (newShots.length && shot === newShots[0]) audio.play("bossAttack");
       }
       if (Math.hypot(boss.x - character.x, boss.y - character.y) < CHAR_HIT_R + boss.radius * 0.55) {
         takeDamage(boss.damage, boss.x, boss.y);

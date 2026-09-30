@@ -8,6 +8,10 @@ export type BlipKind =
   | "hurt"
   | "pickup"
   | "enemy"
+  | "bossIntro"
+  | "bossAttack"
+  | "bossHit"
+  | "bossDeath"
   | "ui";
 
 export type DestroyAudio = {
@@ -199,6 +203,57 @@ export function createDestroyAudio(initialMuted = false): DestroyAudio {
       case "enemy": {
         burst(audio, now, 0.06, 0.05, master, 2200, { q: 1.4 });
         tone(audio, "square", 240, 110, now, 0.07, 0.025, master, 0.002);
+        break;
+      }
+      case "bossIntro": {
+        // Dramatic Mogambo entrance — deep brass-ish stabs + rising dread
+        tone(audio, "sawtooth", 55, 110, now, 0.55, 0.09, master, 0.02);
+        tone(audio, "square", 82, 164, now + 0.05, 0.45, 0.05, master, 0.015);
+        tone(audio, "triangle", 220, 440, now + 0.12, 0.35, 0.04, master, 0.02);
+        burst(audio, now, 0.5, 0.1, master, 280, {
+          q: 0.35,
+          buffer: longNoise,
+          type: "lowpass",
+        });
+        burst(audio, now + 0.18, 0.22, 0.06, master, 900, { q: 1.1 });
+        tone(audio, "sine", 130, 65, now + 0.25, 0.4, 0.07, master, 0.01);
+        break;
+      }
+      case "bossAttack": {
+        // Charge / volley tell — snarling whoosh
+        tone(audio, "sawtooth", 180, 60, now, 0.22, 0.055, master, 0.004);
+        tone(audio, "square", 90, 40, now, 0.18, 0.035, master, 0.006);
+        burst(audio, now, 0.2, 0.08, master, 650, {
+          q: 0.7,
+          buffer: longNoise,
+        });
+        burst(audio, now + 0.04, 0.1, 0.045, master, 2400, { q: 1.5 });
+        break;
+      }
+      case "bossHit": {
+        // Heavy boss armor clang
+        tone(audio, "triangle", 140, 45, now, 0.14, 0.07, master, 0.002);
+        tone(audio, "square", 320, 90, now, 0.09, 0.04, master, 0.001);
+        burst(audio, now, 0.1, 0.08, master, 700, { q: 0.8 });
+        burst(audio, now + 0.02, 0.06, 0.04, master, 1800, { q: 1.3 });
+        break;
+      }
+      case "bossDeath": {
+        // Oversized cinematic collapse
+        tone(audio, "sine", 90, 18, now, 0.7, 0.14, master, 0.006);
+        tone(audio, "sawtooth", 160, 30, now, 0.45, 0.06, master, 0.008);
+        tone(audio, "triangle", 240, 50, now + 0.05, 0.35, 0.045, master, 0.01);
+        burst(audio, now, 0.55, 0.16, master, 380, {
+          q: 0.35,
+          buffer: longNoise,
+          type: "lowpass",
+        });
+        burst(audio, now + 0.04, 0.28, 0.1, master, 1600, { q: 0.8 });
+        burst(audio, now + 0.16, 0.35, 0.07, master, 700, {
+          q: 0.5,
+          buffer: longNoise,
+        });
+        tone(audio, "sine", 440, 110, now + 0.2, 0.35, 0.035, master, 0.015);
         break;
       }
       case "ui":

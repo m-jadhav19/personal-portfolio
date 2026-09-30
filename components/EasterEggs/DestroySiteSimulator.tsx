@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { BOSS_NAME } from "@/lib/easterEggs/destroy/boss";
 import { createDestroyEngine, type DestroyEngine } from "@/lib/easterEggs/destroy/engine";
 import {
   WEAPON_ICON_SRC,
@@ -166,10 +167,10 @@ export function DestroySiteSimulator({ onExit }: DestroySiteSimulatorProps) {
           className={styles.bossBar}
           data-destroy-ignore
           data-cursor="hide"
-          aria-label={`Portrait boss health ${Math.round(boss.hp)} of ${boss.maxHp}`}
+          aria-label={`${BOSS_NAME} health ${Math.round(boss.hp)} of ${boss.maxHp}`}
         >
           <div className={styles.bossBarLabel}>
-            <span>PORTRAIT BOSS</span>
+            <span>{BOSS_NAME.toUpperCase()}</span>
             <span>
               {Math.ceil(boss.hp)}/{boss.maxHp}
             </span>

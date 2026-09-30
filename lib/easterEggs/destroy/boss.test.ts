@@ -3,10 +3,15 @@ import test from "node:test";
 
 import {
   BOSS_MAX_HP,
+  BOSS_NAME,
   createPortraitBoss,
   hurtBoss,
   updatePortraitBoss,
 } from "./boss.ts";
+
+test("boss is named Mogambo", () => {
+  assert.equal(BOSS_NAME, "Mogambo");
+});
 
 test("createPortraitBoss starts at full HP and alive", () => {
   const boss = createPortraitBoss(1280, 800);
