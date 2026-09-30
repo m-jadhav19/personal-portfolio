@@ -341,7 +341,7 @@ export function DestroySiteSimulator({ onExit }: DestroySiteSimulatorProps) {
                 ? "Repair restores the page, resets score, and revives you. Reach the score threshold to wake Mogambo."
                 : bossSummoned
                   ? "Mogambo tore out of the portrait. Repair restores the page and resets score. Leave mode exits without a reload."
-                  : `Rack up ${scoreThreshold} points — the portrait watches you until Mogambo shrinks into a boss. Repair restores the page in place.`}
+                  : `Rack up ${scoreThreshold} points — the portrait watches you until Mogambo tears out as a DOOM-style boss from where the head sits. Repair restores the page in place.`}
             </p>
             <div className={styles.pauseActions}>
               {!dead ? (

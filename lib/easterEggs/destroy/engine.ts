@@ -67,23 +67,15 @@ import {
   type WeaponId,
 } from "./weapons";
 
-type BossReveal = {
-  el: HTMLElement;
+/** Screen FX while the canvas boss emerges from the portrait (no DOM transforms). */
+type BossIntroFx = {
   x: number;
   y: number;
-  startSize: number;
   t: number;
   duration: number;
   waveTimer: number;
   wavesLeft: number;
   flashMarks: number[];
-  prev: {
-    transform: string;
-    transition: string;
-    filter: string;
-    opacity: string;
-    willChange: string;
-  };
 };
 
 type Vec = { x: number; y: number };
@@ -221,7 +213,7 @@ export function createDestroyEngine(
   let envProps: EnvProp[] = [];
   const bossShots: BossProjectile[] = [];
   let boss: PortraitBoss | null = null;
-  let bossReveal: BossReveal | null = null;
+  let bossIntroFx: BossIntroFx | null = null;
   let impactFlash = 0;
   const bossPortrait = loadBossPortrait();
   let portraitDomHidden: HTMLElement | null = null;
@@ -275,7 +267,11 @@ export function createDestroyEngine(
   }
 
   function portraitEl() {
-    return document.querySelector<HTMLElement>("[data-intro='portrait']");
+    // Prefer the live sticker (may be peeled/placed elsewhere), then the stage.
+    return (
+      document.querySelector<HTMLElement>("[data-destroy-portrait='sticker']") ??
+      document.querySelector<HTMLElement>("[data-intro='portrait']")
+    );
   }
 
   function portraitOrigin(el?: HTMLElement | null) {
@@ -303,24 +299,22 @@ export function createDestroyEngine(
       filter: node.style.filter,
       willChange: node.style.willChange,
     };
+    // Instant hide — canvas boss takes over at this exact rect (no CSS shrink teleport).
+    node.style.transition = "none";
     node.style.opacity = "0";
     node.style.visibility = "hidden";
     node.style.pointerEvents = "none";
-    node.style.transform = "";
-    node.style.filter = "";
-    node.removeAttribute("data-mogambo-reveal");
   }
 
   function restorePortraitDom() {
-    cancelBossReveal(false);
+    bossIntroFx = null;
     if (!portraitDomHidden) {
       const el = portraitEl();
       if (el) {
-        el.style.transform = "";
-        el.style.filter = "";
+        el.style.opacity = "";
+        el.style.visibility = "";
+        el.style.pointerEvents = "";
         el.style.transition = "";
-        el.style.willChange = "";
-        el.removeAttribute("data-mogambo-reveal");
       }
       return;
     }
@@ -331,21 +325,7 @@ export function createDestroyEngine(
     portraitDomHidden.style.transition = portraitDomPrev.transition;
     portraitDomHidden.style.filter = portraitDomPrev.filter;
     portraitDomHidden.style.willChange = portraitDomPrev.willChange;
-    portraitDomHidden.removeAttribute("data-mogambo-reveal");
     portraitDomHidden = null;
-  }
-
-  function cancelBossReveal(hideAfter: boolean) {
-    if (!bossReveal) return;
-    const { el, prev } = bossReveal;
-    el.style.transform = prev.transform;
-    el.style.transition = prev.transition;
-    el.style.filter = prev.filter;
-    el.style.opacity = prev.opacity;
-    el.style.willChange = prev.willChange;
-    el.removeAttribute("data-mogambo-reveal");
-    bossReveal = null;
-    if (hideAfter) hidePortraitDom(el);
   }
 
   function smashRevealWave(x: number, y: number, radius: number) {
@@ -382,20 +362,8 @@ export function createDestroyEngine(
     options.onShake?.(0.55);
   }
 
-  function finishBossReveal() {
-    if (!bossReveal) return;
-    const { x, y, el } = bossReveal;
-    cancelBossReveal(true);
-    hidePortraitDom(el);
-    boss = createPortraitBoss(window.innerWidth, window.innerHeight, { x, y });
-    impactFlash = Math.max(impactFlash, 0.45);
-    options.onShake?.(1);
-    emitBoss();
-    emitScore();
-  }
-
   function beginBossReveal() {
-    if (bossSummoned || bossReveal) return;
+    if (bossSummoned || boss || bossIntroFx) return;
     bossSummoned = true;
     const el = portraitEl();
     const origin = portraitOrigin(el);
@@ -403,84 +371,66 @@ export function createDestroyEngine(
     const y = origin?.y ?? window.innerHeight * 0.42;
     const startSize = origin?.size ?? 280;
 
-    if (el) {
-      bossReveal = {
-        el,
-        x,
-        y,
-        startSize,
-        t: 0,
-        duration: reducedMotion ? 0.4 : 0.85,
-        waveTimer: 0.18,
-        wavesLeft: reducedMotion ? 1 : 2,
-        flashMarks: [0.08, 0.45],
-        prev: {
-          transform: el.style.transform,
-          transition: el.style.transition,
-          filter: el.style.filter,
-          opacity: el.style.opacity,
-          willChange: el.style.willChange,
-        },
-      };
-      el.dataset.mogamboReveal = "true";
-      el.style.transition = "none";
-      el.style.willChange = "transform, filter, opacity";
-      el.style.transformOrigin = "center center";
-    } else {
-      // No portrait node — drop straight into the canvas boss.
-      boss = createPortraitBoss(window.innerWidth, window.innerHeight, { x, y });
-      emitBoss();
-    }
+    // Capture once, hide the sticker, hand off to a canvas DOOM emerge at that spot.
+    // No CSS scale/translate — that was reading back a moving rect and teleporting.
+    if (el) hidePortraitDom(el);
+
+    boss = createPortraitBoss(window.innerWidth, window.innerHeight, {
+      x,
+      y,
+      size: startSize,
+    });
+    bossIntroFx = {
+      x,
+      y,
+      t: 0,
+      duration: reducedMotion ? 0.35 : 0.95,
+      waveTimer: 0.12,
+      wavesLeft: reducedMotion ? 1 : 3,
+      flashMarks: [0.05, 0.4, 0.75],
+    };
 
     audio.play("bossIntro");
     impactFlash = 0.55;
     options.onShake?.(1);
     smashRevealWave(x, y, Math.min(160, startSize * 0.55));
+    emitBoss();
     emitScore();
   }
 
-  function updateBossReveal(dt: number) {
-    if (!bossReveal) return;
-    bossReveal.t += dt;
-    const p = Math.min(1, bossReveal.t / bossReveal.duration);
-    const ease = 1 - (1 - p) ** 3;
-    const endScale = Math.min(0.42, 96 / Math.max(96, bossReveal.startSize));
-    const scale = 1 - ease * (1 - endScale);
-    const lift = -ease * (reducedMotion ? 18 : 48);
-    const wobble = Math.sin(bossReveal.t * 28) * (1 - ease) * 2.5;
+  function updateBossIntroFx(dt: number) {
+    if (!bossIntroFx) return;
+    bossIntroFx.t += dt;
+    const p = Math.min(1, bossIntroFx.t / bossIntroFx.duration);
 
-    const { el } = bossReveal;
-    // Keep tracking the live center as it shrinks/lifts.
-    const rect = el.getBoundingClientRect();
-    if (rect.width > 4) {
-      bossReveal.x = rect.left + rect.width / 2;
-      bossReveal.y = rect.top + rect.height / 2;
+    // Keep FX locked to the boss home (where the sticker was), not a drifting rect.
+    if (boss) {
+      bossIntroFx.x = boss.homeX;
+      bossIntroFx.y = boss.homeY;
     }
-
-    el.style.transform = `translate(${wobble}px, ${lift}px) scale(${scale})`;
-    // Skip per-frame CSS filters — they force expensive layer repaints.
-    el.style.opacity = String(1 - ease * 0.12);
 
     if (
-      bossReveal.flashMarks.length &&
-      p >= bossReveal.flashMarks[0]
+      bossIntroFx.flashMarks.length &&
+      p >= bossIntroFx.flashMarks[0]
     ) {
-      bossReveal.flashMarks.shift();
+      bossIntroFx.flashMarks.shift();
       impactFlash = Math.max(impactFlash, 0.28);
-      options.onShake?.(0.75);
+      options.onShake?.(0.65);
     }
 
-    bossReveal.waveTimer -= dt;
-    if (bossReveal.waveTimer <= 0 && bossReveal.wavesLeft > 0) {
-      const radius = 70 + bossReveal.wavesLeft * 28;
-      smashRevealWave(bossReveal.x, bossReveal.y, radius);
-      bossReveal.wavesLeft -= 1;
-      bossReveal.waveTimer = reducedMotion ? 0.16 : 0.22;
+    bossIntroFx.waveTimer -= dt;
+    if (bossIntroFx.waveTimer <= 0 && bossIntroFx.wavesLeft > 0) {
+      const radius = 55 + bossIntroFx.wavesLeft * 24;
+      smashRevealWave(bossIntroFx.x, bossIntroFx.y, radius);
+      bossIntroFx.wavesLeft -= 1;
+      bossIntroFx.waveTimer = reducedMotion ? 0.14 : 0.2;
     }
 
-    if (impactFlash > 0) impactFlash = Math.max(0, impactFlash - dt);
-
-    if (p >= 1) finishBossReveal();
+    if (p >= 1) {
+      bossIntroFx = null;
+      impactFlash = Math.max(impactFlash, 0.35);
+      options.onShake?.(0.85);
+    }
   }
 
   function spawnBoss() {
@@ -488,7 +438,7 @@ export function createDestroyEngine(
   }
 
   function maybeSummonBoss() {
-    if (bossSummoned || bossReveal || dead || paused) return;
+    if (bossSummoned || boss || bossIntroFx || dead || paused) return;
     if (score >= BOSS_SCORE_THRESHOLD) spawnBoss();
   }
 
@@ -1208,8 +1158,8 @@ export function createDestroyEngine(
 
   function update(dt: number) {
     setDestroyWatchTarget(character.x, character.y);
-    updateBossReveal(dt);
-    if (impactFlash > 0 && !bossReveal) {
+    updateBossIntroFx(dt);
+    if (impactFlash > 0 && !bossIntroFx) {
       impactFlash = Math.max(0, impactFlash - dt * 1.8);
     }
 
@@ -1455,7 +1405,11 @@ export function createDestroyEngine(
         bossShots.push(shot);
         if (newShots.length && shot === newShots[0]) audio.play("bossAttack");
       }
-      if (Math.hypot(boss.x - character.x, boss.y - character.y) < CHAR_HIT_R + boss.radius * 0.55) {
+      if (
+        boss.mode !== "emerge" &&
+        Math.hypot(boss.x - character.x, boss.y - character.y) <
+          CHAR_HIT_R + boss.radius * 0.55
+      ) {
         takeDamage(boss.damage, boss.x, boss.y);
       }
       bossEmitTimer -= dt;
@@ -1629,7 +1583,7 @@ export function createDestroyEngine(
     score = 0;
     bossSummoned = false;
     boss = null;
-    bossReveal = null;
+    bossIntroFx = null;
     impactFlash = 0;
     dead = false;
     hurtFlash = 0;
@@ -1659,7 +1613,7 @@ export function createDestroyEngine(
     restorePortraitDom();
     clearDestroyWatchTarget();
     boss = null;
-    bossReveal = null;
+    bossIntroFx = null;
     impactFlash = 0;
     bossSummoned = false;
     score = 0;
