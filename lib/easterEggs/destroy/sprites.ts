@@ -12,6 +12,12 @@ export type BulletHole = {
   rotation: number;
   scale: number;
   crack: boolean;
+  /** Seconds remaining before the scar is fully covered */
+  life: number;
+  /** Full lifetime (hold + fade) */
+  maxLife: number;
+  /** Seconds of full opacity before fade/cover begins */
+  hold: number;
 };
 
 export function drawPixelRect(
@@ -135,66 +141,99 @@ export function drawBlasterBolt(
   ctx.restore();
 }
 
-export function drawMissile(
+export function drawRocket(
   ctx: CanvasRenderingContext2D,
   x: number,
   y: number,
+  angle = -Math.PI / 2,
   atlas?: DestroySpriteAtlas | null,
 ) {
-  if (drawSprite(ctx, atlas?.get("missile") ?? null, x, y, { scale: 1 })) {
-    return;
-  }
-  const ox = Math.round(x);
-  const oy = Math.round(y);
-  drawPixelRect(ctx, ox - 3, oy - 10, 6, 16, "#64748b");
-  drawPixelRect(ctx, ox - 2, oy - 14, 4, 5, "#ef4444");
-  drawPixelRect(ctx, ox - 4, oy + 4, 3, 4, "#f97316");
-  drawPixelRect(ctx, ox + 1, oy + 4, 3, 4, "#f97316");
-}
-
-export function drawBomb(
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  fuse: number,
-  atlas?: DestroySpriteAtlas | null,
-) {
-  if (drawSprite(ctx, atlas?.get("bomb") ?? null, x, y, { scale: 1 })) {
-    if (Math.floor(fuse * 10) % 2 === 0) {
-      drawPixelRect(ctx, x - 2, y - 18, 4, 4, "#fbbf24");
-    }
-    return;
-  }
-  const ox = Math.round(x);
-  const oy = Math.round(y);
-  drawPixelRect(ctx, ox - 6, oy - 6, 12, 12, "#1e293b");
-  drawPixelRect(ctx, ox - 1, oy - 10, 2, 5, "#a3a3a3");
-  if (Math.floor(fuse * 10) % 2 === 0) {
-    drawPixelRect(ctx, ox - 2, oy - 14, 3, 3, "#fbbf24");
-  }
-}
-
-export function drawRoach(
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  facing: 1 | -1,
-  phase: number,
-  atlas?: DestroySpriteAtlas | null,
-) {
-  const bob = Math.sin(phase) * 1;
   if (
-    drawSprite(ctx, atlas?.get("roach") ?? null, x, y + bob, {
-      facing,
+    drawSprite(ctx, atlas?.get("rocket") ?? null, x, y, {
+      rotation: angle + Math.PI / 2,
       scale: 1,
     })
   ) {
     return;
   }
   const ox = Math.round(x);
-  const oy = Math.round(y + bob);
-  drawPixelRect(ctx, ox - 5, oy - 2, 10, 5, "#78350f");
-  drawPixelRect(ctx, ox + (facing > 0 ? 3 : -6), oy - 3, 3, 3, "#451a03");
+  const oy = Math.round(y);
+  ctx.save();
+  ctx.translate(ox, oy);
+  ctx.rotate(angle);
+  drawPixelRect(ctx, -3, -12, 6, 20, "#94a3b8");
+  drawPixelRect(ctx, -2, -16, 4, 5, "#ef4444");
+  drawPixelRect(ctx, -4, 6, 3, 5, "#f97316");
+  drawPixelRect(ctx, 1, 6, 3, 5, "#f97316");
+  drawPixelRect(ctx, -1, 8, 2, 4, "#fde047");
+  ctx.restore();
+}
+
+export function drawVortex(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  life: number,
+  atlas?: DestroySpriteAtlas | null,
+) {
+  const pulse = 0.85 + Math.sin(life * 14) * 0.15;
+  if (
+    drawSprite(ctx, atlas?.get("vortex") ?? null, x, y, {
+      scale: pulse,
+      rotation: life * 6,
+    })
+  ) {
+    return;
+  }
+  const ox = Math.round(x);
+  const oy = Math.round(y);
+  const r = 10 * pulse;
+  ctx.save();
+  ctx.translate(ox, oy);
+  ctx.rotate(life * 6);
+  ctx.strokeStyle = "#c084fc";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(0, 0, r, 0, Math.PI * 1.6);
+  ctx.stroke();
+  ctx.strokeStyle = "#67e8f9";
+  ctx.beginPath();
+  ctx.arc(0, 0, r * 0.55, Math.PI * 0.4, Math.PI * 2);
+  ctx.stroke();
+  drawPixelRect(ctx, -2, -2, 4, 4, "#f5d0fe");
+  ctx.restore();
+}
+
+export function drawZapArc(
+  ctx: CanvasRenderingContext2D,
+  x0: number,
+  y0: number,
+  x1: number,
+  y1: number,
+  life: number,
+  maxLife: number,
+) {
+  const alpha = Math.max(0, life / maxLife);
+  const midX = (x0 + x1) / 2 + Math.sin(life * 40) * 10;
+  const midY = (y0 + y1) / 2 + Math.cos(life * 37) * 8;
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.strokeStyle = "#e0f2fe";
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.moveTo(x0, y0);
+  ctx.lineTo(midX, midY);
+  ctx.lineTo(x1, y1);
+  ctx.stroke();
+  ctx.strokeStyle = "#38bdf8";
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.moveTo(x0, y0);
+  ctx.lineTo(midX + 3, midY - 4);
+  ctx.lineTo(x1, y1);
+  ctx.stroke();
+  drawPixelRect(ctx, x1 - 2, y1 - 2, 4, 4, "#fef08a");
+  ctx.restore();
 }
 
 export function drawExplosion(
@@ -276,10 +315,22 @@ export function drawDebris(
 export function createBulletHole(
   x: number,
   y: number,
-  opts?: { scale?: number; crack?: boolean },
+  opts?: {
+    scale?: number;
+    crack?: boolean;
+    /** Total lifetime in seconds (hold + fade). Default ~2s. */
+    life?: number;
+    /** Full-opacity hold before cover-up fade. Default ~55% of life. */
+    hold?: number;
+  },
 ): BulletHole {
   const variant =
     HOLE_VARIANTS[Math.floor(Math.random() * HOLE_VARIANTS.length)];
+  const maxLife = Math.max(0.2, opts?.life ?? 2);
+  const hold = Math.min(
+    maxLife,
+    Math.max(0, opts?.hold ?? maxLife * 0.55),
+  );
   return {
     x,
     y,
@@ -287,7 +338,20 @@ export function createBulletHole(
     rotation: Math.random() * Math.PI * 2,
     scale: opts?.scale ?? 0.85 + Math.random() * 0.55,
     crack: opts?.crack ?? Math.random() < 0.55,
+    life: maxLife,
+    maxLife,
+    hold,
   };
+}
+
+/** 1 while holding, then ease out as the surface covers the scar. */
+export function holeCoverAlpha(hole: BulletHole): number {
+  const fadeSpan = Math.max(0.001, hole.maxLife - hole.hold);
+  const age = hole.maxLife - hole.life;
+  if (age <= hole.hold) return 1;
+  const t = Math.min(1, (age - hole.hold) / fadeSpan);
+  // Ease-in cover so the close happens a bit faster at the end.
+  return Math.max(0, 1 - t * t);
 }
 
 export function drawBulletHole(
@@ -295,20 +359,27 @@ export function drawBulletHole(
   hole: BulletHole,
   atlas?: DestroySpriteAtlas | null,
 ) {
+  const cover = holeCoverAlpha(hole);
+  if (cover <= 0.01) return;
+
+  // Shrink slightly while covering so it reads as the surface closing over.
+  const scale = hole.scale * (0.72 + 0.28 * cover);
   const img = atlas?.get(hole.variant) ?? null;
   const drew = drawSprite(ctx, img, hole.x, hole.y, {
     rotation: hole.rotation,
-    scale: hole.scale,
+    scale,
+    alpha: cover,
   });
 
   if (!drew) {
     // Procedural jagged hole fallback
     ctx.save();
+    ctx.globalAlpha = cover;
     ctx.translate(Math.round(hole.x), Math.round(hole.y));
     ctx.rotate(hole.rotation);
     ctx.fillStyle = "#0a0a0a";
     ctx.beginPath();
-    const r = 7 * hole.scale;
+    const r = 7 * scale;
     for (let i = 0; i < 8; i++) {
       const a = (i / 8) * Math.PI * 2;
       const jitter = r * (0.65 + Math.random() * 0.45);
@@ -329,8 +400,8 @@ export function drawBulletHole(
     const crack = atlas?.get("crack") ?? null;
     drawSprite(ctx, crack, hole.x + 6, hole.y - 4, {
       rotation: hole.rotation + 0.4,
-      scale: hole.scale * 0.9,
-      alpha: 0.85,
+      scale: scale * 0.9,
+      alpha: 0.85 * cover,
     });
   }
 }

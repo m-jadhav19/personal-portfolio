@@ -136,7 +136,9 @@ export function DestroySiteSimulator({ onExit }: DestroySiteSimulatorProps) {
       >
         <div className={styles.brand}>
           <p className={styles.title}>Destroy mode</p>
-          <p className={styles.hint}>1–4 switch · click fire · Esc pause</p>
+          <p className={styles.hint}>
+            click fire · WASD / RMB move · 1–4 · Esc
+          </p>
         </div>
 
         <div className={styles.weapons} role="group" aria-label="Weapons">
@@ -151,6 +153,8 @@ export function DestroySiteSimulator({ onExit }: DestroySiteSimulatorProps) {
               aria-pressed={index === weaponIndex}
               aria-label={WEAPON_LABELS[id]}
               title={`${index + 1}: ${WEAPON_LABELS[id]}`}
+              data-cursor="hide"
+              data-cursor-surface
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
@@ -167,13 +171,19 @@ export function DestroySiteSimulator({ onExit }: DestroySiteSimulatorProps) {
         </div>
 
         <div className={styles.actions}>
-          <button type="button" className={styles.btn} onClick={toggleMute}>
+          <button
+            type="button"
+            className={styles.btn}
+            onClick={toggleMute}
+            data-cursor="hide"
+          >
             Sound {muted ? "Off" : "On"}
           </button>
           <button
             type="button"
             className={`${styles.btn} ${styles.btnPrimary}`}
             onClick={togglePause}
+            data-cursor="hide"
           >
             Pause
           </button>

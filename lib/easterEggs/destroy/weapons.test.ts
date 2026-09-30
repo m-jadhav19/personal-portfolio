@@ -2,9 +2,11 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  WEAPON_CONFIG,
   WEAPONS,
   clampWeaponIndex,
   cycleWeaponIndex,
+  weaponHoleLife,
 } from "./weapons.ts";
 
 test("clampWeaponIndex clamps to valid range", () => {
@@ -23,5 +25,19 @@ test("cycleWeaponIndex wraps forward and backward", () => {
 });
 
 test("WEAPONS lists the chaos kit in order", () => {
-  assert.deepEqual([...WEAPONS], ["blaster", "missile", "bomb", "swarm"]);
+  assert.deepEqual([...WEAPONS], ["blaster", "rocket", "vortex", "zap"]);
+});
+
+test("heavier weapons scar longer and wider", () => {
+  const blaster = WEAPON_CONFIG.blaster;
+  const rocket = WEAPON_CONFIG.rocket;
+  const vortex = WEAPON_CONFIG.vortex;
+  const zap = WEAPON_CONFIG.zap;
+
+  assert.ok(weaponHoleLife(blaster) < weaponHoleLife(rocket));
+  assert.ok(weaponHoleLife(rocket) < weaponHoleLife(vortex));
+  assert.ok(weaponHoleLife(zap) > weaponHoleLife(blaster));
+  assert.ok(blaster.radius < rocket.radius);
+  assert.ok(rocket.radius < vortex.radius);
+  assert.ok(vortex.holeScale > blaster.holeScale);
 });
