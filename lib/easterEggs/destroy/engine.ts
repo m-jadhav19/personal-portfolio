@@ -13,13 +13,18 @@ import {
   BOSS_SCORE_THRESHOLD,
   DOM_DESTROY_SCORE,
   ENEMY_SCORE,
+  ENV_PROP_STATS,
   PLAYER_MAX_HP,
+  drawEnvProp,
   drawPickup,
   drawPixelEnemy,
+  drawTileFloor,
   spawnEnemyAtEdge,
+  spawnEnvProps,
   spawnPickupRandom,
   steerEnemyToward,
   type Enemy,
+  type EnvProp,
   type Pickup,
 } from "./combat";
 import {
@@ -45,6 +50,10 @@ import {
   type DebrisParticle,
 } from "./sprites";
 import {
+  clearDestroyWatchTarget,
+  setDestroyWatchTarget,
+} from "./watchTarget";
+import {
   WEAPON_CONFIG,
   WEAPONS,
   clampWeaponIndex,
@@ -53,6 +62,25 @@ import {
   type WeaponConfig,
   type WeaponId,
 } from "./weapons";
+
+type BossReveal = {
+  el: HTMLElement;
+  x: number;
+  y: number;
+  startSize: number;
+  t: number;
+  duration: number;
+  waveTimer: number;
+  wavesLeft: number;
+  flashMarks: number[];
+  prev: {
+    transform: string;
+    transition: string;
+    filter: string;
+    opacity: string;
+    willChange: string;
+  };
+};
 
 type Vec = { x: number; y: number };
 
@@ -183,14 +211,21 @@ export function createDestroyEngine(
   let particles: DebrisParticle[] = [];
   const enemies: Enemy[] = [];
   const pickups: Pickup[] = [];
+  let envProps: EnvProp[] = [];
   const bossShots: BossProjectile[] = [];
   let boss: PortraitBoss | null = null;
+  let bossReveal: BossReveal | null = null;
+  let impactFlash = 0;
   const bossPortrait = loadBossPortrait();
   let portraitDomHidden: HTMLElement | null = null;
   let portraitDomPrev = {
     visibility: "",
     opacity: "",
     pointerEvents: "",
+    transform: "",
+    transition: "",
+    filter: "",
+    willChange: "",
   };
 
   let health = PLAYER_MAX_HP;
@@ -232,56 +267,219 @@ export function createDestroyEngine(
     });
   }
 
-  function portraitOrigin() {
-    const el = document.querySelector<HTMLElement>("[data-intro='portrait']");
-    if (!el) return undefined;
-    const rect = el.getBoundingClientRect();
+  function portraitEl() {
+    return document.querySelector<HTMLElement>("[data-intro='portrait']");
+  }
+
+  function portraitOrigin(el?: HTMLElement | null) {
+    const node = el ?? portraitEl();
+    if (!node) return undefined;
+    const rect = node.getBoundingClientRect();
     if (rect.width < 8 || rect.height < 8) return undefined;
     return {
       x: rect.left + rect.width / 2,
       y: rect.top + rect.height / 2,
+      size: Math.max(rect.width, rect.height),
     };
   }
 
-  function hidePortraitDom() {
-    const el = document.querySelector<HTMLElement>("[data-intro='portrait']");
-    if (!el || portraitDomHidden) return;
-    portraitDomHidden = el;
+  function hidePortraitDom(el?: HTMLElement | null) {
+    const node = el ?? portraitEl();
+    if (!node || portraitDomHidden) return;
+    portraitDomHidden = node;
     portraitDomPrev = {
-      visibility: el.style.visibility,
-      opacity: el.style.opacity,
-      pointerEvents: el.style.pointerEvents,
+      visibility: node.style.visibility,
+      opacity: node.style.opacity,
+      pointerEvents: node.style.pointerEvents,
+      transform: node.style.transform,
+      transition: node.style.transition,
+      filter: node.style.filter,
+      willChange: node.style.willChange,
     };
-    el.style.opacity = "0";
-    el.style.visibility = "hidden";
-    el.style.pointerEvents = "none";
+    node.style.opacity = "0";
+    node.style.visibility = "hidden";
+    node.style.pointerEvents = "none";
+    node.style.transform = "";
+    node.style.filter = "";
+    node.removeAttribute("data-mogambo-reveal");
   }
 
   function restorePortraitDom() {
-    if (!portraitDomHidden) return;
+    cancelBossReveal(false);
+    if (!portraitDomHidden) {
+      const el = portraitEl();
+      if (el) {
+        el.style.transform = "";
+        el.style.filter = "";
+        el.style.transition = "";
+        el.style.willChange = "";
+        el.removeAttribute("data-mogambo-reveal");
+      }
+      return;
+    }
     portraitDomHidden.style.visibility = portraitDomPrev.visibility;
     portraitDomHidden.style.opacity = portraitDomPrev.opacity;
     portraitDomHidden.style.pointerEvents = portraitDomPrev.pointerEvents;
+    portraitDomHidden.style.transform = portraitDomPrev.transform;
+    portraitDomHidden.style.transition = portraitDomPrev.transition;
+    portraitDomHidden.style.filter = portraitDomPrev.filter;
+    portraitDomHidden.style.willChange = portraitDomPrev.willChange;
+    portraitDomHidden.removeAttribute("data-mogambo-reveal");
     portraitDomHidden = null;
   }
 
-  function spawnBoss() {
-    if (bossSummoned) return;
-    bossSummoned = true;
-    boss = createPortraitBoss(
-      window.innerWidth,
-      window.innerHeight,
-      portraitOrigin(),
+  function cancelBossReveal(hideAfter: boolean) {
+    if (!bossReveal) return;
+    const { el, prev } = bossReveal;
+    el.style.transform = prev.transform;
+    el.style.transition = prev.transition;
+    el.style.filter = prev.filter;
+    el.style.opacity = prev.opacity;
+    el.style.willChange = prev.willChange;
+    el.removeAttribute("data-mogambo-reveal");
+    bossReveal = null;
+    if (hideAfter) hidePortraitDom(el);
+  }
+
+  function smashRevealWave(x: number, y: number, radius: number) {
+    const cfg = WEAPON_CONFIG.rocket;
+    damageAt(x, y, radius, reducedMotion ? 5 : 10, { awardScore: false });
+    scatterHoles(
+      x,
+      y,
+      radius * 0.9,
+      reducedMotion ? 5 : 12,
+      cfg,
     );
-    hidePortraitDom();
-    audio.play("bossIntro");
-    options.onShake?.(0.85);
+    explosions.push({
+      x,
+      y,
+      life: 0.42,
+      maxLife: 0.42,
+    });
+    const crater = Math.max(18, radius * 0.35);
+    const bits = spawnDebris(
+      {
+        left: x - crater,
+        top: y - crater,
+        width: crater * 2,
+        height: crater * 2,
+      },
+      reducedMotion ? 10 : 22,
+      ["#fdba74", "#38bdf8", "#f97316", "#fde047", "#c084fc", "#a1a1aa"],
+    );
+    particles = particles.concat(bits).slice(-MAX_PARTICLES);
+    audio.play("boom");
+    options.onShake?.(0.9);
+  }
+
+  function finishBossReveal() {
+    if (!bossReveal) return;
+    const { x, y, el } = bossReveal;
+    cancelBossReveal(true);
+    hidePortraitDom(el);
+    boss = createPortraitBoss(window.innerWidth, window.innerHeight, { x, y });
+    impactFlash = Math.max(impactFlash, 0.45);
+    options.onShake?.(1);
     emitBoss();
     emitScore();
   }
 
+  function beginBossReveal() {
+    if (bossSummoned || bossReveal) return;
+    bossSummoned = true;
+    const el = portraitEl();
+    const origin = portraitOrigin(el);
+    const x = origin?.x ?? window.innerWidth * 0.62;
+    const y = origin?.y ?? window.innerHeight * 0.42;
+    const startSize = origin?.size ?? 280;
+
+    if (el) {
+      bossReveal = {
+        el,
+        x,
+        y,
+        startSize,
+        t: 0,
+        duration: reducedMotion ? 0.5 : 1.2,
+        waveTimer: 0,
+        wavesLeft: reducedMotion ? 2 : 4,
+        flashMarks: [0.05, 0.28, 0.55, 0.82],
+        prev: {
+          transform: el.style.transform,
+          transition: el.style.transition,
+          filter: el.style.filter,
+          opacity: el.style.opacity,
+          willChange: el.style.willChange,
+        },
+      };
+      el.dataset.mogamboReveal = "true";
+      el.style.transition = "none";
+      el.style.willChange = "transform, filter, opacity";
+      el.style.transformOrigin = "center center";
+    } else {
+      // No portrait node — drop straight into the canvas boss.
+      boss = createPortraitBoss(window.innerWidth, window.innerHeight, { x, y });
+      emitBoss();
+    }
+
+    audio.play("bossIntro");
+    impactFlash = 0.55;
+    options.onShake?.(1);
+    smashRevealWave(x, y, Math.min(160, startSize * 0.55));
+    emitScore();
+  }
+
+  function updateBossReveal(dt: number) {
+    if (!bossReveal) return;
+    bossReveal.t += dt;
+    const p = Math.min(1, bossReveal.t / bossReveal.duration);
+    const ease = 1 - (1 - p) ** 3;
+    const endScale = Math.min(0.42, 96 / Math.max(96, bossReveal.startSize));
+    const scale = 1 - ease * (1 - endScale);
+    const lift = -ease * (reducedMotion ? 18 : 48);
+    const wobble = Math.sin(bossReveal.t * 28) * (1 - ease) * 2.5;
+
+    const { el } = bossReveal;
+    // Keep tracking the live center as it shrinks/lifts.
+    const rect = el.getBoundingClientRect();
+    if (rect.width > 4) {
+      bossReveal.x = rect.left + rect.width / 2;
+      bossReveal.y = rect.top + rect.height / 2;
+    }
+
+    el.style.transform = `translate(${wobble}px, ${lift}px) scale(${scale})`;
+    el.style.filter = `saturate(${1 + ease * 0.8}) contrast(${1 + ease * 0.35}) brightness(${1 + (1 - ease) * impactFlash})`;
+    el.style.opacity = String(1 - ease * 0.08);
+
+    if (
+      bossReveal.flashMarks.length &&
+      p >= bossReveal.flashMarks[0]
+    ) {
+      bossReveal.flashMarks.shift();
+      impactFlash = Math.max(impactFlash, 0.28);
+      options.onShake?.(0.75);
+    }
+
+    bossReveal.waveTimer -= dt;
+    if (bossReveal.waveTimer <= 0 && bossReveal.wavesLeft > 0) {
+      const radius = 70 + bossReveal.wavesLeft * 28;
+      smashRevealWave(bossReveal.x, bossReveal.y, radius);
+      bossReveal.wavesLeft -= 1;
+      bossReveal.waveTimer = reducedMotion ? 0.16 : 0.22;
+    }
+
+    if (impactFlash > 0) impactFlash = Math.max(0, impactFlash - dt);
+
+    if (p >= 1) finishBossReveal();
+  }
+
+  function spawnBoss() {
+    beginBossReveal();
+  }
+
   function maybeSummonBoss() {
-    if (bossSummoned || dead || paused) return;
+    if (bossSummoned || bossReveal || dead || paused) return;
     if (score >= BOSS_SCORE_THRESHOLD) spawnBoss();
   }
 
@@ -380,7 +578,37 @@ export function createDestroyEngine(
         }
       }
     }
+
+    killed += hurtEnvPropsAt(x, y, radius, damage);
     return killed;
+  }
+
+  function hurtEnvPropsAt(
+    x: number,
+    y: number,
+    radius: number,
+    damage: number,
+  ) {
+    let smashed = 0;
+    for (let i = envProps.length - 1; i >= 0; i--) {
+      const prop = envProps[i];
+      if (Math.hypot(prop.x - x, prop.y - y) > radius + prop.radius) continue;
+      prop.hp -= damage;
+      prop.hitFlash = 0.16;
+      if (prop.hp > 0) continue;
+      const bits = spawnDebris(
+        { left: prop.x - 8, top: prop.y - 8, width: 16, height: 16 },
+        reducedMotion ? 4 : 10,
+        ["#a16207", "#b91c1c", "#166534", "#78716c", "#fde68a"],
+      );
+      particles = particles.concat(bits).slice(-MAX_PARTICLES);
+      explosions.push({ x: prop.x, y: prop.y, life: 0.2, maxLife: 0.2 });
+      addScore(ENV_PROP_STATS[prop.kind].score);
+      envProps.splice(i, 1);
+      smashed += 1;
+      audio.play("hit");
+    }
+    return smashed;
   }
 
   function resize() {
@@ -491,14 +719,20 @@ export function createDestroyEngine(
     audio.play("hit");
   }
 
-  function damageAt(x: number, y: number, radius: number, hits: number) {
+  function damageAt(
+    x: number,
+    y: number,
+    radius: number,
+    hits: number,
+    opts?: { awardScore?: boolean },
+  ) {
     const damaged = targets.applyDamage(x, y, radius, hits);
     const particleBudget = reducedMotion ? 4 : 14;
     for (const d of damaged) {
       const next = spawnDebris(d.box, particleBudget);
       particles = particles.concat(next).slice(-MAX_PARTICLES);
     }
-    if (damaged.length > 0) {
+    if (damaged.length > 0 && opts?.awardScore !== false) {
       addScore(damaged.length * DOM_DESTROY_SCORE);
     }
     return damaged.length;
@@ -698,9 +932,14 @@ export function createDestroyEngine(
     }
   }
 
+  /** Aim follows mouse/trackpad freely — never snaps the character to the cursor. */
+  function syncPointer(clientX: number, clientY: number) {
+    pointer.x = clientX;
+    pointer.y = clientY;
+  }
+
   function onPointerMove(event: PointerEvent) {
-    pointer.x = event.clientX;
-    pointer.y = event.clientY;
+    syncPointer(event.clientX, event.clientY);
 
     // Bitmask is more reliable than button events alone across browsers.
     const rightHeld = (event.buttons & 2) !== 0;
@@ -721,12 +960,16 @@ export function createDestroyEngine(
     }
   }
 
+  // Trackpad / mouse aim backup — some devices update mousemove more reliably.
+  function onMouseMove(event: MouseEvent) {
+    syncPointer(event.clientX, event.clientY);
+  }
+
   function onPointerDown(event: PointerEvent) {
     if (isHudTarget(event.target)) return;
 
     // Keep aim synced even when the first interaction is a click (no prior move).
-    pointer.x = event.clientX;
-    pointer.y = event.clientY;
+    syncPointer(event.clientX, event.clientY);
 
     // Right-click drag repositions the character.
     if (event.button === 2) {
@@ -835,6 +1078,12 @@ export function createDestroyEngine(
   }
 
   function update(dt: number) {
+    setDestroyWatchTarget(character.x, character.y);
+    updateBossReveal(dt);
+    if (impactFlash > 0 && !bossReveal) {
+      impactFlash = Math.max(0, impactFlash - dt * 1.8);
+    }
+
     // WASD / arrows — the only non-drag way to reposition. Never chase the cursor.
     if (!paused && !hidden && !dragging && !dead) {
       let mx = 0;
@@ -853,9 +1102,13 @@ export function createDestroyEngine(
       }
     }
 
-    // Face the aim point; walk frames while dragging or strafing.
+    // Face the aim point (mouse/trackpad), independent of WASD strafe.
     if (Math.abs(pointer.x - character.x) > 1) {
       facing = pointer.x >= character.x ? 1 : -1;
+    }
+
+    for (const prop of envProps) {
+      if (prop.hitFlash > 0) prop.hitFlash = Math.max(0, prop.hitFlash - dt);
     }
     if (dragging) {
       walkPhase += dt * 14;
@@ -1062,20 +1315,52 @@ export function createDestroyEngine(
     const h = window.innerHeight;
     ctx.clearRect(0, 0, w, h);
 
+    // Pixel tile wash under everything — 8-bit stage dressing.
+    drawTileFloor(ctx, w, h, atlas);
+
     // Holes sit under FX so the page looks punched through.
     for (const hole of holes) {
       drawBulletHole(ctx, hole, atlas);
     }
+
+    for (const prop of envProps) drawEnvProp(ctx, prop, atlas);
 
     for (const p of particles) drawDebris(ctx, p);
     for (const e of explosions) {
       drawExplosion(ctx, e.x, e.y, e.life, e.maxLife, atlas);
     }
 
-    for (const p of pickups) drawPickup(ctx, p);
-    for (const e of enemies) drawPixelEnemy(ctx, e);
+    for (const p of pickups) drawPickup(ctx, p, atlas);
+    for (const e of enemies) drawPixelEnemy(ctx, e, atlas);
     if (boss) drawPortraitBoss(ctx, boss, bossPortrait);
     for (const s of bossShots) drawBossShot(ctx, s);
+
+    // Fighting-game style impact frames for Mogambo's entrance.
+    if (impactFlash > 0) {
+      const frame = Math.floor(impactFlash * 36) % 2 === 0;
+      const a = Math.min(0.78, impactFlash * 1.6);
+      ctx.save();
+      ctx.globalCompositeOperation = "lighter";
+      ctx.fillStyle = frame
+        ? `rgba(255, 255, 255, ${a})`
+        : `rgba(253, 120, 40, ${a * 0.85})`;
+      ctx.fillRect(0, 0, w, h);
+      if (bossReveal) {
+        ctx.globalCompositeOperation = "source-over";
+        ctx.strokeStyle = `rgba(253, 186, 116, ${0.35 + a * 0.4})`;
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.arc(
+          bossReveal.x,
+          bossReveal.y,
+          40 + (1 - bossReveal.t / bossReveal.duration) * 90,
+          0,
+          Math.PI * 2,
+        );
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
 
     for (const p of projectiles) {
       if (p.kind === "blaster") {
@@ -1120,10 +1405,16 @@ export function createDestroyEngine(
     running = true;
     resize();
     clampCharacter(character.x, character.y);
+    envProps = spawnEnvProps(
+      window.innerWidth,
+      window.innerHeight,
+      reducedMotion ? 6 : 12,
+    );
     emitScore();
     emitBoss();
     lastTs = performance.now();
     window.addEventListener("pointermove", onPointerMove);
+    window.addEventListener("mousemove", onMouseMove, { passive: true });
     window.addEventListener("pointerdown", onPointerDown);
     window.addEventListener("pointerup", onPointerUp);
     window.addEventListener("pointercancel", onPointerUp);
@@ -1143,6 +1434,7 @@ export function createDestroyEngine(
     clearMoveKeys();
     cancelAnimationFrame(raf);
     window.removeEventListener("pointermove", onPointerMove);
+    window.removeEventListener("mousemove", onMouseMove);
     window.removeEventListener("pointerdown", onPointerDown);
     window.removeEventListener("pointerup", onPointerUp);
     window.removeEventListener("pointercancel", onPointerUp);
@@ -1162,6 +1454,7 @@ export function createDestroyEngine(
     particles = [];
     enemies.length = 0;
     pickups.length = 0;
+    envProps = [];
     bossShots.length = 0;
   }
 
@@ -1178,6 +1471,8 @@ export function createDestroyEngine(
     score = 0;
     bossSummoned = false;
     boss = null;
+    bossReveal = null;
+    impactFlash = 0;
     dead = false;
     hurtFlash = 0;
     hurtIFrames = 0;
@@ -1187,6 +1482,11 @@ export function createDestroyEngine(
     rapidTimer = 0;
     enemySpawnTimer = 1.4;
     pickupSpawnTimer = 4;
+    envProps = spawnEnvProps(
+      window.innerWidth,
+      window.innerHeight,
+      reducedMotion ? 6 : 12,
+    );
     emitHealth();
     emitBuffs();
     emitScore();
@@ -1199,7 +1499,10 @@ export function createDestroyEngine(
     clearFx();
     clearHoles();
     restorePortraitDom();
+    clearDestroyWatchTarget();
     boss = null;
+    bossReveal = null;
+    impactFlash = 0;
     bossSummoned = false;
     score = 0;
     // Instant restore + clear pending rebuild timers (no flash on unmount).

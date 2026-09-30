@@ -6,9 +6,11 @@ import {
   DOM_DESTROY_SCORE,
   ENEMY_SCORE,
   ENEMY_STATS,
+  ENV_PROP_STATS,
   PLAYER_MAX_HP,
   randomEnemyKind,
   spawnEnemyAtEdge,
+  spawnEnvProps,
   spawnPickupRandom,
   steerEnemyToward,
 } from "./combat.ts";
@@ -57,5 +59,16 @@ test("spawnPickupRandom stays in bounds", () => {
 test("randomEnemyKind returns a known kind", () => {
   for (let i = 0; i < 20; i++) {
     assert.ok(["roach", "drone", "slime"].includes(randomEnemyKind()));
+  }
+});
+
+test("spawnEnvProps scatters destructible 8-bit props", () => {
+  const props = spawnEnvProps(1000, 800, 8);
+  assert.equal(props.length, 8);
+  for (const prop of props) {
+    assert.ok(["crate", "barrel", "bush", "rock"].includes(prop.kind));
+    assert.equal(prop.hp, ENV_PROP_STATS[prop.kind].hp);
+    assert.ok(prop.x > 40 && prop.x < 960);
+    assert.ok(prop.y > 40 && prop.y < 760);
   }
 });

@@ -39,7 +39,8 @@ const DESTROY_GAP = 5;
 const FRAME_OUTSET = 6;
 const BRACKET_FOLLOW = 0.45;
 const FRAME_FOLLOW = 0.32;
-const DESTROY_FOLLOW = 0.85;
+/** 1:1 aim tracking so mouse/trackpad stay snappy while WASD moves the body. */
+const DESTROY_FOLLOW = 1;
 const GLITCH_MS = 100;
 const GLITCH_CHANCE = 0.04;
 const KONAMI_INTERRUPT_CHANCE = 0.008;

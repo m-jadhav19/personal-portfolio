@@ -15,6 +15,7 @@ export function HeroPortrait({ portraitRef }: HeroPortraitProps) {
       ref={portraitRef}
       className={styles.portraitStage}
       data-intro="portrait"
+      data-destroy-ignore
       data-cursor="hide"
     >
       <PortraitSticker

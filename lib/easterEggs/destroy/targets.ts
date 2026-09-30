@@ -103,6 +103,8 @@ function hasMeaningfulContent(el: HTMLElement): boolean {
 
 function isDestroyable(el: HTMLElement): boolean {
   if (isIgnorable(el)) return false;
+  // Hero portrait observes Destroy mode — never trash Mogambo's face early.
+  if (el.closest("[data-intro='portrait']")) return false;
   const forced =
     el.hasAttribute("data-destroy-target") ||
     el.hasAttribute("data-intro") ||

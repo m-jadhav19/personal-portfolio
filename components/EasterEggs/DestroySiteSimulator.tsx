@@ -211,7 +211,7 @@ export function DestroySiteSimulator({ onExit }: DestroySiteSimulatorProps) {
         <div className={styles.brand}>
           <p className={styles.title}>Destroy mode</p>
           <p className={styles.hint}>
-            click fire · WASD / RMB move · 1–4 · Esc
+            WASD move · mouse aim · click fire · RMB drag · 1–4 · Esc
           </p>
         </div>
 
@@ -340,8 +340,8 @@ export function DestroySiteSimulator({ onExit }: DestroySiteSimulatorProps) {
               {dead
                 ? "Repair restores the page, resets score, and revives you. Reach the score threshold to wake Mogambo."
                 : bossSummoned
-                  ? "Mogambo is loose. Repair restores the page and resets score. Leave mode exits without a reload."
-                  : `Rack up ${scoreThreshold} points to pull Mogambo from the portrait. Repair restores the page in place.`}
+                  ? "Mogambo tore out of the portrait. Repair restores the page and resets score. Leave mode exits without a reload."
+                  : `Rack up ${scoreThreshold} points — the portrait watches you until Mogambo shrinks into a boss. Repair restores the page in place.`}
             </p>
             <div className={styles.pauseActions}>
               {!dead ? (

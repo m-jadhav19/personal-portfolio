@@ -85,6 +85,17 @@ html[data-easter-egg="destroy"] [data-destroy-target] {
   pointer-events: auto !important;
 }
 
+/* Portrait just watches the destroy character — no peel / poke / destroy hits. */
+html[data-easter-egg="destroy"] [data-intro="portrait"],
+html[data-easter-egg="destroy"] [data-intro="portrait"] * {
+  pointer-events: none !important;
+}
+
+html[data-easter-egg="destroy"] [data-intro="portrait"][data-mogambo-reveal="true"] {
+  will-change: transform, filter, opacity;
+  transition: none !important;
+}
+
 html[data-easter-egg="broken-ux"] * {
   scroll-behavior: auto !important;
 }

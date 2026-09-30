@@ -68,10 +68,40 @@ def paint(rows: list[str], palette: dict[str, str], scale: int = 1) -> tuple[int
     return out_w, out_h, bytes(buf)
 
 
+def save_svg(name: str, rows: list[str], palette: dict[str, str], scale: int = 4) -> None:
+    """Emit a crisp 8-bit SVG (rect grid) that Image() / <img> can load."""
+    h = len(rows)
+    w = max(len(r) for r in rows)
+    out_w, out_h = w * scale, h * scale
+    rects: list[str] = []
+    for y, row in enumerate(rows):
+        for x, ch in enumerate(row.ljust(w, ".")):
+            rgba = hex_to_rgba(palette.get(ch, "."))
+            if rgba[3] == 0:
+                continue
+            color = f"#{rgba[0]:02x}{rgba[1]:02x}{rgba[2]:02x}"
+            opacity = "" if rgba[3] == 255 else f' fill-opacity="{rgba[3] / 255:.3f}"'
+            rects.append(
+                f'<rect x="{x * scale}" y="{y * scale}" width="{scale}" height="{scale}" '
+                f'fill="{color}"{opacity}/>'
+            )
+    svg = (
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{out_w}" height="{out_h}" '
+        f'viewBox="0 0 {out_w} {out_h}" shape-rendering="crispEdges">\n'
+        + "\n".join(rects)
+        + "\n</svg>\n"
+    )
+    path = OUT / f"{name}.svg"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(svg)
+    print(f"wrote {path} ({out_w}x{out_h})")
+
+
 def save(name: str, rows: list[str], palette: dict[str, str], scale: int = 4) -> None:
     w, h, rgba = paint(rows, palette, scale=scale)
     write_png(OUT / f"{name}.png", w, h, rgba)
     print(f"wrote {OUT / name}.png ({w}x{h})")
+    save_svg(name, rows, palette, scale=scale)
 
 
 CHAR_PAL = {
@@ -286,6 +316,152 @@ CRACK = [
     ".c......",
 ]
 
+ENEMY_PAL = {
+    ".": ".",
+    "b": "#92400e",
+    "B": "#451a03",
+    "t": "#78350f",
+    "s": "#64748b",
+    "S": "#334155",
+    "c": "#38bdf8",
+    "o": "#f97316",
+    "g": "#22c55e",
+    "G": "#15803d",
+    "e": "#052e16",
+    "w": "#fef08a",
+}
+
+ROACH = [
+    "..tttt..",
+    ".tbbbtt.",
+    "tbbbbbbt",
+    "tbbBBbbt",
+    ".tbbbbt.",
+    "t.t..t.t",
+]
+
+DRONE = [
+    "..oooo..",
+    ".sSccSs.",
+    "sSccccSs",
+    "sSccccSs",
+    ".sSSSSs.",
+    "o......o",
+]
+
+SLIME = [
+    "...gg...",
+    "..gGGg..",
+    ".gGeeGg.",
+    "gGGeeGGg",
+    "gGGGGGGg",
+    ".gGGGGg.",
+]
+
+PICKUP_PAL = {
+    ".": ".",
+    "d": "#14532d",
+    "g": "#4ade80",
+    "w": "#bbf7d0",
+    "n": "#1e3a8a",
+    "b": "#93c5fd",
+    "B": "#3b82f6",
+    "r": "#7c2d12",
+    "o": "#fdba74",
+    "y": "#facc15",
+}
+
+PICKUP_HEALTH = [
+    ".dddddd.",
+    "ddggggdd",
+    "ddgwwgdd",
+    "ddggggdd",
+    "ddgwwgdd",
+    "ddggggdd",
+    ".dddddd.",
+]
+
+PICKUP_SHIELD = [
+    "...bb...",
+    "..bBBb..",
+    ".bBwwBb.",
+    ".bBwwBb.",
+    "..bBBb..",
+    "...nn...",
+]
+
+PICKUP_RAPID = [
+    ".rrrrrr.",
+    "rroooorr",
+    "rroyyorr",
+    "rroooorr",
+    "rroyyorr",
+    "rroooorr",
+    ".rrrrrr.",
+]
+
+ENV_PAL = {
+    ".": ".",
+    "w": "#a16207",
+    "W": "#713f12",
+    "l": "#fde68a",
+    "m": "#78716c",
+    "M": "#44403c",
+    "k": "#292524",
+    "r": "#b91c1c",
+    "R": "#7f1d1d",
+    "g": "#166534",
+    "G": "#14532d",
+    "L": "#4ade80",
+    "s": "#a8a29e",
+    "S": "#57534e",
+}
+
+CRATE = [
+    ".WWWWWW.",
+    "WwwwwwW.",
+    "WwlllWw.",
+    "WwwwwwW.",
+    "WwlllWw.",
+    "WwwwwwW.",
+    ".WWWWWW.",
+]
+
+BARREL = [
+    "..rrrr..",
+    ".rRRRRr.",
+    ".rRkkRr.",
+    ".rRRRRr.",
+    ".rRkkRr.",
+    ".rRRRRr.",
+    "..rrrr..",
+]
+
+BUSH = [
+    "...LL...",
+    "..LgGL..",
+    ".LGGGgL.",
+    "LGgGGgGL",
+    ".GGGGGG.",
+    "..G..G..",
+]
+
+ROCK = [
+    "...ss...",
+    "..sSSs..",
+    ".sSSSSS.",
+    "sSSkkSSs",
+    ".sSSSSs.",
+    "..sSSs..",
+]
+
+TILE = [
+    "mmMm",
+    "MmmM",
+    "mMmm",
+    "MmMm",
+]
+
 
 def main() -> None:
     OUT.mkdir(parents=True, exist_ok=True)
@@ -327,6 +503,19 @@ def main() -> None:
     save("icon-rocket", ICON_ROCKET, weapon_pal, 3)
     save("icon-vortex", ICON_VORTEX, weapon_pal, 3)
     save("icon-zap", ICON_ZAP, weapon_pal, 3)
+
+    # Combat + environment — SVG-first 8-bit props
+    save("enemy-roach", ROACH, ENEMY_PAL, 3)
+    save("enemy-drone", DRONE, ENEMY_PAL, 3)
+    save("enemy-slime", SLIME, ENEMY_PAL, 3)
+    save("pickup-health", PICKUP_HEALTH, PICKUP_PAL, 3)
+    save("pickup-shield", PICKUP_SHIELD, PICKUP_PAL, 3)
+    save("pickup-rapid", PICKUP_RAPID, PICKUP_PAL, 3)
+    save("env-crate", CRATE, ENV_PAL, 3)
+    save("env-barrel", BARREL, ENV_PAL, 3)
+    save("env-bush", BUSH, ENV_PAL, 3)
+    save("env-rock", ROCK, ENV_PAL, 3)
+    save("env-tile", TILE, ENV_PAL, 3)
 
 
 if __name__ == "__main__":
