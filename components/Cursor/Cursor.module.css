@@ -137,6 +137,39 @@
   margin-top: -10px;
 }
 
+/* Grab hand over the portrait sticker; the reticle pinches shut while grabbing. */
+.rootHand .center {
+  width: 1.35rem;
+  height: 1.35rem;
+}
+
+/* On the svg, not .center: an individual `scale` there would also scale its translate. */
+.rootGrabbing .hand {
+  scale: 0.86;
+}
+
+.rootGrabbing .corner {
+  width: 5px;
+  height: 5px;
+}
+
+.rootGrabbing .tr,
+.rootGrabbing .br {
+  margin-left: -5px;
+}
+
+.rootGrabbing .bl,
+.rootGrabbing .br {
+  margin-top: -5px;
+}
+
+.hand {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transition: scale 160ms ease;
+}
+
 .rootGlitch .corner {
   opacity: 0.7;
 }

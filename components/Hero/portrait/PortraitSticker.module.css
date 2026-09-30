@@ -49,6 +49,7 @@
   aspect-ratio: 1 / 1;
   pointer-events: auto;
   touch-action: pan-y pinch-zoom;
+  cursor: grab;
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
@@ -398,4 +399,8 @@
   .hint {
     transition: none;
   }
+}
+
+.sticker .part {
+  cursor: grab;
 }

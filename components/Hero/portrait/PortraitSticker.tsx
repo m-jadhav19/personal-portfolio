@@ -14,7 +14,7 @@ import { createPortal } from "react-dom";
 import { isDestroyEggActive } from "@/lib/easterEggs/destroy/isActive";
 import { getDestroyWatchTarget } from "@/lib/easterEggs/destroy/watchTarget";
 import { scrollByDelta } from "@/lib/lenis";
-import { StickerPeel } from "@/lib/sticker";
+import { StickerPeel, type StickerDirection } from "@/lib/sticker";
 
 import {
   PORTRAIT_BOXES as BOX,
@@ -46,7 +46,7 @@ const HINTS: Record<Part, string> = {
   eyes: "click to wink",
   beard: "click to chat",
   ear: "listening",
-  face: "right-click to peel me off",
+  face: "drag to peel me off",
   sparks: "idea!",
   "bracket-left": "click to close the tag",
   "bracket-right": "click to close the tag",
@@ -60,13 +60,13 @@ const CROP = {
   size: SIDE,
 };
 
-/** Fraction of the sticker (from each edge) that grabs a peel. */
-const EDGE = 0.2;
 const DRAG_THRESHOLD = 6;
+/** Dragging peels the nearest edge this far (fraction of the sticker) before it comes off in your hand. */
+const DETACH_AT = 0.36;
+/** The sticker leans toward a peeling drag, up to this many px. */
+const PEEL_LEAN = 12;
 const PUPIL_RANGE = { x: 7, y: 4.5 };
 const TILT = 14;
-/** Peel past this fraction and letting go tosses the sticker off to re-stick. */
-const FLING_AT = 0.55;
 const COMBO_HITS = 6;
 const COMBO_WINDOW = 1400;
 const GLYPHS = ["</>", "{ }", "=>", ";", "( )", "✦", "#", "01"];
@@ -119,7 +119,8 @@ type MouthTarget = Partial<MouthShape> | "rest";
 type MouthStep = [target: MouthTarget, duration: number, ease?: string, position?: gsap.Position];
 
 type Mode = "home" | "lifting" | "carrying" | "moving" | "placed";
-type CarryInput = "mouse" | "touch";
+/** How the sticker is being carried: picked up to click down, held on a mouse drag, or on a finger. */
+type CarryInput = "mouse" | "drag" | "touch";
 
 function silhouetteMask(transform = "") {
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${CROP.x} ${CROP.y} ${CROP.size} ${CROP.size}"><g transform="${transform}"><path fill="#000" d="${PATH.base}"/></g></svg>`;
@@ -193,6 +194,22 @@ type Carry = {
   goHome: () => void;
 };
 
+type Point = { x: number; y: number };
+
+/** A press on the sticker that turns into a peel once it drags. */
+type Drag = {
+  pointerId: number;
+  input: "mouse" | "touch";
+  start: Point;
+  /** Grab point in the sticker's own (unrotated, unscaled) box. */
+  grab: Point;
+  size: number;
+  direction: StickerDirection;
+  /** Where along the peeling edge the fold is held. */
+  along: number;
+  peeling: boolean;
+};
+
 type PortraitStickerProps = {
   label: string;
 };
@@ -207,13 +224,7 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
   const backShadowRef = useRef<HTMLDivElement>(null);
   const depthRef = useRef<HTMLDivElement>(null);
   const peelRef = useRef<StickerPeel | null>(null);
-  const dragRef = useRef<{
-    pointerId: number;
-    startX: number;
-    startY: number;
-    peeling: boolean;
-    progress: number;
-  } | null>(null);
+  const dragRef = useRef<Drag | null>(null);
   const suppressClickRef = useRef(false);
   const reducedRef = useRef(false);
   const actionsRef = useRef<Record<string, () => void>>({});
@@ -280,54 +291,15 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
     return { x: clientX - rect.left, y: clientY - rect.top, size: rect.width };
   };
 
-  const inEdge = (x: number, y: number, size: number) => {
-    const q = size * EDGE;
-    return x < q || x > size - q || y < q || y > size - q;
-  };
-
-  const peelProgress = (x: number, y: number, size: number) => {
-    const direction = peelRef.current?.currentDirection;
-    const raw =
-      direction === "left"
-        ? x
-        : direction === "right"
-          ? size - x
-          : direction === "top"
-            ? y
-            : size - y;
-    return Math.min(1, Math.max(0, raw / size));
-  };
-
   const interactive = () =>
     !reducedRef.current &&
     !busyRef.current &&
     (modeRef.current === "home" || modeRef.current === "placed");
 
   const onStickerPointerMove = (event: React.PointerEvent) => {
-    const peel = peelRef.current;
-    if (!peel || !interactive()) return;
+    if (!peelRef.current || !interactive() || dragRef.current?.peeling) return;
     const point = localPoint(event.clientX, event.clientY);
     if (!point) return;
-
-    const drag = dragRef.current;
-    if (drag?.pointerId === event.pointerId) {
-      if (!drag.peeling) {
-        const moved = Math.hypot(
-          event.clientX - drag.startX,
-          event.clientY - drag.startY,
-        );
-        if (moved < DRAG_THRESHOLD) return;
-        drag.peeling = true;
-        stickerRef.current?.setPointerCapture(event.pointerId);
-        tiltToRef.current?.(0, 0);
-      }
-      peel.update(point.x, point.y);
-      drag.progress = peelProgress(point.x, point.y, point.size);
-      const canToss = modeRef.current === "home" && drag.progress > FLING_AT;
-      setHint(canToss ? "let go to toss it" : "peeling…");
-      return;
-    }
-
     if (event.pointerType !== "mouse") return;
     stickerRef.current?.setAttribute("data-hover", "");
     tiltToRef.current?.(
@@ -340,40 +312,6 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
     if (event.pointerType !== "mouse" || !interactive()) return;
     setHint(HINTS.face);
     run("hover-on");
-  };
-
-  const onStickerPointerDown = (event: React.PointerEvent) => {
-    suppressClickRef.current = false;
-    const peel = peelRef.current;
-    if (!peel || !interactive() || event.button !== 0) return;
-    const point = localPoint(event.clientX, event.clientY);
-    if (!point || !inEdge(point.x, point.y, point.size)) return;
-
-    // Capture only once the pointer actually drags, so taps on parts near the
-    // edge (ear, hair) still land as clicks on those parts.
-    dragRef.current = {
-      pointerId: event.pointerId,
-      startX: event.clientX,
-      startY: event.clientY,
-      peeling: false,
-      progress: 0,
-    };
-    peel.begin(point.x, point.y);
-  };
-
-  const endDrag = (event: React.PointerEvent) => {
-    const drag = dragRef.current;
-    if (drag?.pointerId !== event.pointerId) return;
-    dragRef.current = null;
-    if (drag.peeling) {
-      suppressClickRef.current = true;
-      setHint(null);
-      if (modeRef.current === "home" && drag.progress > FLING_AT) {
-        run("fling");
-        return;
-      }
-    }
-    peelRef.current?.release();
   };
 
   const onStickerPointerLeave = (event: React.PointerEvent) => {
@@ -640,65 +578,6 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
       );
     };
 
-    const slap = () => {
-      shockwave();
-      const { x, y } = stickerCenter();
-      spawnBurst(fx, x, y, 16, 1.5);
-      blink();
-      raiseBrows();
-      popSparks();
-      setHint("thwack!");
-    };
-
-    // Peeled far enough: toss the sticker off, then slap it back down.
-    const fling = () => {
-      const peel = peelRef.current;
-      if (!peel) return;
-      const direction = peel.currentDirection;
-      const dx =
-        direction === "left"
-          ? 1
-          : direction === "right"
-            ? -1
-            : Math.random() < 0.5
-              ? -1
-              : 1;
-      const spin = dx * (18 + Math.random() * 14);
-      busyRef.current = true;
-      gsap
-        .timeline({
-          onComplete: () => {
-            busyRef.current = false;
-            setHint(null);
-          },
-        })
-        .to(sticker, {
-          x: dx * 90,
-          y: -70,
-          rotation: spin,
-          scale: 1.08,
-          autoAlpha: 0,
-          duration: 0.38,
-          ease: "power2.in",
-        })
-        .add(() => peel.reset())
-        .set(sticker, { x: -dx * 14, y: -46, rotation: -spin * 0.5, scale: 1.45 })
-        .to(sticker, { autoAlpha: 1, duration: 0.08 }, "+=0.2")
-        .to(
-          sticker,
-          { x: 0, y: 0, rotation: 0, scale: 1, duration: 0.24, ease: "power4.in" },
-          "<",
-        )
-        .add(slap)
-        .to(sticker, {
-          keyframes: [
-            { scaleX: 1.07, scaleY: 0.93, duration: 0.07 },
-            { scaleX: 1, scaleY: 1, duration: 0.6, ease: "elastic.out(1, 0.35)" },
-          ],
-        })
-        .to({}, { duration: 0.3 });
-    };
-
     // Too many pokes in a row: spin out with googly eyes.
     const dizzy = () => {
       busyRef.current = true;
@@ -754,7 +633,6 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
     };
 
     actionsRef.current = {
-      fling,
       dizzy,
       burst: () => {
         const { x, y } = stickerCenter();
@@ -950,7 +828,7 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
       }
     }, 700);
 
-    // ── Peel it off with a right-click, carry it, click anywhere to stick it ──
+    // ── Peel it off (drag it, right-click or long-press), carry it, stick it anywhere ──
     const layer = document.createElement("div");
     layer.className = styles.placeLayer;
     document.body.appendChild(layer);
@@ -962,21 +840,81 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
     let swallowClick = false;
     // Touch: a long press peels it off, dragging carries it, lifting the finger sticks it.
     let press: { id: number; x: number; y: number; timer: number } | null = null;
-    let touchCarry: {
+    // A pointer still held down on a carried sticker; letting go sticks it.
+    let held: {
       id: number;
       x: number;
       y: number;
       moved: boolean;
-      dropAt: { x: number; y: number } | null;
+      dropAt: Point | null;
+      input: CarryInput;
     } | null = null;
     let edgeRaf = 0;
     let hintTimer = 0;
+
+    const canGrab = () =>
+      !reducedRef.current &&
+      !busyRef.current &&
+      (modeRef.current === "home" || modeRef.current === "placed");
+
+    const setGrabbing = (on: boolean) =>
+      document.documentElement.toggleAttribute("data-cursor-grabbing", on);
 
     const headerHeight = () => document.querySelector("header")?.offsetHeight ?? 0;
     const stickerWidth = () => sticker.offsetWidth;
 
     const awayWidth = () =>
       Math.max(AWAY_MIN_WIDTH, slot.offsetWidth * AWAY_RATIO);
+
+    /** Client point → the sticker's own box, undoing a placed sticker's rotation and scale. */
+    const toLocal = (clientX: number, clientY: number) => {
+      const r = sticker.getBoundingClientRect();
+      const size = sticker.offsetWidth;
+      const angle = (-(Number(gsap.getProperty(sticker, "rotation")) || 0) * Math.PI) / 180;
+      const scale = Number(gsap.getProperty(sticker, "scale")) || 1;
+      const dx = clientX - (r.left + r.width / 2);
+      const dy = clientY - (r.top + r.height / 2);
+      return {
+        x: (dx * Math.cos(angle) - dy * Math.sin(angle)) / scale + size / 2,
+        y: (dx * Math.sin(angle) + dy * Math.cos(angle)) / scale + size / 2,
+        size,
+      };
+    };
+
+    const nearestEdge = (x: number, y: number, size: number) => {
+      const gaps: Record<StickerDirection, number> = {
+        left: x,
+        right: size - x,
+        top: y,
+        bottom: size - y,
+      };
+      const direction = (Object.keys(gaps) as StickerDirection[]).reduce((a, b) =>
+        gaps[a] <= gaps[b] ? a : b,
+      );
+      const along = direction === "left" || direction === "right" ? y : x;
+      return { direction, along: clamp(along, 1, size - 1) };
+    };
+
+    const beginFold = (peel: StickerPeel, direction: StickerDirection, along: number, size: number) =>
+      peel.begin(
+        direction === "left" ? 1 : direction === "right" ? size - 1 : along,
+        direction === "top" ? 1 : direction === "bottom" ? size - 1 : along,
+        direction,
+      );
+
+    /** Folds `depth` px of the sticker back from its `direction` edge. */
+    const foldTo = (
+      peel: StickerPeel,
+      direction: StickerDirection,
+      along: number,
+      size: number,
+      depth: number,
+    ) => {
+      if (direction === "left") peel.update(depth, along);
+      else if (direction === "right") peel.update(size - depth, along);
+      else if (direction === "top") peel.update(along, depth);
+      else peel.update(along, size - depth);
+    };
 
     /** Page coords for the sticker's top-left, kept inside the on-screen bounds. */
     const boundedTarget = (clientX: number, clientY: number) => {
@@ -1020,8 +958,11 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
 
     const endCarry = () => {
       follow = null;
+      held = null;
+      stopEdgeScroll();
       sticker.classList.remove(styles.carried);
       setCarrying(null);
+      setGrabbing(false);
     };
 
     const whee = () => {
@@ -1036,6 +977,38 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
       gsap.to(pupils, { scale: 1, duration: 0.3 });
     };
 
+    /** The sticker is off the page: lift it into the page layer and follow the pointer. */
+    const enterCarry = (input: CarryInput) => {
+      peelRef.current?.reset();
+      const wasHome = sticker.parentElement !== layer;
+      toLayer();
+      sticker.classList.add(styles.carried);
+      setCarrying(input);
+      setGrabbing(true);
+      if (wasHome) {
+        const from = sticker.offsetWidth;
+        const to = awayWidth();
+        grab = { x: (grab.x * to) / from, y: (grab.y * to) / from };
+        gsap.to(sticker, { width: to, duration: 0.3, ease: "power3.out" });
+      }
+      follow = {
+        x: gsap.quickTo(sticker, "x", { duration: 0.3, ease: "power3.out" }),
+        y: gsap.quickTo(sticker, "y", { duration: 0.3, ease: "power3.out" }),
+      };
+      const target = boundedTarget(lastClient.x, lastClient.y);
+      follow.x(target.x);
+      follow.y(target.y);
+      gsap.to(sticker, {
+        scale: CARRY_SCALE,
+        rotation: -6,
+        duration: 0.3,
+        ease: "back.out(2)",
+      });
+      modeRef.current = "carrying";
+      busyRef.current = false;
+      if (held?.input === "touch" && !held.dropAt) startEdgeScroll();
+    };
+
     const pickup = (clientX: number, clientY: number, input: CarryInput = "mouse") => {
       const peel = peelRef.current;
       if (!peel) return;
@@ -1046,78 +1019,34 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
       modeRef.current = "lifting";
       busyRef.current = true;
 
-      const r = sticker.getBoundingClientRect();
-      grab = { x: clientX - r.left, y: clientY - r.top };
+      const local = toLocal(clientX, clientY);
+      grab = { x: local.x, y: local.y };
       lastClient = { x: clientX, y: clientY };
 
       // A quick Sticker.js lift from the nearest edge sells the "peel off" moment.
-      const size = r.width;
-      const local = { x: grab.x, y: grab.y };
-      const distances = {
-        left: local.x,
-        right: size - local.x,
-        top: local.y,
-        bottom: size - local.y,
-      };
-      const direction = (Object.keys(distances) as (keyof typeof distances)[]).reduce(
-        (a, b) => (distances[a] <= distances[b] ? a : b),
-      );
-      const along = direction === "left" || direction === "right" ? local.y : local.x;
+      const { direction, along } = nearestEdge(local.x, local.y, local.size);
       const lift = { depth: 0 };
-      const applyLift = () => {
-        const d = lift.depth;
-        if (direction === "left") peel.update(d, along);
-        else if (direction === "right") peel.update(size - d, along);
-        else if (direction === "top") peel.update(along, d);
-        else peel.update(along, size - d);
-      };
-      peel.begin(
-        direction === "left" ? 1 : direction === "right" ? size - 1 : along,
-        direction === "top" ? 1 : direction === "bottom" ? size - 1 : along,
-        direction,
-      );
+      beginFold(peel, direction, along, local.size);
       whee();
 
       gsap
         .timeline({
           onComplete: () => {
-            peel.reset();
-            const wasHome = sticker.parentElement !== layer;
-            toLayer();
-            sticker.classList.add(styles.carried);
-            setCarrying(input);
-            if (wasHome) {
-              const from = sticker.offsetWidth;
-              const to = awayWidth();
-              grab = { x: (grab.x * to) / from, y: (grab.y * to) / from };
-              gsap.to(sticker, { width: to, duration: 0.3, ease: "power3.out" });
-            }
-            follow = {
-              x: gsap.quickTo(sticker, "x", { duration: 0.3, ease: "power3.out" }),
-              y: gsap.quickTo(sticker, "y", { duration: 0.3, ease: "power3.out" }),
-            };
-            const target = boundedTarget(lastClient.x, lastClient.y);
-            follow.x(target.x);
-            follow.y(target.y);
-            gsap.to(sticker, {
-              scale: CARRY_SCALE,
-              rotation: -6,
-              duration: 0.3,
-              ease: "back.out(2)",
-            });
-            modeRef.current = "carrying";
-            busyRef.current = false;
+            enterCarry(input);
             // The finger may already have lifted mid-peel after dragging.
-            const drop = touchCarry?.dropAt;
+            const drop = held?.dropAt;
             if (drop) {
-              touchCarry = null;
+              held = null;
               place(drop.x, drop.y);
-            } else if (touchCarry) {
-              startEdgeScroll();
             }
           },
         })
-        .to(lift, { depth: size * 0.3, duration: 0.2, ease: "power2.out", onUpdate: applyLift });
+        .to(lift, {
+          depth: local.size * 0.3,
+          duration: 0.2,
+          ease: "power2.out",
+          onUpdate: () => foldTo(peel, direction, along, local.size, lift.depth),
+        });
     };
 
     const goHome = () => {
@@ -1212,7 +1141,7 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
 
     const edgeScroll = () => {
       edgeRaf = 0;
-      if (!touchCarry || modeRef.current !== "carrying") return;
+      if (!held || modeRef.current !== "carrying") return;
       const top = headerHeight() + EDGE_SCROLL_ZONE;
       const bottom = window.innerHeight - EDGE_SCROLL_ZONE;
       const y = lastClient.y;
@@ -1264,32 +1193,135 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
           dragRef.current = null;
           suppressClickRef.current = true;
           navigator.vibrate?.(12);
-          touchCarry = { id, x, y, moved: false, dropAt: null };
+          held = { id, x, y, moved: false, dropAt: null, input: "touch" };
           pickup(x, y, "touch");
         }, LONG_PRESS_MS),
       };
     };
 
+    const lean = tilt
+      ? {
+          x: gsap.quickTo(tilt, "x", { duration: 0.35, ease: "power3.out" }),
+          y: gsap.quickTo(tilt, "y", { duration: 0.35, ease: "power3.out" }),
+        }
+      : null;
+    const setLean = (x: number, y: number) => {
+      lean?.x(x);
+      lean?.y(y);
+    };
+
+    // Any press on the sticker may become a drag that peels it off.
+    const onDragStart = (event: PointerEvent) => {
+      suppressClickRef.current = false;
+      if (event.button !== 0 || !event.isPrimary || !canGrab()) return;
+      const local = toLocal(event.clientX, event.clientY);
+      const { direction, along } = nearestEdge(local.x, local.y, local.size);
+      dragRef.current = {
+        pointerId: event.pointerId,
+        input: event.pointerType === "mouse" ? "mouse" : "touch",
+        start: { x: event.clientX, y: event.clientY },
+        grab: { x: local.x, y: local.y },
+        size: local.size,
+        direction,
+        along,
+        peeling: false,
+      };
+    };
+
+    /** The peel has gone far enough: it comes off in the hand and follows the pointer. */
+    const detach = (event: PointerEvent, drag: Drag) => {
+      dragRef.current = null;
+      setLean(0, 0);
+      grab = drag.grab;
+      lastClient = { x: event.clientX, y: event.clientY };
+      held = {
+        id: event.pointerId,
+        x: event.clientX,
+        y: event.clientY,
+        moved: true,
+        dropAt: null,
+        input: drag.input === "mouse" ? "drag" : "touch",
+      };
+      if (drag.input === "touch") navigator.vibrate?.(12);
+      spawnBurst(fx, event.clientX, event.clientY, 8, 0.9);
+      setHint("drop it anywhere");
+      enterCarry(held.input);
+    };
+
+    /** Folds the grabbed edge back as the pointer drags away. Returns true while it owns the move. */
+    const dragPeel = (event: PointerEvent, drag: Drag) => {
+      const peel = peelRef.current;
+      if (!peel) return false;
+      const dx = event.clientX - drag.start.x;
+      const dy = event.clientY - drag.start.y;
+      const dist = Math.hypot(dx, dy);
+      if (!drag.peeling) {
+        if (dist < DRAG_THRESHOLD || !canGrab()) return false;
+        // The sticker is `pan-y`: a mostly vertical finger drag is the page scrolling.
+        if (drag.input === "touch" && Math.abs(dy) > Math.abs(dx)) {
+          dragRef.current = null;
+          return false;
+        }
+        drag.peeling = true;
+        cancelPress();
+        suppressClickRef.current = true;
+        try {
+          sticker.setPointerCapture(event.pointerId);
+        } catch {
+          // The pointer may already be gone.
+        }
+        hoverOff();
+        tiltToRef.current?.(0, 0);
+        sticker.removeAttribute("data-hover");
+        whee();
+        setGrabbing(true);
+        beginFold(peel, drag.direction, drag.along, drag.size);
+      }
+      const reach = drag.size * DETACH_AT;
+      foldTo(peel, drag.direction, drag.along, drag.size, Math.min(dist, reach));
+      setLean(clamp(dx * 0.08, -PEEL_LEAN, PEEL_LEAN), clamp(dy * 0.08, -PEEL_LEAN, PEEL_LEAN));
+      setHint(dist > reach * 0.6 ? "almost…" : "peeling…");
+      if (dist >= reach) detach(event, drag);
+      return true;
+    };
+
     const onPointerEnd = (event: PointerEvent) => {
       if (press?.id === event.pointerId) cancelPress();
-      if (touchCarry?.id !== event.pointerId) return;
+      const drag = dragRef.current;
+      if (drag?.pointerId === event.pointerId) {
+        dragRef.current = null;
+        if (drag.peeling) {
+          // Let go before it came off: it lays back down.
+          peelRef.current?.release();
+          setLean(0, 0);
+          setGrabbing(false);
+          setHint(null);
+          settle();
+        }
+      }
+      if (held?.id !== event.pointerId) return;
+      if (held.input === "drag" && event.type === "pointerup") {
+        // The click that follows this release shouldn't land on whatever is underneath.
+        swallowClick = true;
+        window.setTimeout(() => (swallowClick = false), 0);
+      }
       stopEdgeScroll();
-      if (event.type !== "pointerup" || !touchCarry.moved) {
+      if (event.type !== "pointerup" || !held.moved) {
         // Held without dragging: it stays peeled until the next tap sticks it.
-        touchCarry = null;
+        held = null;
         return;
       }
       if (modeRef.current === "lifting") {
-        touchCarry.dropAt = { x: event.clientX, y: event.clientY };
+        held.dropAt = { x: event.clientX, y: event.clientY };
         return;
       }
-      touchCarry = null;
+      held = null;
       if (modeRef.current === "carrying") place(event.clientX, event.clientY);
     };
 
     // Keeps the page still while a finger drags the sticker around.
     const onTouchMove = (event: TouchEvent) => {
-      if (touchCarry && event.cancelable) event.preventDefault();
+      if ((held || dragRef.current?.peeling) && event.cancelable) event.preventDefault();
     };
 
     const onCapturePointerDown = (event: PointerEvent) => {
@@ -1310,7 +1342,7 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
 
     const onCaptureContextMenu = (event: MouseEvent) => {
       // Touch long presses also raise a context menu; the gesture owns those.
-      if (press || touchCarry || modeRef.current === "lifting" || modeRef.current === "moving") {
+      if (press || held || modeRef.current === "lifting" || modeRef.current === "moving") {
         event.preventDefault();
         event.stopPropagation();
         return;
@@ -1362,10 +1394,10 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
         if (Math.hypot(event.clientX - press.x, event.clientY - press.y) > PRESS_SLOP) cancelPress();
       }
       if (
-        touchCarry?.id === event.pointerId &&
-        Math.hypot(event.clientX - touchCarry.x, event.clientY - touchCarry.y) > PRESS_SLOP
+        held?.id === event.pointerId &&
+        Math.hypot(event.clientX - held.x, event.clientY - held.y) > PRESS_SLOP
       ) {
-        touchCarry.moved = true;
+        held.moved = true;
       }
       const now = performance.now();
       const dt = Math.max(1, now - lastMoveAt);
@@ -1373,6 +1405,12 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
       const vx = (event.clientX - lastClient.x) / dt;
       lastMoveAt = now;
       lastClient = { x: event.clientX, y: event.clientY };
+
+      const drag = dragRef.current;
+      if (drag?.pointerId === event.pointerId && dragPeel(event, drag)) {
+        lastActive = now;
+        return;
+      }
 
       // In Destroy mode the sticker stares at the character instead of the pointer.
       if (isDestroyEggActive()) return;
@@ -1425,6 +1463,7 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
     window.addEventListener("pointercancel", onPointerEnd);
     window.addEventListener("touchmove", onTouchMove, { passive: false });
     sticker.addEventListener("pointerdown", onTouchPressStart);
+    sticker.addEventListener("pointerdown", onDragStart);
 
     return () => {
       cancelAnimationFrame(destroyLookRaf);
@@ -1435,6 +1474,9 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
       window.removeEventListener("pointercancel", onPointerEnd);
       window.removeEventListener("touchmove", onTouchMove);
       sticker.removeEventListener("pointerdown", onTouchPressStart);
+      sticker.removeEventListener("pointerdown", onDragStart);
+      dragRef.current = null;
+      setGrabbing(false);
       window.clearTimeout(blinkTimer);
       window.clearInterval(idleTimer);
       idleTl?.kill();
@@ -1486,7 +1528,7 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
 
   // Touch taps fire enter/leave too; those shouldn't flash hover hints over the tap's own.
   const onEnter = (part: Part, ...actions: string[]) => (event: React.PointerEvent) => {
-    // Parts sliding under a still pointer mid-spin/fling aren't real hovers.
+    // Parts sliding under a still pointer mid-spin or mid-peel aren't real hovers.
     if (event.pointerType !== "mouse" || !interactive()) return;
     setHint(HINTS[part]);
     run(...actions);
@@ -1726,11 +1768,9 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
           ref={stickerRef}
           className={styles.sticker}
           style={maskVars}
+          data-cursor="grab"
           onPointerEnter={onStickerPointerEnter}
           onPointerMove={onStickerPointerMove}
-          onPointerDown={onStickerPointerDown}
-          onPointerUp={endDrag}
-          onPointerCancel={endDrag}
           onPointerLeave={onStickerPointerLeave}
           onContextMenu={onStickerContextMenu}
           onClick={onPartClick("boop")}
@@ -1799,7 +1839,9 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
               <span className={styles.boundsLabel}>
                 {carrying === "touch"
                   ? "Let go anywhere to stick it · drop it on its spot to put it back"
-                  : "Click anywhere to stick it · Esc puts it back"}
+                  : carrying === "drag"
+                    ? "Let go anywhere to stick it · Esc puts it back"
+                    : "Click anywhere to stick it · Esc puts it back"}
               </span>
             </div>,
             document.body,
