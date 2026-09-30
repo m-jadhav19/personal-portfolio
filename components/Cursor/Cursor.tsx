@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 import { useSystemMode } from "@/components/EasterEggs/SystemModeProvider";
+import { isDestroyEggActive } from "@/lib/easterEggs/destroy/isActive";
 import { MODE_CURSOR, type SystemMode } from "@/lib/systemMode";
 
 import styles from "./Cursor.module.css";
@@ -110,6 +111,11 @@ function resolveFromPoint(
   x: number,
   y: number,
 ): { state: CursorState; frameEl: HTMLElement | null } {
+  // Destroy mode owns aiming — never snap/frame to HUD weapon buttons or page UI.
+  if (isDestroyEggActive()) {
+    return { state: "default", frameEl: null };
+  }
+
   const stack = document.elementsFromPoint(x, y);
   const overlayLocked = isOverlayLocked();
 
