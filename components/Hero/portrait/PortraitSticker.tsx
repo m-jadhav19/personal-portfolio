@@ -46,7 +46,7 @@ const HINTS: Record<Part, string> = {
   eyes: "click to wink",
   beard: "click to chat",
   ear: "listening",
-  face: "drag to peel me off",
+  face: "hold 2s to grab me",
   sparks: "idea!",
   "bracket-left": "click to close the tag",
   "bracket-right": "click to close the tag",
@@ -93,9 +93,9 @@ const AWAY_RATIO = 0.7;
 const AWAY_MIN_WIDTH = 170;
 const CARRY_SCALE = 1.1;
 /** Touch: hold this long without moving to peel the sticker off. */
-const LONG_PRESS_MS = 380;
+const LONG_PRESS_MS = 2000;
 const PRESS_SLOP = 10;
-const HOLD_HINT = "hold to peel me off";
+const HOLD_HINT = "keep holding…";
 /** Touch-carrying near the top/bottom edge scrolls the page this fast (px per frame). */
 const EDGE_SCROLL_ZONE = 72;
 const EDGE_SCROLL_SPEED = 14;
@@ -324,10 +324,8 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
   };
 
   const onStickerContextMenu = (event: React.MouseEvent) => {
-    if (!carryRef.current || !interactive()) return;
+    // Grab is left-click hold; keep the browser menu from covering the sticker.
     event.preventDefault();
-    event.stopPropagation();
-    carryRef.current.pickup(event.clientX, event.clientY);
   };
 
   // ─── Face, part animations and the peel-and-place mechanic ─────────────
@@ -828,7 +826,7 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
       }
     }, 700);
 
-    // ── Peel it off (drag it, right-click or long-press), carry it, stick it anywhere ──
+    // ── Peel it off (hold left-click / finger for 2s, or drag), carry it, stick it anywhere ──
     const layer = document.createElement("div");
     layer.className = styles.placeLayer;
     document.body.appendChild(layer);
@@ -1169,12 +1167,15 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
       clearHoldHint(1200);
     };
 
-    const onTouchPressStart = (event: PointerEvent) => {
-      if (event.pointerType === "mouse" || !event.isPrimary) return;
+    /** Left-click or finger: hold still for 2s to peel the sticker into your hand. */
+    const onHoldStart = (event: PointerEvent) => {
+      if (!event.isPrimary) return;
+      if (event.pointerType === "mouse" && event.button !== 0) return;
       if (reducedRef.current || busyRef.current) return;
       if (modeRef.current !== "home" && modeRef.current !== "placed") return;
       cancelPress();
       const { pointerId: id, clientX: x, clientY: y } = event;
+      const input: CarryInput = event.pointerType === "mouse" ? "mouse" : "touch";
       window.clearTimeout(hintTimer);
       setHint(HOLD_HINT);
       // Swelling while held shows the press is registering before it lets go.
@@ -1192,9 +1193,9 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
           press = null;
           dragRef.current = null;
           suppressClickRef.current = true;
-          navigator.vibrate?.(12);
-          held = { id, x, y, moved: false, dropAt: null, input: "touch" };
-          pickup(x, y, "touch");
+          if (input === "touch") navigator.vibrate?.(12);
+          held = { id, x, y, moved: false, dropAt: null, input };
+          pickup(x, y, input);
         }, LONG_PRESS_MS),
       };
     };
@@ -1462,7 +1463,7 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
     window.addEventListener("pointerup", onPointerEnd);
     window.addEventListener("pointercancel", onPointerEnd);
     window.addEventListener("touchmove", onTouchMove, { passive: false });
-    sticker.addEventListener("pointerdown", onTouchPressStart);
+    sticker.addEventListener("pointerdown", onHoldStart);
     sticker.addEventListener("pointerdown", onDragStart);
 
     return () => {
@@ -1473,7 +1474,7 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
       window.removeEventListener("pointerup", onPointerEnd);
       window.removeEventListener("pointercancel", onPointerEnd);
       window.removeEventListener("touchmove", onTouchMove);
-      sticker.removeEventListener("pointerdown", onTouchPressStart);
+      sticker.removeEventListener("pointerdown", onHoldStart);
       sticker.removeEventListener("pointerdown", onDragStart);
       dragRef.current = null;
       setGrabbing(false);
