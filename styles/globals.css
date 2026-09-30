@@ -127,6 +127,12 @@ body.custom-cursor-active * {
   cursor: none !important;
 }
 
+/* Native fallback while the portrait sticker is peeled or carried. */
+html[data-cursor-grabbing] body:not(.custom-cursor-active),
+html[data-cursor-grabbing] body:not(.custom-cursor-active) * {
+  cursor: grabbing !important;
+}
+
 /* ─── Intro loading states (Russell parity) ─────────────────────────────── */
 
 html.intro-loading [data-intro="nav-item"] {
