@@ -319,33 +319,22 @@ export function drawEnvProp(
   ctx.restore();
 }
 
+/** Cheap stage wash — never tile thousands of sprites per frame. */
 export function drawTileFloor(
   ctx: CanvasRenderingContext2D,
   width: number,
   height: number,
-  atlas?: DestroySpriteAtlas | null,
+  _atlas?: DestroySpriteAtlas | null,
 ) {
-  const tile = atlas?.get("envTile") ?? null;
-  if (!tile || !tile.complete || tile.naturalWidth === 0) {
-    // Soft pixel grit fallback
-    ctx.save();
-    ctx.fillStyle = "rgba(15, 23, 42, 0.18)";
-    for (let y = 0; y < height; y += 24) {
-      for (let x = 0; x < width; x += 24) {
-        if ((x + y) % 48 === 0) ctx.fillRect(x, y, 12, 12);
-      }
-    }
-    ctx.restore();
-    return;
-  }
-  const tw = tile.naturalWidth;
-  const th = tile.naturalHeight;
   ctx.save();
-  ctx.globalAlpha = 0.22;
-  ctx.imageSmoothingEnabled = false;
-  for (let y = 0; y < height + th; y += th) {
-    for (let x = 0; x < width + tw; x += tw) {
-      ctx.drawImage(tile, x, y, tw, th);
+  ctx.fillStyle = "rgba(15, 23, 42, 0.14)";
+  ctx.fillRect(0, 0, width, height);
+  // Sparse grit only — a few dozen rects, not a full grid.
+  ctx.fillStyle = "rgba(30, 41, 59, 0.2)";
+  const step = 96;
+  for (let y = 0; y < height; y += step) {
+    for (let x = ((y / step) % 2) * (step / 2); x < width; x += step) {
+      ctx.fillRect(x, y, 8, 8);
     }
   }
   ctx.restore();

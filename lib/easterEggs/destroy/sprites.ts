@@ -82,10 +82,9 @@ export function drawCharacter(
 
   ctx.save();
   if (hurt > 0) {
-    // Impact frames: blink + red wash
+    // Blink only — canvas filters are expensive and can freeze low-end GPUs.
     const blink = Math.floor(hurt * 20) % 2 === 0;
     ctx.globalAlpha = blink ? 0.35 : 1;
-    ctx.filter = blink ? "saturate(0.2) brightness(1.6)" : "none";
   }
 
   const body = atlas?.get(frame) ?? null;

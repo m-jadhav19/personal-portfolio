@@ -50,7 +50,7 @@ const AOE_SELECTOR = [
   "[data-destroy-target]",
 ].join(",");
 
-const CACHE_TTL_MS = 200;
+const CACHE_TTL_MS = 500;
 const MIN_SIZE = 10;
 
 export type TargetSnapshot = {
@@ -338,19 +338,10 @@ export function createTargetRegistry(): TargetRegistry {
       if (d) result.push(d);
     }
 
-    // Also sample a few points inside the blast for elementsFromPoint coverage
+    // One extra center probe only — elementsFromPoint is expensive.
     if (result.length < hits) {
-      const samples = [
-        [x, y],
-        [x - radius * 0.4, y],
-        [x + radius * 0.4, y],
-        [x, y - radius * 0.4],
-        [x, y + radius * 0.4],
-      ] as const;
-      for (const [sx, sy] of samples) {
-        if (result.length >= hits) break;
-        const el = pickBestFromPoint(sx, sy);
-        if (!el || damaged.has(el)) continue;
+      const el = pickBestFromPoint(x, y);
+      if (el && !damaged.has(el)) {
         const d = damageElement(el);
         if (d) result.push(d);
       }
