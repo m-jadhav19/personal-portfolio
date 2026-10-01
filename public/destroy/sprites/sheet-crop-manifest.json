@@ -1,23 +1,18 @@
 {
-  "character-idle": 7,
-  "character-walk": 6,
-  "gun": 6,
-  "blaster-bolt": 6,
-  "rocket": 6,
-  "vortex": 6,
-  "explosion": 6,
-  "enemy-roach": 6,
-  "enemy-drone": 6,
-  "enemy-slime": 6,
-  "pickup-health": 7,
-  "pickup-shield": 6,
-  "pickup-rapid": 6,
-  "env-crate": 6,
-  "env-barrel": 5,
-  "env-bush": 6,
-  "env-rock": 6,
-  "hole-a": 6,
-  "hole-b": 6,
-  "hole-c": 6,
-  "crack": 6
+  "directions": [
+    "r",
+    "ur",
+    "u",
+    "ul",
+    "l",
+    "dl",
+    "d",
+    "dr"
+  ],
+  "player_poses": [
+    "idle",
+    "aim",
+    "shoot"
+  ],
+  "walk_frames": 6
 }

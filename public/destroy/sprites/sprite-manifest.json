@@ -1,28 +1,38 @@
 {
   "source": "sheet-source.png",
   "cropper": "scripts/crop-destroy-spritesheet.py",
-  "frame_ms": 120,
+  "directions": [
+    "r",
+    "ur",
+    "u",
+    "ul",
+    "l",
+    "dl",
+    "d",
+    "dr"
+  ],
+  "player": {
+    "poses": [
+      "idle",
+      "aim",
+      "shoot"
+    ],
+    "walk_frames": 6
+  },
+  "frame_ms": 100,
   "animations": {
-    "character-idle": { "frames": 7, "files": ["character-idle-1.png", "character-idle-2.png", "character-idle-3.png", "character-idle-4.png", "character-idle-5.png", "character-idle-6.png", "character-idle-7.png"] },
-    "character-walk": { "frames": 6, "files": ["character-walk-1.png", "character-walk-2.png", "character-walk-3.png", "character-walk-4.png", "character-walk-5.png", "character-walk-6.png"] },
-    "gun": { "frames": 6 },
-    "blaster-bolt": { "frames": 6 },
-    "rocket": { "frames": 6 },
-    "vortex": { "frames": 6 },
-    "explosion": { "frames": 6 },
-    "enemy-roach": { "frames": 6 },
-    "enemy-drone": { "frames": 6 },
-    "enemy-slime": { "frames": 6 },
-    "pickup-health": { "frames": 7 },
-    "pickup-shield": { "frames": 6 },
-    "pickup-rapid": { "frames": 6 },
-    "env-crate": { "frames": 6 },
-    "env-barrel": { "frames": 5 },
-    "env-bush": { "frames": 6 },
-    "env-rock": { "frames": 6 },
-    "hole-a": { "frames": 6 },
-    "hole-b": { "frames": 6 },
-    "hole-c": { "frames": 6 },
-    "crack": { "frames": 6 }
-  }
+    "enemy-roach": {
+      "frames": 6,
+      "loop_frames": 4
+    },
+    "enemy-drone": {
+      "frames": 6,
+      "loop_frames": 4
+    },
+    "enemy-slime": {
+      "frames": 6,
+      "loop_frames": 4
+    }
+  },
+  "notes": "Gameplay loops enemy frames 1-4; later frames are death/attack tells. Player body+gun baked into 8-dir aim/shoot/walk."
 }
