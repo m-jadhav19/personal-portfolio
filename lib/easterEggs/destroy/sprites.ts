@@ -1,7 +1,9 @@
 import {
   HOLE_VARIANTS,
-  characterAnimFrame,
+  aimAngleToDir,
+  characterDirFrame,
   drawSprite,
+  gunSpriteId,
   type DestroySpriteAtlas,
   type HoleVariant,
 } from "./spriteAtlas";
@@ -38,9 +40,13 @@ export type CharacterDrawOpts = {
   shielded?: boolean;
   knockX?: number;
   knockY?: number;
+  /** True while the trigger is held / a shot just fired — uses SHOOT sheet row. */
+  shooting?: boolean;
+  /** True while WASD/dragging — uses 8-dir walk cycle facing aim. */
+  moving?: boolean;
 };
 
-/** Orange stick-figure mercenary with a directional gun arm. */
+/** 8-dir sheet mercenary — body+gun face the cursor. */
 export function drawCharacter(
   ctx: CanvasRenderingContext2D,
   x: number,
@@ -54,13 +60,15 @@ export function drawCharacter(
   const hurt = opts?.hurtFlash ?? 0;
   const knockX = opts?.knockX ?? 0;
   const knockY = opts?.knockY ?? 0;
+  const shooting = opts?.shooting ?? false;
   const ox = Math.round(x + knockX);
   const oy = Math.round(y + knockY);
+  const dir = aimAngleToDir(aimAngle);
 
   // Shadow
   ctx.fillStyle = "rgba(0,0,0,0.25)";
   ctx.beginPath();
-  ctx.ellipse(ox, oy + 28, 18, 5, 0, 0, Math.PI * 2);
+  ctx.ellipse(ox, oy + 26, 16, 5, 0, 0, Math.PI * 2);
   ctx.fill();
 
   if (opts?.shielded) {
@@ -73,8 +81,9 @@ export function drawCharacter(
     ctx.restore();
   }
 
-  const moving = Math.abs(Math.sin(walkPhase)) > 0.2;
-  const frame = characterAnimFrame(moving, walkPhase);
+  const moving =
+    opts?.moving ?? Math.abs(Math.sin(walkPhase)) > 0.2;
+  const frame = characterDirFrame(moving, shooting, walkPhase, aimAngle);
 
   ctx.save();
   if (hurt > 0) {
@@ -83,14 +92,23 @@ export function drawCharacter(
     ctx.globalAlpha = blink ? 0.35 : 1;
   }
 
-  // Sheet characters include a baked-in rifle; face left/right from aim.
+  // Directional sprites already face the aim octant (gun baked in) — no flip.
   const body =
     atlas?.get(frame) ??
     atlas?.get(moving ? "characterWalkA" : "characterIdle") ??
     null;
-  const drewBody = drawSprite(ctx, body, ox, oy, { facing, scale: 1 });
+  const drewBody = drawSprite(ctx, body, ox, oy, { scale: 1 });
 
   if (!drewBody) {
+    const gun = atlas?.get(gunSpriteId(dir)) ?? atlas?.get("gun") ?? null;
+    if (gun) {
+      drawSprite(ctx, gun, ox + Math.cos(aimAngle) * 14, oy + Math.sin(aimAngle) * 10, {
+        scale: 1,
+      });
+    }
+  }
+
+  if (!drewBody && !atlas?.get(gunSpriteId(dir)) && !atlas?.get("gun")) {
     // Procedural fallback
     const s = 2;
     const bodyC = hurt > 0 ? "#fecaca" : "#e85d04";
@@ -126,23 +144,12 @@ export function drawCharacter(
       2 * s,
       "#111",
     );
-
-    const gun = atlas?.get("gun") ?? null;
-    const gx = ox + Math.cos(aimAngle) * 18;
-    const gy = oy + Math.sin(aimAngle) * 6;
-    const drewGun = drawSprite(ctx, gun, gx, gy, {
-      rotation: aimAngle,
-      scale: 1,
-    });
-
-    if (!drewGun) {
-      ctx.save();
-      ctx.translate(gx, gy);
-      ctx.rotate(aimAngle);
-      drawPixelRect(ctx, 0, -3, 28, 6, "#38bdf8");
-      drawPixelRect(ctx, 24, -5, 8, 10, "#e0f2fe");
-      ctx.restore();
-    }
+    ctx.save();
+    ctx.translate(ox + Math.cos(aimAngle) * 18, oy + Math.sin(aimAngle) * 6);
+    ctx.rotate(aimAngle);
+    drawPixelRect(ctx, 0, -3, 28, 6, "#38bdf8");
+    drawPixelRect(ctx, 24, -5, 8, 10, "#e0f2fe");
+    ctx.restore();
   }
   ctx.restore();
 

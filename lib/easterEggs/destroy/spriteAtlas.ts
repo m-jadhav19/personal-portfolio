@@ -1,117 +1,144 @@
-export const DESTROY_SPRITE_PATHS = {
-  characterIdle: "/destroy/sprites/character-idle.png",
-  characterIdle1: "/destroy/sprites/character-idle-1.png",
-  characterIdle2: "/destroy/sprites/character-idle-2.png",
-  characterIdle3: "/destroy/sprites/character-idle-3.png",
-  characterIdle4: "/destroy/sprites/character-idle-4.png",
-  characterIdle5: "/destroy/sprites/character-idle-5.png",
-  characterIdle6: "/destroy/sprites/character-idle-6.png",
-  characterIdle7: "/destroy/sprites/character-idle-7.png",
-  characterWalkA: "/destroy/sprites/character-walk-a.png",
-  characterWalkB: "/destroy/sprites/character-walk-b.png",
-  characterWalk1: "/destroy/sprites/character-walk-1.png",
-  characterWalk2: "/destroy/sprites/character-walk-2.png",
-  characterWalk3: "/destroy/sprites/character-walk-3.png",
-  characterWalk4: "/destroy/sprites/character-walk-4.png",
-  characterWalk5: "/destroy/sprites/character-walk-5.png",
-  characterWalk6: "/destroy/sprites/character-walk-6.png",
-  gun: "/destroy/sprites/gun.png",
-  blasterBolt: "/destroy/sprites/blaster-bolt.png",
-  rocket: "/destroy/sprites/rocket.png",
-  vortex: "/destroy/sprites/vortex.png",
-  explosion: "/destroy/sprites/explosion.png",
-  holeA: "/destroy/sprites/hole-a.png",
-  holeB: "/destroy/sprites/hole-b.png",
-  holeC: "/destroy/sprites/hole-c.png",
-  crack: "/destroy/sprites/crack.png",
-  iconBlaster: "/destroy/sprites/icon-blaster.png",
-  iconRocket: "/destroy/sprites/icon-rocket.png",
-  iconVortex: "/destroy/sprites/icon-vortex.png",
-  iconZap: "/destroy/sprites/icon-zap.png",
-  enemyRoach: "/destroy/sprites/enemy-roach.png",
-  enemyRoach1: "/destroy/sprites/enemy-roach-1.png",
-  enemyRoach2: "/destroy/sprites/enemy-roach-2.png",
-  enemyRoach3: "/destroy/sprites/enemy-roach-3.png",
-  enemyRoach4: "/destroy/sprites/enemy-roach-4.png",
-  enemyRoach5: "/destroy/sprites/enemy-roach-5.png",
-  enemyRoach6: "/destroy/sprites/enemy-roach-6.png",
-  enemyDrone: "/destroy/sprites/enemy-drone.png",
-  enemyDrone1: "/destroy/sprites/enemy-drone-1.png",
-  enemyDrone2: "/destroy/sprites/enemy-drone-2.png",
-  enemyDrone3: "/destroy/sprites/enemy-drone-3.png",
-  enemyDrone4: "/destroy/sprites/enemy-drone-4.png",
-  enemyDrone5: "/destroy/sprites/enemy-drone-5.png",
-  enemyDrone6: "/destroy/sprites/enemy-drone-6.png",
-  enemySlime: "/destroy/sprites/enemy-slime.png",
-  enemySlime1: "/destroy/sprites/enemy-slime-1.png",
-  enemySlime2: "/destroy/sprites/enemy-slime-2.png",
-  enemySlime3: "/destroy/sprites/enemy-slime-3.png",
-  enemySlime4: "/destroy/sprites/enemy-slime-4.png",
-  enemySlime5: "/destroy/sprites/enemy-slime-5.png",
-  enemySlime6: "/destroy/sprites/enemy-slime-6.png",
-  pickupHealth: "/destroy/sprites/pickup-health.png",
-  pickupShield: "/destroy/sprites/pickup-shield.png",
-  pickupRapid: "/destroy/sprites/pickup-rapid.png",
-  envCrate: "/destroy/sprites/env-crate.png",
-  envBarrel: "/destroy/sprites/env-barrel.png",
-  envBush: "/destroy/sprites/env-bush.png",
-  envRock: "/destroy/sprites/env-rock.png",
-  envTile: "/destroy/sprites/env-tile.png",
-} as const;
+/** 8 compass dirs matching the sheet column order (L→R). */
+export const AIM_DIRS = ["r", "ur", "u", "ul", "l", "dl", "d", "dr"] as const;
+export type AimDir = (typeof AIM_DIRS)[number];
+
+export type PlayerPose = "idle" | "aim" | "shoot";
+
+const playerPath = (pose: PlayerPose, dir: AimDir) =>
+  `/destroy/sprites/player-${pose}-${dir}.png`;
+const walkPath = (frame: number, dir: AimDir) =>
+  `/destroy/sprites/walk-${frame}-${dir}.png`;
+const gunPath = (dir: AimDir) => `/destroy/sprites/gun-${dir}.png`;
+
+function buildPaths() {
+  const paths: Record<string, string> = {
+    // Compat fallbacks
+    characterIdle: "/destroy/sprites/character-idle.png",
+    characterWalkA: "/destroy/sprites/character-walk-a.png",
+    characterWalkB: "/destroy/sprites/character-walk-b.png",
+    gun: "/destroy/sprites/gun.png",
+    blasterBolt: "/destroy/sprites/blaster-bolt.png",
+    rocket: "/destroy/sprites/rocket.png",
+    vortex: "/destroy/sprites/vortex.png",
+    explosion: "/destroy/sprites/explosion.png",
+    holeA: "/destroy/sprites/hole-a.png",
+    holeB: "/destroy/sprites/hole-b.png",
+    holeC: "/destroy/sprites/hole-c.png",
+    crack: "/destroy/sprites/crack.png",
+    iconBlaster: "/destroy/sprites/icon-blaster.png",
+    iconRocket: "/destroy/sprites/icon-rocket.png",
+    iconVortex: "/destroy/sprites/icon-vortex.png",
+    iconZap: "/destroy/sprites/icon-zap.png",
+    enemyRoach: "/destroy/sprites/enemy-roach.png",
+    enemyDrone: "/destroy/sprites/enemy-drone.png",
+    enemySlime: "/destroy/sprites/enemy-slime.png",
+    pickupHealth: "/destroy/sprites/pickup-health.png",
+    pickupShield: "/destroy/sprites/pickup-shield.png",
+    pickupRapid: "/destroy/sprites/pickup-rapid.png",
+    envCrate: "/destroy/sprites/env-crate.png",
+    envBarrel: "/destroy/sprites/env-barrel.png",
+    envBush: "/destroy/sprites/env-bush.png",
+    envRock: "/destroy/sprites/env-rock.png",
+    envTile: "/destroy/sprites/env-tile.png",
+  };
+
+  for (const dir of AIM_DIRS) {
+    for (const pose of ["idle", "aim", "shoot"] as const) {
+      paths[`player_${pose}_${dir}`] = playerPath(pose, dir);
+    }
+    paths[`gun_${dir}`] = gunPath(dir);
+    for (let f = 1; f <= 6; f++) {
+      paths[`walk_${f}_${dir}`] = walkPath(f, dir);
+    }
+  }
+
+  for (const kind of ["roach", "drone", "slime"] as const) {
+    for (let f = 1; f <= 6; f++) {
+      const key =
+        kind === "roach"
+          ? `enemyRoach${f}`
+          : kind === "drone"
+            ? `enemyDrone${f}`
+            : `enemySlime${f}`;
+      paths[key] = `/destroy/sprites/enemy-${kind}-${f}.png`;
+    }
+  }
+
+  return paths as Record<string, string>;
+}
+
+export const DESTROY_SPRITE_PATHS = buildPaths();
 
 export type DestroySpriteId = keyof typeof DESTROY_SPRITE_PATHS;
 
-/** Matches sheet-crop-manifest.json animation timing (120ms / frame). */
-export const ENEMY_FRAME_MS = 120;
+/** Matches sheet-crop-manifest.json animation timing. */
+export const ENEMY_FRAME_MS = 100;
+export const WALK_FRAME_MS = 90;
 
+/** Loop the first 4 frames — later sheet frames are death/attack tells. */
 export const ENEMY_ANIM_FRAMES: Record<
   "roach" | "drone" | "slime",
   readonly DestroySpriteId[]
 > = {
-  roach: [
-    "enemyRoach1",
-    "enemyRoach2",
-    "enemyRoach3",
-    "enemyRoach4",
-    "enemyRoach5",
-    "enemyRoach6",
-  ],
-  drone: [
-    "enemyDrone1",
-    "enemyDrone2",
-    "enemyDrone3",
-    "enemyDrone4",
-    "enemyDrone5",
-    "enemyDrone6",
-  ],
-  slime: [
-    "enemySlime1",
-    "enemySlime2",
-    "enemySlime3",
-    "enemySlime4",
-    "enemySlime5",
-    "enemySlime6",
-  ],
+  roach: ["enemyRoach1", "enemyRoach2", "enemyRoach3", "enemyRoach4"],
+  drone: ["enemyDrone1", "enemyDrone2", "enemyDrone3", "enemyDrone4"],
+  slime: ["enemySlime1", "enemySlime2", "enemySlime3", "enemySlime4"],
 };
 
+/** Legacy 2-frame walk ids (compat). */
 export const CHARACTER_IDLE_FRAMES = [
-  "characterIdle1",
-  "characterIdle2",
-  "characterIdle3",
-  "characterIdle4",
-  "characterIdle5",
-  "characterIdle6",
-  "characterIdle7",
+  "characterIdle",
 ] as const satisfies readonly DestroySpriteId[];
 
 export const CHARACTER_WALK_FRAMES = [
-  "characterWalk1",
-  "characterWalk2",
-  "characterWalk3",
-  "characterWalk4",
-  "characterWalk5",
-  "characterWalk6",
+  "characterWalkA",
+  "characterWalkB",
 ] as const satisfies readonly DestroySpriteId[];
+
+/**
+ * Map a canvas aim angle (atan2(dy, dx), y-down) to one of 8 sheet directions.
+ * Right=0, down=+π/2, left=±π, up=-π/2 → r, dr, d, dl, l, ul, u, ur.
+ */
+export function aimAngleToDir(angle: number): AimDir {
+  const TWO_PI = Math.PI * 2;
+  let a = angle % TWO_PI;
+  if (a < 0) a += TWO_PI;
+  const sector = Math.round(a / (Math.PI / 4)) % 8;
+  const map: AimDir[] = ["r", "dr", "d", "dl", "l", "ul", "u", "ur"];
+  return map[sector];
+}
+
+export function playerSpriteId(
+  pose: PlayerPose,
+  dir: AimDir,
+): DestroySpriteId {
+  return `player_${pose}_${dir}` as DestroySpriteId;
+}
+
+export function walkSpriteId(frame1to6: number, dir: AimDir): DestroySpriteId {
+  const f = Math.min(6, Math.max(1, frame1to6));
+  return `walk_${f}_${dir}` as DestroySpriteId;
+}
+
+export function gunSpriteId(dir: AimDir): DestroySpriteId {
+  return `gun_${dir}` as DestroySpriteId;
+}
+
+export function characterDirFrame(
+  moving: boolean,
+  shooting: boolean,
+  walkPhase: number,
+  aimAngle: number,
+): DestroySpriteId {
+  const dir = aimAngleToDir(aimAngle);
+  // Shoot pose wins briefly so muzzle flash tracks the cursor octant.
+  if (shooting) return playerSpriteId("shoot", dir);
+  if (moving) {
+    const frame = (Math.floor(Math.abs(walkPhase) * 1.15) % 6) + 1;
+    return walkSpriteId(frame, dir);
+  }
+  return playerSpriteId("aim", dir);
+}
 
 export type DestroySpriteAtlas = {
   ready: Promise<void>;
@@ -199,15 +226,14 @@ export function enemyAnimFrame(
   return frames[idx];
 }
 
+/** @deprecated Prefer characterDirFrame for 8-dir sheet. */
 export function characterAnimFrame(
   moving: boolean,
   walkPhase: number,
 ): DestroySpriteId {
-  // walkPhase is an engine accumulator (~14/sec while moving), not wall-clock.
   const frames = moving ? CHARACTER_WALK_FRAMES : CHARACTER_IDLE_FRAMES;
   const rate = moving ? 1.15 : 0.7;
-  const idx =
-    Math.floor(Math.abs(walkPhase) * rate) % frames.length;
+  const idx = Math.floor(Math.abs(walkPhase) * rate) % frames.length;
   return frames[idx];
 }
 
@@ -239,3 +265,14 @@ export const ENV_SPRITE: Record<
   bush: "envBush",
   rock: "envRock",
 };
+
+/** Muzzle offset from character center toward aim (px), for projectile spawn. */
+export function muzzleOffset(aimAngle: number, dist = 26): {
+  x: number;
+  y: number;
+} {
+  return {
+    x: Math.cos(aimAngle) * dist,
+    y: Math.sin(aimAngle) * dist,
+  };
+}

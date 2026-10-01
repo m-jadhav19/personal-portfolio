@@ -29,6 +29,7 @@ import {
 } from "./combat";
 import {
   loadDestroySpriteAtlas,
+  muzzleOffset,
   type DestroySpriteAtlas,
 } from "./spriteAtlas";
 import {
@@ -193,6 +194,8 @@ export function createDestroyEngine(
   };
   let facing: 1 | -1 = 1;
   let walkPhase = 0;
+  /** Seconds remaining to show the SHOOT sheet row after firing. */
+  let shootFlash = 0;
   let dragging = false;
   const dragOffset: Vec = { x: 0, y: 0 };
   const moveKeys = {
@@ -908,8 +911,10 @@ export function createDestroyEngine(
     const cfg = WEAPON_CONFIG[id];
     const aim = Math.atan2(pointer.y - character.y, pointer.x - character.x);
     const liveBonus = rapidTimer > 0 ? 4 : 0;
-    const muzzleX = character.x + Math.cos(aim) * 28;
-    const muzzleY = character.y + Math.sin(aim) * 8;
+    const muzzle = muzzleOffset(aim, 28);
+    const muzzleX = character.x + muzzle.x;
+    const muzzleY = character.y + muzzle.y;
+    shootFlash = Math.max(shootFlash, 0.12);
 
     if (id === "blaster") {
       if (countKind("blaster") >= cfg.maxLive + liveBonus) return;
@@ -931,8 +936,8 @@ export function createDestroyEngine(
       const speed = 520;
       projectiles.push({
         kind: "rocket",
-        x: character.x + Math.cos(aim) * 22,
-        y: character.y + Math.sin(aim) * 10,
+        x: muzzleX,
+        y: muzzleY,
         vx: Math.cos(aim) * speed,
         vy: Math.sin(aim) * speed,
         life: 1.8,
@@ -946,8 +951,8 @@ export function createDestroyEngine(
       const speed = 340;
       projectiles.push({
         kind: "vortex",
-        x: character.x + Math.cos(aim) * 20,
-        y: character.y + Math.sin(aim) * 12,
+        x: muzzleX,
+        y: muzzleY,
         vx: Math.cos(aim) * speed,
         vy: Math.sin(aim) * speed,
         life: 1.2,
@@ -1159,6 +1164,7 @@ export function createDestroyEngine(
   function update(dt: number) {
     setDestroyWatchTarget(character.x, character.y);
     updateBossIntroFx(dt);
+    if (shootFlash > 0) shootFlash = Math.max(0, shootFlash - dt);
     if (impactFlash > 0 && !bossIntroFx) {
       impactFlash = Math.max(0, impactFlash - dt * 1.8);
     }
@@ -1491,11 +1497,19 @@ export function createDestroyEngine(
     }
 
     const aim = Math.atan2(pointer.y - character.y, pointer.x - character.x);
+    const moving =
+      dragging ||
+      moveKeys.up ||
+      moveKeys.down ||
+      moveKeys.left ||
+      moveKeys.right;
     drawCharacter(ctx, character.x, character.y, facing, aim, walkPhase, atlas, {
       hurtFlash,
       shielded: shieldTimer > 0,
       knockX,
       knockY,
+      shooting: shootFlash > 0,
+      moving,
     });
   }
 
