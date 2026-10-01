@@ -454,6 +454,14 @@ export function createDestroyEngine(
 
   function takeDamage(amount: number, fromX: number, fromY: number) {
     if (dead || paused || shieldTimer > 0 || hurtIFrames > 0) return;
+    // Manual override for local QA / automation (set in DevTools).
+    if (
+      typeof window !== "undefined" &&
+      (window as unknown as { __DESTROY_GOD_MODE__?: boolean })
+        .__DESTROY_GOD_MODE__ === true
+    ) {
+      return;
+    }
     health = Math.max(0, health - amount);
     hurtFlash = 0.45;
     hurtIFrames = 0.55;
