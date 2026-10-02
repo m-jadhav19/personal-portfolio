@@ -14,7 +14,7 @@ import { createPortal } from "react-dom";
 import { isDestroyEggActive } from "@/lib/easterEggs/destroy/isActive";
 import { getDestroyWatchTarget } from "@/lib/easterEggs/destroy/watchTarget";
 import { scrollByDelta } from "@/lib/lenis";
-import { StickerPeel, type StickerDirection } from "@/lib/sticker";
+import { StickerPeel } from "@/lib/sticker";
 
 import {
   PORTRAIT_BOXES as BOX,
@@ -204,9 +204,6 @@ type Drag = {
   /** Grab point in the sticker's own (unrotated, unscaled) box. */
   grab: Point;
   size: number;
-  direction: StickerDirection;
-  /** Where along the peeling edge the fold is held. */
-  along: number;
   peeling: boolean;
 };
 
@@ -879,39 +876,17 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
       };
     };
 
-    const nearestEdge = (x: number, y: number, size: number) => {
-      const gaps: Record<StickerDirection, number> = {
-        left: x,
-        right: size - x,
-        top: y,
-        bottom: size - y,
-      };
-      const direction = (Object.keys(gaps) as StickerDirection[]).reduce((a, b) =>
-        gaps[a] <= gaps[b] ? a : b,
-      );
-      const along = direction === "left" || direction === "right" ? y : x;
-      return { direction, along: clamp(along, 1, size - 1) };
+    const pinchAxis = (x: number, y: number, size: number) => {
+      let ux = x - size / 2;
+      let uy = y - size / 2;
+      const len = Math.hypot(ux, uy);
+      if (len < size * 0.08) return { ux: 0, uy: -1 };
+      return { ux: ux / len, uy: uy / len };
     };
 
-    const beginFold = (peel: StickerPeel, direction: StickerDirection, along: number, size: number) =>
-      peel.begin(
-        direction === "left" ? 1 : direction === "right" ? size - 1 : along,
-        direction === "top" ? 1 : direction === "bottom" ? size - 1 : along,
-        direction,
-      );
-
-    /** Folds `depth` px of the sticker back from its `direction` edge. */
-    const foldTo = (
-      peel: StickerPeel,
-      direction: StickerDirection,
-      along: number,
-      size: number,
-      depth: number,
-    ) => {
-      if (direction === "left") peel.update(depth, along);
-      else if (direction === "right") peel.update(size - depth, along);
-      else if (direction === "top") peel.update(along, depth);
-      else peel.update(along, size - depth);
+    /** Lifts the paper at the grab point and folds it back. */
+    const foldTo = (peel: StickerPeel, at: Point, depth: number) => {
+      peel.peelFrom(at.x, at.y, depth);
     };
 
     /** Page coords for the sticker's top-left, kept inside the on-screen bounds. */
@@ -1021,10 +996,10 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
       grab = { x: local.x, y: local.y };
       lastClient = { x: clientX, y: clientY };
 
-      // A quick Sticker.js lift from the nearest edge sells the "peel off" moment.
-      const { direction, along } = nearestEdge(local.x, local.y, local.size);
+      // The flap starts under the pointer, then the sticker comes free.
+      const at = { x: local.x, y: local.y };
       const lift = { depth: 0 };
-      beginFold(peel, direction, along, local.size);
+      foldTo(peel, at, 0);
       whee();
 
       gsap
@@ -1043,7 +1018,7 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
           depth: local.size * 0.3,
           duration: 0.2,
           ease: "power2.out",
-          onUpdate: () => foldTo(peel, direction, along, local.size, lift.depth),
+          onUpdate: () => foldTo(peel, at, lift.depth),
         });
     };
 
@@ -1216,15 +1191,12 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
       suppressClickRef.current = false;
       if (event.button !== 0 || !event.isPrimary || !canGrab()) return;
       const local = toLocal(event.clientX, event.clientY);
-      const { direction, along } = nearestEdge(local.x, local.y, local.size);
       dragRef.current = {
         pointerId: event.pointerId,
         input: event.pointerType === "mouse" ? "mouse" : "touch",
         start: { x: event.clientX, y: event.clientY },
         grab: { x: local.x, y: local.y },
         size: local.size,
-        direction,
-        along,
         peeling: false,
       };
     };
@@ -1255,9 +1227,9 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
       if (!peel) return false;
       const dx = event.clientX - drag.start.x;
       const dy = event.clientY - drag.start.y;
-      const dist = Math.hypot(dx, dy);
+      const travel = Math.hypot(dx, dy);
       if (!drag.peeling) {
-        if (dist < DRAG_THRESHOLD || !canGrab()) return false;
+        if (travel < DRAG_THRESHOLD || !canGrab()) return false;
         // The sticker is `pan-y`: a mostly vertical finger drag is the page scrolling.
         if (drag.input === "touch" && Math.abs(dy) > Math.abs(dx)) {
           dragRef.current = null;
@@ -1276,10 +1248,18 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
         sticker.removeAttribute("data-hover");
         whee();
         setGrabbing(true);
-        beginFold(peel, drag.direction, drag.along, drag.size);
+        foldTo(peel, drag.grab, 0);
       }
+      const localNow = toLocal(event.clientX, event.clientY);
+      const ldx = localNow.x - drag.grab.x;
+      const ldy = localNow.y - drag.grab.y;
+      const { ux, uy } = pinchAxis(drag.grab.x, drag.grab.y, drag.size);
+      const pull = ldx * ux + ldy * uy;
+      const side = Math.abs(ldx * -uy + ldy * ux);
+      // Pulling away from the pinch peels fastest; other directions still lift it.
+      const dist = Math.max(0, pull) * 1.15 + Math.max(0, -pull) * 0.4 + side * 0.12;
       const reach = drag.size * DETACH_AT;
-      foldTo(peel, drag.direction, drag.along, drag.size, Math.min(dist, reach));
+      foldTo(peel, drag.grab, Math.min(dist, reach));
       setLean(clamp(dx * 0.08, -PEEL_LEAN, PEEL_LEAN), clamp(dy * 0.08, -PEEL_LEAN, PEEL_LEAN));
       setHint(dist > reach * 0.6 ? "almost…" : "peeling…");
       if (dist >= reach) detach(event, drag);

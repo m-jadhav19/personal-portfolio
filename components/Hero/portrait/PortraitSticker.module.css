@@ -176,6 +176,8 @@
   position: relative;
   width: 100%;
   height: 100%;
+  perspective: 900px;
+  transform-style: preserve-3d;
   will-change: transform;
 }
 
@@ -257,6 +259,23 @@
   overflow: hidden;
 }
 
+/* The drop-shadow filter flattens 3D, so the curl lifts only while it's off. */
+.sticker:has(.peelMask[data-peel="curl"]) {
+  filter: none;
+}
+
+.peelMask[data-peel="curl"],
+.peelMask[data-peel="curl"] .peelMove,
+.peelMask[data-peel="curl"] .front,
+.peelMask[data-peel="curl"] .back {
+  overflow: visible;
+  transform-style: preserve-3d;
+}
+
+.peelMask[data-peel="curl"] .back {
+  backface-visibility: visible;
+}
+
 .peelMove {
   position: relative;
   width: 100%;
@@ -308,6 +327,7 @@
   overflow: hidden;
   visibility: hidden;
   pointer-events: none;
+  backface-visibility: hidden;
 }
 
 .backClip {

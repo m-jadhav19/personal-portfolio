@@ -20,6 +20,7 @@
 
 .marquee {
   position: relative;
+  z-index: 1;
   display: grid;
   grid-template-rows: repeat(3, auto);
   gap: 1.05em;
@@ -28,12 +29,16 @@
   cursor: default;
   --portrait-w: clamp(320px, min(50vw, 80vh), 760px);
   --portrait-h: var(--portrait-w);
+  --marquee-angle: -8deg;
 }
 
 .marqueeRow {
   position: relative;
+  z-index: 1;
   overflow: hidden;
-  width: 100%;
+  width: 175%;
+  margin-left: -37.5%;
+  rotate: var(--marquee-angle);
 }
 
 .marqueeRowBack {
@@ -41,8 +46,7 @@
 }
 
 .marqueeRowFront {
-  z-index: 3;
-  overflow: visible;
+  z-index: 1;
   pointer-events: none;
 }
 
@@ -62,7 +66,7 @@
   text-shadow:
     0.05em 0.06em 0 var(--accent),
     0.1em 0.12em 0 color-mix(in srgb, var(--accent) 40%, transparent);
-  opacity: 0.8;
+  opacity: 0.72;
   animation: marquee-left 24s linear infinite;
 }
 
@@ -71,7 +75,7 @@
   padding-right: 4.5em;
 }
 
-/* Middle back row only — bottom front row matches the first (right → left). */
+/* Middle back row only — bottom row matches the first (right → left). */
 .marqueeRowBack:nth-child(even) .track {
   animation-name: marquee-right;
 }
@@ -172,6 +176,11 @@ html.intro-loading [data-intro="portrait"] {
 
   .marquee {
     --portrait-w: clamp(260px, min(92vw, 62vh), 460px);
+  }
+
+  .marqueeRow {
+    width: 210%;
+    margin-left: -55%;
   }
 
   .scrollCue {
