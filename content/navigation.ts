@@ -7,7 +7,7 @@ export type NavigationItem = {
 };
 
 export const navigation: NavigationItem[] = [
-  { id: "projects", label: "Work", number: "01" },
+  { id: "projects", label: "Projects", number: "01" },
   { id: "about", label: "About", number: "02" },
   { id: "lab", label: "Lab", number: "03" },
   { id: "experience", label: "Experience", number: "04" },

@@ -2,24 +2,39 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  clampChapterStep,
   clampCtaPosition,
-  getProjectSide,
-  selectFeaturedProjects,
+  getChapterIndex,
 } from "./projectMotion.ts";
 
-test("selects only the first three projects", () => {
-  const projects = Array.from({ length: 7 }, (_, index) => ({ id: index + 1 }));
-
-  assert.deepEqual(
-    selectFeaturedProjects(projects).map((project) => project.id),
-    [1, 2, 3],
-  );
+test("returns the first chapter when there is nothing to advance", () => {
+  assert.equal(getChapterIndex(0, 0), 0);
+  assert.equal(getChapterIndex(0, 1), 0);
+  assert.equal(getChapterIndex(1, 1), 0);
 });
 
-test("places zero-based even projects left and odd projects right", () => {
-  assert.equal(getProjectSide(0), "left");
-  assert.equal(getProjectSide(1), "right");
-  assert.equal(getProjectSide(2), "left");
+test("maps the start of the sequence to the first chapter", () => {
+  assert.equal(getChapterIndex(0, 7), 0);
+  assert.equal(getChapterIndex(-0.4, 7), 0);
+});
+
+test("stays on the last chapter at progress 1", () => {
+  assert.equal(getChapterIndex(1, 7), 6);
+  assert.equal(getChapterIndex(1.2, 7), 6);
+});
+
+test("flips to the next chapter halfway through each step", () => {
+  assert.equal(getChapterIndex(0.04, 7), 0);
+  assert.equal(getChapterIndex(0.5 / 6, 7), 1);
+  assert.equal(getChapterIndex(0.5, 7), 3);
+  assert.equal(getChapterIndex(5.5 / 6, 7), 6);
+});
+
+test("a heavy scroll advances only one chapter", () => {
+  assert.equal(clampChapterStep(0, 3, 7), 1);
+  assert.equal(clampChapterStep(2, 0, 7), 1);
+  assert.equal(clampChapterStep(4, 4, 7), 4);
+  assert.equal(clampChapterStep(6, 2, 7), 5);
 });
 
 test("keeps the CTA fully inside the media bounds", () => {

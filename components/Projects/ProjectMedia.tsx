@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 
 import type { Project } from "@/lib/types";
 
@@ -8,33 +8,27 @@ import styles from "./FeaturedWork.module.css";
 
 type ProjectMediaProps = {
   project: Project;
+  children?: ReactNode;
 };
 
-export function ProjectMedia({ project }: ProjectMediaProps) {
+export function ProjectMedia({ project, children }: ProjectMediaProps) {
   const [isHovering, setIsHovering] = useState(false);
 
   return (
-    <a
-      href={project.url}
-      target="_blank"
-      rel="noopener noreferrer"
+    <div
       className={`${styles.media} ${isHovering ? styles.mediaHovered : ""}`}
-      data-cursor="project"
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => setIsHovering(false)}
-      aria-label={`View ${project.title}`}
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={project.imageSrc}
-        alt={project.title}
+        alt=""
         className={styles.mediaImage}
         draggable={false}
       />
       <span className={styles.mediaVeil} aria-hidden="true" />
-      <span className={styles.viewBtnTouch} aria-hidden="true">
-        View project →
-      </span>
-    </a>
+      {children}
+    </div>
   );
 }
