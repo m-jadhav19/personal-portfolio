@@ -4,8 +4,6 @@ import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
-import { gsap } from "gsap";
-
 import { useCatalogScroll } from "@/hooks/useCatalogScroll";
 import type { Project } from "@/lib/types";
 
@@ -54,37 +52,6 @@ export function AllProjectsCatalog({
     return () => window.removeEventListener("keydown", handleEscape);
   }, [isOpen, onClose]);
 
-  useEffect(() => {
-    const list = listRef.current;
-    if (!isReady || !list) return;
-
-    const prefersReducedMotion = window.matchMedia(
-      "(prefers-reduced-motion: reduce)",
-    ).matches;
-
-    if (prefersReducedMotion) return;
-
-    const items = list.querySelectorAll<HTMLElement>("[data-catalog-item]");
-
-    const ctx = gsap.context(() => {
-      gsap.fromTo(
-        items,
-        { opacity: 0, y: 28, filter: "blur(4px)" },
-        {
-          opacity: 1,
-          y: 0,
-          filter: "blur(0px)",
-          duration: 0.55,
-          stagger: 0.055,
-          ease: "power3.out",
-          delay: 0.06,
-        },
-      );
-    }, list);
-
-    return () => ctx.revert();
-  }, [isReady]);
-
   if (!isOpen || !mounted) return null;
 
   return createPortal(
@@ -100,7 +67,7 @@ export function AllProjectsCatalog({
         <div className={styles.headerMeta}>
           <p className={styles.eyebrow}>Project index</p>
           <h2 id="all-projects-title" className={styles.title}>
-            All Work
+            All Projects
           </h2>
         </div>
         <button

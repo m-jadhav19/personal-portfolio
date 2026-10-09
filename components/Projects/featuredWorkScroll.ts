@@ -36,8 +36,47 @@ function prefersReducedMotion() {
   return window.matchMedia(REDUCED_MOTION_QUERY).matches;
 }
 
+function animateShowMore(section: HTMLElement) {
+  const showMore = section.querySelector<HTMLElement>("[data-show-more]");
+  if (!showMore || prefersReducedMotion()) return () => {};
+
+  gsap.set(showMore, { autoAlpha: 0, y: 28 });
+
+  const entrance = gsap.to(showMore, {
+    autoAlpha: 1,
+    y: 0,
+    duration: 0.65,
+    ease: "power3.out",
+    easeReverse: "power3.in",
+    paused: true,
+    overwrite: "auto",
+  });
+
+  const reveal = ScrollTrigger.create({
+    trigger: showMore,
+    start: "top 88%",
+    end: "bottom top",
+    onToggle: (self) => {
+      if (self.isActive) {
+        entrance.play();
+        return;
+      }
+
+      if (self.direction < 0) entrance.reverse();
+    },
+  });
+
+  if (reveal.isActive) entrance.progress(1);
+
+  return () => {
+    reveal.kill();
+    entrance.kill();
+  };
+}
+
 function setupStackedFade(section: HTMLElement): FeaturedWorkScrollCleanup {
   const chapters = gsap.utils.toArray<HTMLElement>("[data-chapter]", section);
+  let releaseShowMore = () => {};
   const ctx = gsap.context(() => {
     chapters.forEach((chapter) => {
       gsap.set(chapter, { autoAlpha: 0, y: 24 });
@@ -53,11 +92,15 @@ function setupStackedFade(section: HTMLElement): FeaturedWorkScrollCleanup {
         },
       });
     });
+    releaseShowMore = animateShowMore(section);
   }, section);
 
   ScrollTrigger.refresh();
 
-  return () => ctx.revert();
+  return () => {
+    releaseShowMore();
+    ctx.revert();
+  };
 }
 
 function setupPinnedSequence(
@@ -80,6 +123,7 @@ function setupPinnedSequence(
   };
 
   let release = () => {};
+  let releaseShowMore = () => {};
 
   const ctx = gsap.context(() => {
     chapters.forEach((chapter, index) => {
@@ -323,6 +367,14 @@ function setupPinnedSequence(
       beginStep(settled + direction);
     };
 
+    const cancelSettle = () => {
+      window.clearTimeout(snapTimer);
+      scrollTween?.kill();
+      scrollTween = null;
+      settling = false;
+      stepping = false;
+    };
+
     const stopSettle = () => {
       if (stepping) return;
       if (!scrollTween && !settling) return;
@@ -366,7 +418,11 @@ function setupPinnedSequence(
         if (index !== settled) beginStep(index);
         else scheduleSnap(settled);
       },
+      onLeave: cancelSettle,
+      onLeaveBack: cancelSettle,
     });
+
+    releaseShowMore = animateShowMore(section);
 
     publishIndex(0);
 
@@ -384,6 +440,7 @@ function setupPinnedSequence(
   ScrollTrigger.refresh();
 
   return () => {
+    releaseShowMore();
     release();
     ctx.revert();
   };

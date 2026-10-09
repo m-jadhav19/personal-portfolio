@@ -1,7 +1,7 @@
 import { portfolio } from "@/content/portfolio";
 
 const PRELOAD_TIMEOUT_MS = 20_000;
-const FEATURED_PROJECT_COUNT = 3;
+const FEATURED_PROJECT_COUNT = 4;
 
 function uniqueUrls(urls: string[]) {
   return [...new Set(urls.filter(Boolean))];

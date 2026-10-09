@@ -10,11 +10,12 @@
   /* Stay hittable while opacity fades in — visibility:hidden would pierce to the hero */
   opacity: 0;
   visibility: visible;
-  pointer-events: auto;
+  pointer-events: none;
 }
 
 .catalogOpen {
   opacity: 1;
+  pointer-events: auto;
 }
 
 .header {

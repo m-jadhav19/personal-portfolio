@@ -1,3 +1,9 @@
+export const FEATURED_PROJECT_COUNT = 4;
+
+export function selectFeaturedProjects<T>(projects: readonly T[]) {
+  return projects.slice(0, FEATURED_PROJECT_COUNT);
+}
+
 type CtaPositionInput = {
   pointerX: number;
   pointerY: number;

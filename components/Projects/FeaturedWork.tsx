@@ -1,9 +1,16 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
+import {
+  isBarOverlayAnimating,
+  playBarCover,
+  playBarReveal,
+  prefersReducedBarMotion,
+} from "@/animations/barOverlay";
 import { Magnetic } from "@/components/Cursor/Magnetic";
 import { portfolio } from "@/content/portfolio";
 import type { Project } from "@/lib/types";
@@ -13,10 +20,18 @@ import {
   unlockPageScroll,
 } from "@/lib/scrollLock";
 
+import { AllProjectsCatalog } from "./AllProjectsCatalog";
 import { initFeaturedWorkScroll } from "./featuredWorkScroll";
 import { ProjectDetail } from "./ProjectDetail";
 import { ProjectMedia } from "./ProjectMedia";
+import { selectFeaturedProjects } from "./projectMotion";
 import styles from "./FeaturedWork.module.css";
+
+function nextFrame() {
+  return new Promise<void>((resolve) => {
+    requestAnimationFrame(() => resolve());
+  });
+}
 
 function chapterMeta(project: Project) {
   const stack = project.technologies ?? project.tags;
@@ -25,12 +40,81 @@ function chapterMeta(project: Project) {
 
 export function FeaturedWork() {
   const sectionRef = useRef<HTMLElement>(null);
-  const projects = portfolio.projects;
+  const allProjects = portfolio.projects;
+  const projects = selectFeaturedProjects(allProjects);
   const total = String(projects.length).padStart(2, "0");
+  const hasMoreProjects = allProjects.length > projects.length;
 
   const [isSequence, setIsSequence] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [isCatalogMounted, setIsCatalogMounted] = useState(false);
+  const [isCatalogReady, setIsCatalogReady] = useState(false);
   const [detailProject, setDetailProject] = useState<Project | null>(null);
+  const isTransitioningRef = useRef(false);
+
+  const openCatalog = useCallback(async () => {
+    if (isTransitioningRef.current || isBarOverlayAnimating()) return;
+
+    isTransitioningRef.current = true;
+    setIsCatalogMounted(true);
+    setIsCatalogReady(false);
+    lockPageScroll();
+
+    try {
+      if (prefersReducedBarMotion()) {
+        setIsCatalogReady(true);
+        return;
+      }
+
+      await playBarCover();
+      flushSync(() => {
+        setIsCatalogMounted(true);
+        setIsCatalogReady(true);
+      });
+      await nextFrame();
+      await playBarReveal();
+    } catch {
+      setIsCatalogMounted(false);
+      setIsCatalogReady(false);
+      unlockPageScroll();
+      ScrollTrigger.refresh();
+    } finally {
+      isTransitioningRef.current = false;
+    }
+  }, []);
+
+  const closeCatalog = useCallback(async () => {
+    if (isTransitioningRef.current || isBarOverlayAnimating()) return;
+
+    isTransitioningRef.current = true;
+
+    try {
+      if (prefersReducedBarMotion()) {
+        setIsCatalogReady(false);
+        setIsCatalogMounted(false);
+        unlockPageScroll();
+        ScrollTrigger.refresh();
+        return;
+      }
+
+      await playBarCover();
+      flushSync(() => {
+        setIsCatalogReady(false);
+        setIsCatalogMounted(false);
+      });
+      unlockPageScroll();
+      ScrollTrigger.refresh();
+      await nextFrame();
+      await playBarReveal();
+    } catch {
+      setIsCatalogReady(false);
+      setIsCatalogMounted(false);
+      unlockPageScroll();
+      ScrollTrigger.refresh();
+    } finally {
+      isTransitioningRef.current = false;
+    }
+  }, []);
 
   const openDetail = useCallback((project: Project) => {
     setDetailProject(project);
@@ -39,9 +123,11 @@ export function FeaturedWork() {
 
   const closeDetail = useCallback(() => {
     setDetailProject(null);
-    unlockPageScroll();
-    ScrollTrigger.refresh();
-  }, []);
+    if (!isCatalogMounted) {
+      unlockPageScroll();
+      ScrollTrigger.refresh();
+    }
+  }, [isCatalogMounted]);
 
   useEffect(() => {
     const section = sectionRef.current;
@@ -190,7 +276,33 @@ export function FeaturedWork() {
 
           </div>
         </div>
+
+        {hasMoreProjects ? (
+          <div className={styles.showMoreWrap} data-show-more>
+            <Magnetic strength={0.16}>
+              <button
+                type="button"
+                className={styles.showMoreBtn}
+                data-cursor="button"
+                onClick={() => void openCatalog()}
+              >
+                <span>Show all projects</span>
+                <span className={styles.showMoreCount}>
+                  {String(allProjects.length).padStart(2, "0")}
+                </span>
+              </button>
+            </Magnetic>
+          </div>
+        ) : null}
       </section>
+
+      <AllProjectsCatalog
+        projects={allProjects}
+        isOpen={isCatalogMounted}
+        isReady={isCatalogReady}
+        onClose={() => void closeCatalog()}
+        onOpenDetail={openDetail}
+      />
 
       <ProjectDetail
         project={detailProject}

@@ -3,6 +3,50 @@
   margin-bottom: clamp(4rem, 8vh, 7rem);
 }
 
+.showMoreWrap {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  justify-content: center;
+  padding: clamp(3rem, 8vh, 5rem) var(--grid-padding-inline)
+    clamp(5rem, 10vh, 8rem);
+  background: var(--background);
+}
+
+.showMoreBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.35rem;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--background) 82%, transparent);
+  color: var(--foreground);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: var(--font-bitcount-weight-semibold);
+  font-style: normal;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    border-color 0.3s var(--ease),
+    color 0.3s var(--ease),
+    transform 0.3s var(--ease);
+}
+
+.showMoreBtn:hover,
+.showMoreBtn:focus-visible {
+  border-color: var(--accent);
+  color: var(--accent);
+  transform: translateY(-2px);
+}
+
+.showMoreCount {
+  padding: 0.2rem 0.45rem;
+  border: 1px solid currentColor;
+  font-size: 0.62rem;
+}
+
 .track {
   position: relative;
   z-index: 10;
@@ -135,18 +179,21 @@
 
 .liveButton,
 .infoButton {
-  border: 0;
-  background: var(--cobalt);
-  color: var(--background);
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--background) 82%, transparent);
+  color: var(--foreground);
   cursor: pointer;
+  transition:
+    border-color 0.3s var(--ease),
+    color 0.3s var(--ease),
+    transform 0.3s var(--ease);
 }
 
 .liveButton {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  padding: 0.62rem 0.9rem;
-  border-radius: 4px;
+  padding: 0.72rem 0.95rem;
   font-size: 0.72rem;
   font-weight: var(--font-bitcount-weight-semibold);
   letter-spacing: 0.12em;
@@ -158,10 +205,6 @@
   width: 2.35rem;
   height: 2.35rem;
   place-items: center;
-  border-radius: 8px;
-  box-shadow:
-    0 10px 22px rgba(0, 0, 0, 0.32),
-    0 1px 0 rgba(255, 255, 255, 0.16) inset;
 }
 
 .infoIcon {
@@ -173,8 +216,9 @@
 .liveButton:focus-visible,
 .infoButton:hover,
 .infoButton:focus-visible {
-  background: var(--cobalt-light);
-  color: var(--background);
+  border-color: var(--accent);
+  color: var(--accent);
+  transform: translateY(-2px);
 }
 
 .mediaFrame {

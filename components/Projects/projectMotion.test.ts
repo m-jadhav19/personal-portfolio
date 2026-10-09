@@ -5,7 +5,15 @@ import {
   clampChapterStep,
   clampCtaPosition,
   getChapterIndex,
+  selectFeaturedProjects,
 } from "./projectMotion.ts";
+
+test("keeps the pinned sequence to the first four projects", () => {
+  assert.deepEqual(
+    selectFeaturedProjects(["a", "b", "c", "d", "e", "f", "g"]),
+    ["a", "b", "c", "d"],
+  );
+});
 
 test("returns the first chapter when there is nothing to advance", () => {
   assert.equal(getChapterIndex(0, 0), 0);

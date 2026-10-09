@@ -71,6 +71,7 @@ export function useCatalogScroll({
             {
               y: -28,
               ease: "none",
+              immediateRender: false,
               scrollTrigger: {
                 trigger: item,
                 scroller: wrapper,
@@ -89,6 +90,7 @@ export function useCatalogScroll({
             {
               y: 16,
               ease: "none",
+              immediateRender: false,
               scrollTrigger: {
                 trigger: item,
                 scroller: wrapper,

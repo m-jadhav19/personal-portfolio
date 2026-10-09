@@ -1,9 +1,8 @@
 import { gsap } from "gsap";
 
 const NUM_BARS = 12;
-const DURATION = 0.85;
-const STAGGER = 0.045;
-const EASE = "power2.inOut";
+const DURATION = 0.62;
+const STAGGER = 0.03;
 
 export type BarOverlayController = {
   playReveal: () => Promise<void>;
@@ -36,7 +35,6 @@ export function prefersReducedBarMotion() {
 
 export function createBarOverlayController(bars: HTMLElement[]) {
   let isAnimating = false;
-  let timeline: gsap.core.Timeline | null = null;
   let pendingResolve: (() => void) | null = null;
 
   const settlePending = () => {
@@ -47,64 +45,53 @@ export function createBarOverlayController(bars: HTMLElement[]) {
     isAnimating = false;
   };
 
-  const setCovered = (covered: boolean) => {
-    bars.forEach((bar) => {
-      bar.style.transform = covered ? "scaleY(1)" : "scaleY(0)";
-    });
-  };
+  gsap.set(bars, { scaleY: 0, transformOrigin: "top center" });
 
-  if (prefersReducedBarMotion()) {
-    setCovered(false);
-  }
+  const timeline = gsap.timeline({ paused: true });
+  timeline.to(bars, {
+    scaleY: 1,
+    duration: DURATION,
+    ease: "power3.out",
+    easeReverse: "power3.in",
+    stagger: STAGGER,
+    transformOrigin: "top center",
+  });
 
-  const runToggle = (covered: boolean) => {
+  const run = (forward: boolean) => {
     if (prefersReducedBarMotion()) {
-      setCovered(covered);
+      gsap.set(bars, { scaleY: forward ? 1 : 0, transformOrigin: "top center" });
       return Promise.resolve();
     }
 
-    if (timeline?.isActive()) {
-      timeline.kill();
-      timeline = null;
-      settlePending();
-    }
+    const settled = forward ? timeline.progress() === 1 : timeline.progress() === 0;
+    if (settled && !timeline.isActive()) return Promise.resolve();
 
+    settlePending();
     isAnimating = true;
 
     return new Promise<void>((resolve) => {
       pendingResolve = resolve;
-
-      timeline = gsap.timeline({
-        onComplete: () => {
-          timeline = null;
-          pendingResolve = null;
-          isAnimating = false;
-          resolve();
-        },
+      const event = forward ? "onComplete" : "onReverseComplete";
+      const other = forward ? "onReverseComplete" : "onComplete";
+      timeline.eventCallback(other, null);
+      timeline.eventCallback(event, () => {
+        timeline.eventCallback(event, null);
+        pendingResolve = null;
+        isAnimating = false;
+        resolve();
       });
 
-      timeline.to(bars, {
-        scaleY: covered ? 1 : 0,
-        transformOrigin: covered ? "top center" : "bottom center",
-        duration: DURATION,
-        ease: EASE,
-        stagger: {
-          each: STAGGER,
-          from: covered ? "start" : "end",
-        },
-      });
+      if (forward) timeline.play();
+      else timeline.reverse();
     });
   };
 
   return {
-    playReveal: () => runToggle(false),
-    playCover: () => runToggle(true),
+    playReveal: () => run(false),
+    playCover: () => run(true),
     isAnimating: () => isAnimating,
     destroy: () => {
-      if (timeline?.isActive()) {
-        timeline.kill();
-      }
-      timeline = null;
+      timeline.kill();
       settlePending();
     },
   };
