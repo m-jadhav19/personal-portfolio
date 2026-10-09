@@ -40,9 +40,9 @@ const SYMBOL: Record<CursorState, string> = {
 const GAP = 8;
 /** Tighter aim reticle while DESTROY is active. */
 const DESTROY_GAP = 5;
-/** Open hand: the reticle opens around it. Grabbing: it pinches shut. */
+/** Mechanical claw: open reticle spreads, grabbing pinches shut. */
 const GRAB_GAP = 14;
-const GRABBING_GAP = 7;
+const GRABBING_GAP = 9;
 const HAND_STATES = new Set<CursorState>(["grab", "grabbing"]);
 const FRAME_OUTSET = 6;
 const BRACKET_FOLLOW = 0.45;
@@ -230,33 +230,43 @@ function resolveIdleGlyph(mode: SystemMode, interruptGlyph: string | null) {
   return MODE_CURSOR[mode].glyph;
 }
 
-function HandIcon({ closed }: { closed: boolean }) {
+function GrabberIcon({ closed }: { closed: boolean }) {
   return (
     <svg
-      className={styles.hand}
-      viewBox="0 0 24 24"
+      className={`${styles.grabber} ${
+        closed ? styles.grabberClosed : styles.grabberOpen
+      }`}
+      viewBox="0 0 32 32"
       fill="none"
       stroke="currentColor"
-      strokeWidth={1.75}
+      strokeWidth={1.55}
       strokeLinecap="round"
       strokeLinejoin="round"
+      aria-hidden="true"
     >
-      {closed ? (
-        <>
-          <path d="M18 11.5V9a2 2 0 0 0-4 0v1.4" />
-          <path d="M14 10V8a2 2 0 0 0-4 0v2" />
-          <path d="M10 9.9V9a2 2 0 0 0-4 0v5" />
-          <path d="M6 14a2 2 0 0 0-4 0" />
-          <path d="M18 11a2 2 0 1 1 4 0v3a8 8 0 0 1-8 8h-4a8 8 0 0 1-8-8 2 2 0 1 1 4 0" />
-        </>
-      ) : (
-        <>
-          <path d="M18 11V6a2 2 0 0 0-4 0" />
-          <path d="M14 10V4a2 2 0 0 0-4 0v2" />
-          <path d="M10 10.5V6a2 2 0 0 0-4 0v8" />
-          <path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15" />
-        </>
-      )}
+      {/* Discrete open/closed paths — no spin tween (that ghosted under difference blend). */}
+      <g className={styles.grabberArms}>
+        {closed ? (
+          <>
+            <path d="M10.6 10.6 14.45 14.45" />
+            <path d="M21.4 10.6 17.55 14.45" />
+            <path d="M21.4 21.4 17.55 17.55" />
+            <path d="M10.6 21.4 14.45 17.55" />
+          </>
+        ) : (
+          <>
+            <path d="M16 7.6V13.1" />
+            <path d="M14.35 7.6H17.65" />
+            <path d="M16 18.9V24.4" />
+            <path d="M14.35 24.4H17.65" />
+            <path d="M7.6 16H13.1" />
+            <path d="M7.6 14.35V17.65" />
+            <path d="M18.9 16H24.4" />
+            <path d="M24.4 14.35V17.65" />
+          </>
+        )}
+      </g>
+      <circle cx="16" cy="16" r="1.65" />
     </svg>
   );
 }
@@ -438,11 +448,18 @@ export function Cursor() {
           ? DESTROY_FOLLOW
           : BRACKET_FOLLOW;
 
+      // Outer brackets twist inward so the reticle reads as claw arms closing.
       for (const item of CORNERS) {
         const current = corners.current[item.key];
         const target = targets.current[item.key];
-        current.x += (target.x - current.x) * follow;
-        current.y += (target.y - current.y) * follow;
+        if (hand) {
+          // Grab states keep hub + brackets locked; lerp made the claw look off-center.
+          current.x = target.x;
+          current.y = target.y;
+        } else {
+          current.x += (target.x - current.x) * follow;
+          current.y += (target.y - current.y) * follow;
+        }
 
         const node = cornerRefs.current[item.key];
         if (node) {
@@ -568,7 +585,11 @@ export function Cursor() {
         />
       ))}
       <span ref={centerRef} className={styles.center}>
-        {hand ? <HandIcon closed={hand === "grabbing"} /> : displayGlyph}
+        {hand ? (
+          <GrabberIcon closed={hand === "grabbing"} />
+        ) : (
+          displayGlyph
+        )}
       </span>
       <span
         ref={coordsRef}
