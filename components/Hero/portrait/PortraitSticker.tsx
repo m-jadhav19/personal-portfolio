@@ -1757,33 +1757,33 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
     );
   };
 
-  const artwork = (interactive: boolean) => (
+  const artwork = (live: boolean) => (
     <>
       <path d={PATH.base} fill={COLOR.cream} />
-      <g data-face={interactive ? "ear" : undefined}>
+      <g data-face={live ? "ear" : undefined}>
         <path
-          data-part={interactive ? "ear" : undefined}
-          className={interactive ? styles.part : undefined}
+          data-part={live ? "ear" : undefined}
+          className={live ? styles.part : undefined}
           d={PATH.ear}
           fill={COLOR.cream}
-          onPointerEnter={interactive ? onEnter("ear", "wiggleEar") : undefined}
-          onPointerLeave={interactive ? onLeave : undefined}
-          onClick={interactive ? onPartClick("wiggleEar") : undefined}
+          onPointerEnter={live ? onEnter("ear", "wiggleEar") : undefined}
+          onPointerLeave={live ? onLeave : undefined}
+          onClick={live ? onPartClick("wiggleEar") : undefined}
         />
       </g>
-      <g data-face={interactive ? "hair" : undefined}>
+      <g data-face={live ? "hair" : undefined}>
         <path
-          data-part={interactive ? "hair" : undefined}
-          className={interactive ? styles.part : undefined}
+          data-part={live ? "hair" : undefined}
+          className={live ? styles.part : undefined}
           d={PATH.hair}
           fill={COLOR.ink}
-          onPointerEnter={interactive ? onEnter("hair", "boing") : undefined}
-          onPointerLeave={interactive ? onLeave : undefined}
-          onClick={interactive ? onPartClick("boing", "raiseBrows") : undefined}
+          onPointerEnter={live ? onEnter("hair", "boing") : undefined}
+          onPointerLeave={live ? onLeave : undefined}
+          onClick={live ? onPartClick("boing", "raiseBrows") : undefined}
         />
       </g>
-      <g data-face={interactive ? "brows" : undefined}>
-        {interactive ? (
+      <g data-face={live ? "brows" : undefined}>
+        {live ? (
           <>
             <path
               data-part="brow-right"
@@ -1832,17 +1832,17 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
           <path d={PATH.brows} fill={COLOR.ink} />
         )}
       </g>
-      <g data-face={interactive ? "beard" : undefined}>
+      <g data-face={live ? "beard" : undefined}>
         <g
-          className={interactive ? styles.part : undefined}
-          onPointerEnter={interactive ? onEnter("beard") : undefined}
-          onPointerLeave={interactive ? onLeave : undefined}
-          onClick={interactive ? onPartClick("talk") : undefined}
+          className={live ? styles.part : undefined}
+          onPointerEnter={live ? onEnter("beard") : undefined}
+          onPointerLeave={live ? onLeave : undefined}
+          onClick={live ? onPartClick("talk") : undefined}
         >
           <path d={PATH.beard} fill={COLOR.ink} />
-          <path data-part={interactive ? "mouth" : undefined} d={PATH.mouth} fill={COLOR.cream} />
+          <path data-part={live ? "mouth" : undefined} d={PATH.mouth} fill={COLOR.cream} />
           <path
-            data-part={interactive ? "mouth-line" : undefined}
+            data-part={live ? "mouth-line" : undefined}
             d={mouthPath(MOUTH_REST)}
             fill={COLOR.ink}
             stroke={COLOR.ink}
@@ -1855,39 +1855,39 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
 
       {/* Glasses and eyes move as one so the lens clips stay aligned. The traced
           frame is solid over the lenses, so the eyes draw on top of it. */}
-      <g data-face={interactive ? "eyes" : undefined}>
+      <g data-face={live ? "eyes" : undefined}>
         <path
-          data-part={interactive ? "glasses" : undefined}
-          className={interactive ? styles.part : undefined}
+          data-part={live ? "glasses" : undefined}
+          className={live ? styles.part : undefined}
           d={PATH.glasses}
           fill={COLOR.ink}
-          onPointerEnter={interactive ? onEnter("glasses", "glint") : undefined}
-          onPointerLeave={interactive ? onLeave : undefined}
-          onClick={interactive ? onPartClick("blink", "raiseBrows") : undefined}
+          onPointerEnter={live ? onEnter("glasses", "glint") : undefined}
+          onPointerLeave={live ? onLeave : undefined}
+          onClick={live ? onPartClick("blink", "raiseBrows") : undefined}
         />
 
         <g
-          className={interactive ? styles.part : undefined}
-          onPointerEnter={interactive ? onEnter("eyes", "glint") : undefined}
-          onPointerLeave={interactive ? onLeave : undefined}
+          className={live ? styles.part : undefined}
+          onPointerEnter={live ? onEnter("eyes", "glint") : undefined}
+          onPointerLeave={live ? onLeave : undefined}
         >
           <g
-            clipPath={interactive ? "url(#lens-left)" : undefined}
-            onClick={interactive ? onPartClick("wink-left", "raiseBrows") : undefined}
+            clipPath={live ? "url(#lens-left)" : undefined}
+            onClick={live ? onPartClick("wink-left", "raiseBrows") : undefined}
           >
             <path d={PATH.lensL} fill={COLOR.cream} />
-            <path data-part={interactive ? "pupil-left" : undefined} d={PATH.pupilL} fill={COLOR.ink} />
-            {interactive ? glintBar("left") : null}
-            {interactive ? lid("left") : null}
+            <path data-part={live ? "pupil-left" : undefined} d={PATH.pupilL} fill={COLOR.ink} />
+            {live ? glintBar("left") : null}
+            {live ? lid("left") : null}
           </g>
           <g
-            clipPath={interactive ? "url(#lens-right)" : undefined}
-            onClick={interactive ? onPartClick("wink-right", "raiseBrows") : undefined}
+            clipPath={live ? "url(#lens-right)" : undefined}
+            onClick={live ? onPartClick("wink-right", "raiseBrows") : undefined}
           >
             <path d={PATH.lensR} fill={COLOR.cream} />
-            <path data-part={interactive ? "pupil-right" : undefined} d={PATH.pupilR} fill={COLOR.ink} />
-            {interactive ? glintBar("right") : null}
-            {interactive ? lid("right") : null}
+            <path data-part={live ? "pupil-right" : undefined} d={PATH.pupilR} fill={COLOR.ink} />
+            {live ? glintBar("right") : null}
+            {live ? lid("right") : null}
           </g>
         </g>
       </g>
