@@ -13,27 +13,41 @@ type CtaPositionInput = {
   ctaHeight: number;
 };
 
-/**
- * Maps 0–1 pin progress onto a chapter index.
- * Progress is divided into `count - 1` steps, and the index flips at the
- * midpoint of each step. Progress 1 stays on the last chapter.
- */
-export function getChapterIndex(progress: number, count: number) {
-  if (count <= 1) return 0;
+/** Pixels of wheel movement that count as one chapter tick. */
+export const SCROLL_TICK_PX = 40;
 
-  const clamped = Math.min(1, Math.max(0, progress));
-  return Math.min(count - 1, Math.round(clamped * (count - 1)));
+/** Line and page wheel modes become pixels, so one notch is one tick. */
+export function wheelDeltaPixels(deltaY: number, deltaMode: number, pageSize: number) {
+  if (deltaMode === 1) return deltaY * 16;
+  if (deltaMode === 2) return deltaY * pageSize;
+  return deltaY;
 }
 
-/** One gesture moves at most one chapter, even if the scroll lands much further. */
-export function clampChapterStep(settled: number, nearest: number, count: number) {
-  const max = Math.max(0, count - 1);
-  const current = Math.min(max, Math.max(0, settled));
-  const target = Math.min(max, Math.max(0, nearest));
+/**
+ * Adds wheel movement until it crosses a tick. The leftover is dropped so a
+ * long flick does not turn into several chapters at once.
+ */
+export function consumeScrollTick(pending: number, delta: number, threshold = SCROLL_TICK_PX) {
+  const next = pending + delta;
+  if (Math.abs(next) < threshold) return { pending: next, direction: 0 };
+  return { pending: 0, direction: Math.sign(next) };
+}
 
-  if (target > current) return Math.min(current + 1, max);
-  if (target < current) return Math.max(current - 1, 0);
-  return current;
+/** The first and last chapters release the page instead of stepping again. */
+export function isSequenceExit(settled: number, direction: number, count: number) {
+  if (!direction || count <= 0) return false;
+  if (direction > 0) return settled >= count - 1;
+  return settled <= 0;
+}
+
+/**
+ * A committed tick owns the sequence. A wheel tick the other way — the
+ * small reversal at the end of a trackpad flick — must not step backward.
+ */
+export function shouldCommitWheel(gestureDir: number, direction: number) {
+  if (!direction) return false;
+  if (gestureDir !== 0 && direction !== gestureDir) return false;
+  return true;
 }
 
 export function clampCtaPosition({

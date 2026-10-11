@@ -1,8 +1,11 @@
 "use client";
 
+import { useGSAP } from "@gsap/react";
+import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useEffect, useRef } from "react";
 
-import { playHeroIntro } from "@/animations/hero";
+import { HERO_COMPLETE_EVENT, playHeroIntro } from "@/animations/hero";
 import { bindMarqueeParallax } from "@/animations/marquee";
 import { INTRO_COMPLETE_EVENT } from "@/animations/navigation";
 import { useMyspaceTheme } from "@/components/EasterEggs/MyspaceThemeProvider";
@@ -13,12 +16,17 @@ import { HeroMeta } from "./HeroMeta";
 import { HeroPortrait } from "./HeroPortrait";
 import styles from "./Hero.module.css";
 
+gsap.registerPlugin(useGSAP, ScrollTrigger);
+
 export function Hero() {
   const { isMyspace } = useMyspaceTheme();
   const lineOneRef = useRef<HTMLDivElement>(null);
   const lineTwoRef = useRef<HTMLDivElement>(null);
   const lineThreeRef = useRef<HTMLDivElement>(null);
   const portraitRef = useRef<HTMLDivElement>(null);
+  const driftRef = useRef<HTMLDivElement>(null);
+  const floatRef = useRef<HTMLDivElement>(null);
+  const cueRef = useRef<HTMLSpanElement>(null);
   const heroRef = useRef<HTMLElement>(null);
   const hasPlayedIntro = useRef(false);
 
@@ -55,6 +63,56 @@ export function Hero() {
     };
   }, []);
 
+  useGSAP(() => {
+    const drift = driftRef.current;
+    const floatEl = floatRef.current;
+    const hero = heroRef.current;
+    const cue = cueRef.current;
+    if (!drift || !floatEl || !hero) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    let idle: gsap.core.Tween | null = null;
+    const startIdle = () => {
+      idle?.kill();
+      idle = gsap.to(floatEl, {
+        y: 10,
+        rotation: 1.8,
+        duration: 2.8,
+        ease: "sine.inOut",
+        yoyo: true,
+        repeat: -1,
+      });
+    };
+
+    if (document.documentElement.dataset.hero === "complete") startIdle();
+    else window.addEventListener(HERO_COMPLETE_EVENT, startIdle);
+
+    const compact = window.matchMedia("(max-width: 767px)").matches;
+    gsap.to(drift, {
+      y: compact ? 28 : 56,
+      x: compact ? -14 : -36,
+      rotation: compact ? -4 : -8,
+      scale: compact ? 0.97 : 0.94,
+      ease: "none",
+      scrollTrigger: {
+        trigger: hero,
+        start: "top top",
+        end: "center top",
+        scrub: 0.55,
+        onUpdate: (self) => {
+          if (!cue) return;
+          cue.style.opacity = String(Math.max(0, 0.55 * (1 - self.progress)));
+        },
+      },
+    });
+
+    return () => {
+      window.removeEventListener(HERO_COMPLETE_EVENT, startIdle);
+      idle?.kill();
+      if (cue) cue.style.opacity = "";
+    };
+  }, { scope: heroRef });
+
   return (
     <section
       id="hero"
@@ -65,14 +123,23 @@ export function Hero() {
         <HeroMarquee
           lines={marqueeLines}
           lineRefs={[lineOneRef, lineTwoRef, lineThreeRef]}
-          portrait={<HeroPortrait portraitRef={portraitRef} />}
+          portrait={
+            <HeroPortrait
+              portraitRef={portraitRef}
+              driftRef={driftRef}
+              floatRef={floatRef}
+            />
+          }
         />
       </div>
 
       <div className={styles.footer}>
         <HeroMeta />
       </div>
-      <span className={styles.scrollCue}>Scroll to explore</span>
+      <span ref={cueRef} className={styles.scrollCue}>
+        Scroll to explore
+        <span className={styles.scrollCueChevron} aria-hidden="true" />
+      </span>
     </section>
   );
 }

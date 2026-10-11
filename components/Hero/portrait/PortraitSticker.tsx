@@ -11,6 +11,7 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 
+import { HERO_COMPLETE_EVENT } from "@/animations/hero";
 import { isDestroyEggActive } from "@/lib/easterEggs/destroy/isActive";
 import { getDestroyWatchTarget } from "@/lib/easterEggs/destroy/watchTarget";
 import { scrollByDelta } from "@/lib/lenis";
@@ -71,6 +72,23 @@ const COMBO_HITS = 6;
 const COMBO_WINDOW = 1400;
 const GLYPHS = ["</>", "{ }", "=>", ";", "( )", "✦", "#", "01"];
 const GLYPH_COLORS = [COLOR.cobalt, COLOR.cream, COLOR.cobalt, "#ffd23f"];
+
+/**
+ * White face with the cobalt extrusion on the top edge.
+ * Bracket height stands in for the em (0.05em 0.06em, then 0.1em 0.12em).
+ */
+const MARK_EM = 115;
+function extrudedMark(d: string) {
+  const near = `translate(${(0.05 * MARK_EM).toFixed(2)} ${(-0.06 * MARK_EM).toFixed(2)})`;
+  const far = `translate(${(0.1 * MARK_EM).toFixed(2)} ${(-0.12 * MARK_EM).toFixed(2)})`;
+  return (
+    <>
+      <path d={d} fill="var(--accent)" fillOpacity={0.4} transform={far} />
+      <path d={d} fill="var(--accent)" transform={near} />
+      <path d={d} fill="#f4f4f0" />
+    </>
+  );
+}
 const MAX_PARTICLES = 60;
 
 /** How far (in artwork units) each feature shifts when the head "turns" toward the pointer. */
@@ -99,6 +117,8 @@ const HOLD_HINT = "keep holding…";
 /** Touch-carrying near the top/bottom edge scrolls the page this fast (px per frame). */
 const EDGE_SCROLL_ZONE = 72;
 const EDGE_SCROLL_SPEED = 14;
+/** One hello per page load, after the hero intro finishes. */
+let heroGreeted = false;
 
 const MOUTH = {
   rest: MOUTH_REST,
@@ -336,7 +356,9 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
       root.querySelector<T>(`[data-part="${part}"]`);
 
     const hair = q("hair");
-    const brows = q("brows");
+    const browL = q("brow-left");
+    const browR = q("brow-right");
+    const brows = [browL, browR].filter((el): el is SVGGraphicsElement => Boolean(el));
     const pupils = [q("pupil-left"), q("pupil-right")];
     const lids = [q("lid-left"), q("lid-right")];
     const glints = [q("glint-left"), q("glint-right")];
@@ -439,6 +461,57 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
         { y: 0 },
         { y: -6, duration: 0.18, ease: "power2.out", yoyo: true, repeat: 1 },
       );
+    };
+
+    gsap.set(brows, { transformOrigin: "50% 100%" });
+
+    type BrowZone = "left" | "center" | "right";
+    let browZone: BrowZone | null = null;
+    let browRelease = 0;
+    /** Side-brow smirk looks at the viewer; the center raise still follows the pointer. */
+    let eyesForward = false;
+    let syncGaze = () => {};
+
+    const showBrows = (zone: BrowZone) => {
+      if (browZone === zone) return;
+      browZone = zone;
+      window.clearTimeout(browRelease);
+      if (zone === "center") {
+        eyesForward = false;
+        gsap.to(brows, {
+          y: -7,
+          duration: 0.22,
+          ease: "back.out(2)",
+          overwrite: "auto",
+        });
+        mouthTo(MOUTH.grin, 0.22);
+        setHint(HINTS.brows);
+        syncGaze();
+        return;
+      }
+      eyesForward = true;
+      const up = zone === "left" ? browL : browR;
+      const down = zone === "left" ? browR : browL;
+      gsap.to(up, { y: -9, duration: 0.2, ease: "back.out(2)", overwrite: "auto" });
+      gsap.to(down, { y: 0, duration: 0.2, ease: "power2.out", overwrite: "auto" });
+      mouthTo({ ...MOUTH.smirk, tilt: zone === "left" ? -1 : 1 }, 0.18, "back.out(2)");
+      setHint("heh");
+      syncGaze();
+    };
+
+    const hideBrows = (delay = 0) => {
+      const run = () => {
+        if (!browZone) return;
+        browZone = null;
+        eyesForward = false;
+        gsap.to(brows, { y: 0, duration: 0.35, ease: "power2.out", overwrite: "auto" });
+        mouthTo(hovered ? MOUTH.grin : "rest", 0.35);
+        setHint(hovered ? HINTS.face : null);
+        syncGaze();
+      };
+      window.clearTimeout(browRelease);
+      if (delay) browRelease = window.setTimeout(run, delay);
+      else run();
     };
 
     const popSparks = () => {
@@ -717,18 +790,31 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
     );
 
     // ── Head turn: features shift toward the pointer; scrolling makes them bob ──
-    const face = { nx: 0, ny: 0, bob: 0 };
+    const face = { nx: 0, ny: 0, bob: 0, glance: 0 };
+    const pointerPos = { x: 0, y: 0, ready: false };
     const faceMovers = faceGroups.map(({ key, el }) => ({
       shift: FACE_SHIFT[key],
       x: gsap.quickTo(el, "x", { duration: 0.5, ease: "power3.out" }),
       y: gsap.quickTo(el, "y", { duration: 0.5, ease: "power3.out" }),
     }));
     const applyFace = () => {
+      const nx = eyesForward ? 0 : face.nx;
+      const ny = eyesForward ? 0 : face.ny;
+      const glance = eyesForward ? 0 : face.glance;
       faceMovers.forEach(({ shift, x, y }) => {
-        x(face.nx * shift.x);
-        y(face.ny * shift.y + face.bob * Math.abs(shift.y) * 0.9);
+        x(nx * shift.x);
+        y(
+          ny * shift.y +
+            face.bob * Math.abs(shift.y) * 0.9 +
+            glance * shift.y * 0.7,
+        );
       });
-      lookMouth(face.nx * MOUTH_LOOK);
+      lookMouth(nx * MOUTH_LOOK + glance * 0.12);
+    };
+
+    // Replaced once lookAtPoint exists, so a scroll glance can stack on the pointer.
+    let syncLook = () => {
+      applyFace();
     };
 
     let lastScrollY = window.scrollY;
@@ -737,15 +823,17 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
       lastScrollY = window.scrollY;
       gsap.to(face, {
         bob: clamp(dy * 0.05, -1.6, 1.6),
+        glance: clamp(dy * 0.055, -1, 1),
         duration: 0.12,
         overwrite: true,
-        onUpdate: applyFace,
+        onUpdate: () => syncLook(),
         onComplete: () => {
           gsap.to(face, {
             bob: 0,
+            glance: 0,
             duration: 0.9,
             ease: "elastic.out(1, 0.35)",
-            onUpdate: applyFace,
+            onUpdate: () => syncLook(),
           });
         },
       });
@@ -1340,6 +1428,10 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
     };
 
     const lookAtPoint = (clientX: number, clientY: number) => {
+      if (eyesForward) {
+        syncGaze();
+        return;
+      }
       const rect = sticker.getBoundingClientRect();
       if (rect.width < 1) return;
 
@@ -1365,8 +1457,37 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
         const dx = clamp((clientX - ex) / 160, -1, 1);
         const dy = clamp((clientY - ey) / 160, -1, 1);
         mover.x(dx * PUPIL_RANGE.x);
-        mover.y(dy * PUPIL_RANGE.y);
+        mover.y(clamp(dy + face.glance, -1, 1) * PUPIL_RANGE.y);
       });
+    };
+
+    syncGaze = () => {
+      if (!eyesForward) {
+        if (pointerPos.ready) lookAtPoint(pointerPos.x, pointerPos.y);
+        return;
+      }
+      face.nx = 0;
+      face.ny = 0;
+      applyFace();
+      if (!trackEyes) return;
+      movers.forEach((mover) => {
+        mover?.x(0);
+        mover?.y(0);
+      });
+    };
+
+    syncLook = () => {
+      if (eyesForward) {
+        syncGaze();
+        return;
+      }
+      if (pointerPos.ready && trackEyes) {
+        lookAtPoint(pointerPos.x, pointerPos.y);
+        return;
+      }
+      applyFace();
+      if (!trackEyes) return;
+      movers.forEach((mover) => mover?.y(face.glance * PUPIL_RANGE.y));
     };
 
     const onPointerMove = (event: PointerEvent) => {
@@ -1386,6 +1507,9 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
       const vx = (event.clientX - lastClient.x) / dt;
       lastMoveAt = now;
       lastClient = { x: event.clientX, y: event.clientY };
+      pointerPos.x = event.clientX;
+      pointerPos.y = event.clientY;
+      pointerPos.ready = true;
 
       const drag = dragRef.current;
       if (drag?.pointerId === event.pointerId && dragPeel(event, drag)) {
@@ -1409,7 +1533,7 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
         });
         return;
       }
-      if (speed > SURPRISE_SPEED && dt < 40) surprise();
+      if (!eyesForward && speed > SURPRISE_SPEED && dt < 40) surprise();
       lookAtPoint(event.clientX, event.clientY);
     };
 
@@ -1434,6 +1558,25 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
       if (modeRef.current === "carrying") followPointer();
     };
 
+    let greetTimer = 0;
+    const greet = () => {
+      window.clearTimeout(greetTimer);
+      greetTimer = window.setTimeout(() => {
+        greetTimer = 0;
+        if (heroGreeted || modeRef.current !== "home" || busyRef.current) return;
+        heroGreeted = true;
+        blink();
+        raiseBrows();
+        popSparks();
+        mouthSeq(
+          [MOUTH.grin, 0.28, "back.out(2)"],
+          ["rest", 0.6, "elastic.out(1, 0.5)", "+=0.4"],
+        );
+      }, 280);
+    };
+    if (document.documentElement.dataset.hero === "complete") greet();
+    else window.addEventListener(HERO_COMPLETE_EVENT, greet);
+
     window.addEventListener("pointermove", onPointerMove, { passive: true });
     window.addEventListener("scroll", onWindowScroll, { passive: true });
     window.addEventListener("pointerdown", onCapturePointerDown, true);
@@ -1443,10 +1586,28 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
     window.addEventListener("pointerup", onPointerEnd);
     window.addEventListener("pointercancel", onPointerEnd);
     window.addEventListener("touchmove", onTouchMove, { passive: false });
+    const browHits = [...sticker.querySelectorAll<SVGElement>("[data-part='brow-hit']")];
+    const onBrowEnter = (event: PointerEvent) => {
+      if (!interactive()) return;
+      const zone = (event.currentTarget as SVGElement).dataset.brow;
+      if (zone === "left" || zone === "center" || zone === "right") showBrows(zone);
+    };
+    const onBrowLeave = (event: PointerEvent) => {
+      const next = event.relatedTarget;
+      if (next instanceof Element && next.closest("[data-part='brow-hit']")) return;
+      hideBrows(event.pointerType === "touch" ? 700 : 0);
+    };
+    browHits.forEach((hit) => {
+      hit.addEventListener("pointerenter", onBrowEnter);
+      hit.addEventListener("pointerleave", onBrowLeave);
+    });
+
     sticker.addEventListener("pointerdown", onHoldStart);
     sticker.addEventListener("pointerdown", onDragStart);
 
     return () => {
+      window.clearTimeout(greetTimer);
+      window.removeEventListener(HERO_COMPLETE_EVENT, greet);
       cancelAnimationFrame(destroyLookRaf);
       cancelPress();
       stopEdgeScroll();
@@ -1454,6 +1615,11 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
       window.removeEventListener("pointerup", onPointerEnd);
       window.removeEventListener("pointercancel", onPointerEnd);
       window.removeEventListener("touchmove", onTouchMove);
+      browHits.forEach((hit) => {
+        hit.removeEventListener("pointerenter", onBrowEnter);
+        hit.removeEventListener("pointerleave", onBrowLeave);
+      });
+      window.clearTimeout(browRelease);
       sticker.removeEventListener("pointerdown", onHoldStart);
       sticker.removeEventListener("pointerdown", onDragStart);
       dragRef.current = null;
@@ -1477,7 +1643,7 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
       gsap.killTweensOf([
         face,
         hair,
-        brows,
+        ...brows,
         mouth,
         lip,
         lipLook,
@@ -1617,15 +1783,54 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
         />
       </g>
       <g data-face={interactive ? "brows" : undefined}>
-        <path
-          data-part={interactive ? "brows" : undefined}
-          className={interactive ? styles.part : undefined}
-          d={PATH.brows}
-          fill={COLOR.ink}
-          onPointerEnter={interactive ? onEnter("brows", "raiseBrows") : undefined}
-          onPointerLeave={interactive ? onLeave : undefined}
-          onClick={interactive ? onPartClick("raiseBrows") : undefined}
-        />
+        {interactive ? (
+          <>
+            <path
+              data-part="brow-right"
+              className={styles.part}
+              d={PATH.browR}
+              fill={COLOR.ink}
+              style={{ pointerEvents: "none" }}
+            />
+            <path
+              data-part="brow-left"
+              className={styles.part}
+              d={PATH.browL}
+              fill={COLOR.ink}
+              style={{ pointerEvents: "none" }}
+            />
+            {(
+              [
+                ["left", 148, 48],
+                ["center", 196, 26],
+                ["right", 222, 48],
+              ] as const
+            ).map(([zone, x, width]) => (
+              <rect
+                key={zone}
+                data-part="brow-hit"
+                data-brow={zone}
+                className={styles.part}
+                x={x}
+                y={182}
+                width={width}
+                height={32}
+                fill="transparent"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  if (suppressClickRef.current) {
+                    suppressClickRef.current = false;
+                    return;
+                  }
+                  if (!interactive() || registerHit()) return;
+                  if (zone === "center") run("raiseBrows");
+                }}
+              />
+            ))}
+          </>
+        ) : (
+          <path d={PATH.brows} fill={COLOR.ink} />
+        )}
       </g>
       <g data-face={interactive ? "beard" : undefined}>
         <g
@@ -1704,34 +1909,25 @@ export function PortraitSticker({ label }: PortraitStickerProps) {
     >
       {/* Brackets sit behind the sticker so "closing the tag" tucks them under it. */}
       <svg className={styles.extras} viewBox={viewBox} aria-hidden="true">
-        <g data-part="bracket-left-idle">
-          <path
-            data-part="bracket-left"
-            className={styles.part}
-            d={PATH.bracketL}
-            fill={COLOR.cobalt}
-            onPointerEnter={onEnter("bracket-left", "hover-brackets-on")}
-            onPointerLeave={(event) => {
-              onLeave(event);
-              run("hover-brackets-off");
-            }}
-            onClick={onPartClick("close-left")}
-          />
-        </g>
-        <g data-part="bracket-right-idle">
-          <path
-            data-part="bracket-right"
-            className={styles.part}
-            d={PATH.bracketR}
-            fill={COLOR.cobalt}
-            onPointerEnter={onEnter("bracket-right", "hover-brackets-on")}
-            onPointerLeave={(event) => {
-              onLeave(event);
-              run("hover-brackets-off");
-            }}
-            onClick={onPartClick("close-right")}
-          />
-        </g>
+        {(["left", "right"] as const).map((side) => {
+          const part = side === "left" ? "bracket-left" : "bracket-right";
+          return (
+            <g key={side} data-part={`${part}-idle`}>
+              <g
+                data-part={part}
+                className={styles.part}
+                onPointerEnter={onEnter(part, "hover-brackets-on")}
+                onPointerLeave={(event) => {
+                  onLeave(event);
+                  run("hover-brackets-off");
+                }}
+                onClick={onPartClick(side === "left" ? "close-left" : "close-right")}
+              >
+                {extrudedMark(side === "left" ? PATH.bracketL : PATH.bracketR)}
+              </g>
+            </g>
+          );
+        })}
       </svg>
 
       {/* Children stay static: the sticker node is moved out to the page while

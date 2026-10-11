@@ -1,15 +1,22 @@
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
-import { getLenis } from "@/lib/lenis";
+import { getLenis, getScrollY, scrollByDelta } from "@/lib/lenis";
+import { isPageScrollLocked } from "@/lib/scrollLock";
 
-import { clampChapterStep, getChapterIndex } from "./projectMotion";
+import {
+  consumeScrollTick,
+  isSequenceExit,
+  shouldCommitWheel,
+  wheelDeltaPixels,
+} from "./projectMotion";
 
 gsap.registerPlugin(ScrollTrigger);
 
 const DESKTOP_MEDIA_QUERY = "(min-width: 901px)";
 const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
-const CHAPTER_STEP_VH = 0.4;
+const TICK_TAIL_MS = 220;
+const EXIT_NUDGE_PX = 240;
 
 function chapterMotion(duration: number): gsap.TweenVars {
   return {
@@ -147,28 +154,12 @@ function setupPinnedSequence(
       }
     });
 
-    const steps = Math.max(count - 1, 1);
     let settled = 0;
-    let writing = false;
-    let ignoreEcho = false;
-    let lastWritten = 0;
-    let snapTimer = 0;
+    // Direction of the tick in progress. The small reversal at the end of a
+    // trackpad flick must not step back to the chapter just left.
+    let gestureDir = 0;
     let transition: gsap.core.Timeline | null = null;
-    let scrollTween: gsap.core.Tween | null = null;
-
-    const readScroll = () => {
-      const lenis = getLenis();
-      return lenis ? lenis.scroll : window.scrollY;
-    };
-
-    const writeScroll = (value: number) => {
-      const lenis = getLenis();
-      if (lenis) {
-        lenis.scrollTo(value, { immediate: true, force: true });
-      } else {
-        window.scrollTo(0, value);
-      }
-    };
+    let finishStep = () => {};
 
     const orchestrate = (from: number, to: number) => {
       const forward = to > from;
@@ -243,8 +234,11 @@ function setupPinnedSequence(
         if (index === to || index === from) {
           if (index === from) {
             if (!transition.reversed()) transition.reverse();
+            else finishStep();
           } else if (transition.reversed() || transition.progress() < 1) {
             transition.play();
+          } else {
+            finishStep();
           }
           settled = index;
           publishIndex(index);
@@ -256,170 +250,234 @@ function setupPinnedSequence(
         transition = null;
       }
 
-      if (index === settled) return;
+      if (index === settled) {
+        finishStep();
+        return;
+      }
 
       transition = orchestrate(settled, index);
+      transition.eventCallback("onComplete", finishStep);
+      transition.eventCallback("onReverseComplete", finishStep);
       settled = index;
       publishIndex(index);
     };
 
-    const easeScrollTo = (trigger: ScrollTrigger, index: number) => {
-      const target =
-        trigger.start + (trigger.end - trigger.start) * (index / steps);
-      const current = readScroll();
-
-      if (Math.abs(target - current) < 2) {
-        settling = false;
-        releaseStep();
-        return;
-      }
-
-      if (scrollTween?.isActive()) {
-        const origin = Number(scrollTween.data);
-        if (Math.abs(target - origin) < 2) {
-          scrollTween.reverse();
-          return;
-        }
-      }
-
-      scrollTween?.kill();
-      const proxy = { y: current };
-      scrollTween = gsap.to(proxy, {
-        ...chapterMotion(0.6),
-        y: target,
-        data: current,
-        overwrite: true,
-        onStart: () => {
-          settling = true;
-        },
-        onUpdate: () => {
-          lastWritten = proxy.y;
-          writing = true;
-          writeScroll(proxy.y);
-          writing = false;
-          ignoreEcho = true;
-        },
-        onComplete: () => {
-          settling = false;
-          scrollTween = null;
-          releaseStep();
-        },
-        onReverseComplete: () => {
-          settling = false;
-          scrollTween = null;
-          releaseStep();
-        },
-      });
-    };
-
-    let settling = false;
     let stepping = false;
     let wheelIdleTimer = 0;
-    let trigger: ScrollTrigger;
+    let pending = 0;
+    let engaged = false;
+    let suppressEngage = false;
+    let stoppedLenis = false;
+    let writing = false;
+    let touchStartY = 0;
+    let touchTicked = false;
+    let pin: ScrollTrigger;
+    let watch: ScrollTrigger;
 
-    const releaseStep = () => {
-      if (settling || wheelIdleTimer) return;
+    finishStep = () => {
       stepping = false;
+      if (!wheelIdleTimer) gestureDir = 0;
     };
 
-    const noteWheel = () => {
+    const noteTick = (direction: number) => {
+      gestureDir = direction;
       window.clearTimeout(wheelIdleTimer);
       wheelIdleTimer = window.setTimeout(() => {
         wheelIdleTimer = 0;
-        releaseStep();
-      }, 180);
+        if (!stepping) gestureDir = 0;
+      }, TICK_TAIL_MS);
     };
 
-    const scheduleSnap = (index: number) => {
-      window.clearTimeout(snapTimer);
-      snapTimer = window.setTimeout(() => {
-        if (!trigger?.isActive) return;
-        easeScrollTo(trigger, index);
-      }, 80);
+    const holdLenis = () => {
+      const lenis = getLenis();
+      if (!lenis || lenis.isStopped) return;
+      lenis.stop();
+      stoppedLenis = true;
     };
 
-    const beginStep = (index: number) => {
-      if (stepping || index === settled) return;
+    const freeLenis = () => {
+      if (!stoppedLenis) return;
+      stoppedLenis = false;
+      if (!isPageScrollLocked()) getLenis()?.start();
+    };
+
+    const writeScroll = (value: number) => {
+      const delta = value - getScrollY();
+      if (Math.abs(delta) < 0.5) return;
+      writing = true;
+      scrollByDelta(delta);
+      ScrollTrigger.update();
+      writing = false;
+    };
+
+    const showInstant = (index: number) => {
+      transition?.progress(1);
+      transition?.kill();
+      transition = null;
+      chapters.forEach((chapter, chapterIndex) => {
+        const visible = chapterIndex === index;
+        const title = chapter.querySelector<HTMLElement>("[data-chapter-title]");
+        const media = chapter.querySelector<HTMLElement>("[data-chapter-media]");
+        const fades = gsap.utils.toArray<HTMLElement>("[data-chapter-fade]", chapter);
+        if (title) gsap.set(title, { yPercent: visible ? 0 : 110, opacity: visible ? 1 : 0 });
+        if (media) gsap.set(media, { opacity: visible ? 1 : 0, scale: visible ? 1 : 1.06 });
+        if (fades.length > 0) gsap.set(fades, { opacity: visible ? 1 : 0, y: visible ? 0 : 16 });
+      });
+      settled = index;
+      stepping = false;
+      publishIndex(index);
+    };
+
+    const park = () => {
+      if (!engaged) return;
+      holdLenis();
+      writeScroll(pin.start);
+    };
+
+    const engage = (fromBelow: boolean) => {
+      engaged = true;
+      suppressEngage = false;
+      pending = 0;
+      showInstant(fromBelow ? count - 1 : 0);
+      park();
+    };
+
+    const armEngage = (top: number) => {
+      if (!suppressEngage) return true;
+      if (top > 160 || top < -200) suppressEngage = false;
+      return !suppressEngage;
+    };
+
+    const releaseSequence = (direction: number) => {
+      engaged = false;
+      suppressEngage = true;
+      pending = 0;
+      gestureDir = 0;
+      window.clearTimeout(wheelIdleTimer);
+      wheelIdleTimer = 0;
+      freeLenis();
+      scrollByDelta(direction * EXIT_NUDGE_PX);
+      ScrollTrigger.update();
+    };
+
+    const beginStep = (direction: number) => {
+      const index = settled + direction;
+      if (stepping || index < 0 || index >= count || index === settled) return;
       stepping = true;
-      settling = true;
+      pending = 0;
       goTo(index);
-      easeScrollTo(trigger, index);
+    };
+
+    const takeTick = (direction: number) => {
+      if (!direction) return;
+      if (isSequenceExit(settled, direction, count) && !stepping) {
+        releaseSequence(direction);
+        return;
+      }
+      if (!shouldCommitWheel(gestureDir, direction) || stepping) return;
+      noteTick(direction);
+      beginStep(direction);
     };
 
     const onWheel = (event: WheelEvent) => {
-      if (!trigger?.isActive || event.ctrlKey) return;
+      if (event.ctrlKey) return;
       if (Math.abs(event.deltaX) > Math.abs(event.deltaY)) return;
 
-      const direction = Math.sign(event.deltaY);
+      const pixels = wheelDeltaPixels(event.deltaY, event.deltaMode, window.innerHeight);
+      const direction = Math.sign(pixels);
       if (!direction) return;
 
-      noteWheel();
-
-      const leaving =
-        (direction < 0 && settled <= 0) ||
-        (direction > 0 && settled >= count - 1);
-      if (leaving && !stepping) return;
+      if (!engaged) {
+        const top = track.getBoundingClientRect().top;
+        if (!armEngage(top)) return;
+        const approaching =
+          (direction > 0 && top <= 140 && top >= 0) ||
+          (direction < 0 && top >= -140 && top <= 40);
+        if (!approaching) return;
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        engage(direction < 0);
+        return;
+      }
 
       event.preventDefault();
       event.stopImmediatePropagation();
-      if (stepping) return;
 
-      beginStep(settled + direction);
+      if (!shouldCommitWheel(gestureDir, direction) || stepping) return;
+
+      const tick = consumeScrollTick(pending, pixels);
+      pending = tick.pending;
+      if (!tick.direction) return;
+      takeTick(tick.direction);
     };
 
-    const cancelSettle = () => {
-      window.clearTimeout(snapTimer);
-      scrollTween?.kill();
-      scrollTween = null;
-      settling = false;
-      stepping = false;
+    const onKey = (event: KeyboardEvent) => {
+      if (!engaged) return;
+      const target = event.target;
+      if (target instanceof HTMLElement) {
+        const tag = target.tagName;
+        if (target.isContentEditable || tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") {
+          return;
+        }
+      }
+      const direction =
+        event.key === "ArrowDown" || event.key === "PageDown"
+          ? 1
+          : event.key === "ArrowUp" || event.key === "PageUp"
+            ? -1
+            : 0;
+      if (!direction) return;
+      event.preventDefault();
+      takeTick(direction);
     };
 
-    const stopSettle = () => {
-      if (stepping) return;
-      if (!scrollTween && !settling) return;
-      scrollTween?.kill();
-      scrollTween = null;
-      settling = false;
-      scheduleSnap(settled);
+    const onTouchStart = (event: TouchEvent) => {
+      if (!engaged || event.touches.length !== 1) return;
+      touchStartY = event.touches[0].clientY;
+      touchTicked = false;
+    };
+
+    const onTouchMove = (event: TouchEvent) => {
+      if (!engaged || touchTicked || event.touches.length !== 1) return;
+      const delta = touchStartY - event.touches[0].clientY;
+      if (Math.abs(delta) < 36) {
+        event.preventDefault();
+        return;
+      }
+      touchTicked = true;
+      event.preventDefault();
+      takeTick(Math.sign(delta));
     };
 
     window.addEventListener("wheel", onWheel, { passive: false, capture: true });
-    window.addEventListener("touchmove", stopSettle, { passive: true });
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("touchstart", onTouchStart, { passive: true });
+    window.addEventListener("touchmove", onTouchMove, { passive: false, capture: true });
 
-    trigger = ScrollTrigger.create({
+    pin = ScrollTrigger.create({
       trigger: track,
       start: "top top",
-      end: () =>
-        `+=${Math.max(count - 1, 0) * window.innerHeight * CHAPTER_STEP_VH}`,
+      end: "+=8",
       pin: true,
       anticipatePin: 1,
       invalidateOnRefresh: true,
+    });
+
+    watch = ScrollTrigger.create({
+      trigger: track,
+      start: "top bottom",
+      end: "bottom top",
       onUpdate: (self) => {
-        if (writing || !self.isActive) return;
-
-        if (ignoreEcho) {
-          ignoreEcho = false;
-          if (Math.abs(readScroll() - lastWritten) <= 24) return;
-        }
-
-        if (stepping || (settling && Math.abs(readScroll() - lastWritten) <= 24)) {
+        if (writing) return;
+        if (engaged) {
+          park();
           return;
         }
-
-        if (settling) {
-          scrollTween?.kill();
-          scrollTween = null;
-          settling = false;
-        }
-
-        const nearest = getChapterIndex(self.progress, count);
-        const index = clampChapterStep(settled, nearest, count);
-        if (index !== settled) beginStep(index);
-        else scheduleSnap(settled);
+        const top = track.getBoundingClientRect().top;
+        if (!armEngage(top)) return;
+        if (self.direction > 0 && top < 72 && top >= 0) engage(false);
+        if (self.direction < 0 && top <= 40 && top > -96) engage(true);
       },
-      onLeave: cancelSettle,
-      onLeaveBack: cancelSettle,
     });
 
     releaseShowMore = animateShowMore(section);
@@ -427,13 +485,15 @@ function setupPinnedSequence(
     publishIndex(0);
 
     release = () => {
-      window.clearTimeout(snapTimer);
       window.clearTimeout(wheelIdleTimer);
       window.removeEventListener("wheel", onWheel, { capture: true });
-      window.removeEventListener("touchmove", stopSettle);
-      scrollTween?.kill();
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("touchstart", onTouchStart);
+      window.removeEventListener("touchmove", onTouchMove, { capture: true });
+      freeLenis();
       transition?.kill();
-      trigger.kill();
+      pin.kill();
+      watch.kill();
     };
   }, section);
 
