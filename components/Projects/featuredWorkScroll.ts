@@ -5,7 +5,9 @@ import { getLenis, getScrollY, scrollByDelta } from "@/lib/lenis";
 import { isPageScrollLocked } from "@/lib/scrollLock";
 
 import {
+  canCatchSequenceTouch,
   consumeScrollTick,
+  exitGlideDistance,
   isSequenceExit,
   shouldCommitWheel,
   wheelDeltaPixels,
@@ -16,7 +18,11 @@ gsap.registerPlugin(ScrollTrigger);
 const DESKTOP_MEDIA_QUERY = "(min-width: 901px)";
 const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
 const TICK_TAIL_MS = 220;
-const EXIT_NUDGE_PX = 240;
+
+/** Slow departure, matching the chapter ease, so the card stays with the page. */
+function glideEase(t: number) {
+  return t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
+}
 
 function chapterMotion(duration: number): gsap.TweenVars {
   return {
@@ -47,7 +53,7 @@ function animateShowMore(section: HTMLElement) {
   const showMore = section.querySelector<HTMLElement>("[data-show-more]");
   if (!showMore || prefersReducedMotion()) return () => {};
 
-  gsap.set(showMore, { autoAlpha: 0, y: 28 });
+  gsap.set(showMore, { autoAlpha: 0, y: 8 });
 
   const entrance = gsap.to(showMore, {
     autoAlpha: 1,
@@ -70,8 +76,8 @@ function animateShowMore(section: HTMLElement) {
       }
 
       if (self.direction < 0) entrance.reverse();
-    },
-  });
+      },
+    });
 
   if (reveal.isActive) entrance.progress(1);
 
@@ -271,6 +277,9 @@ function setupPinnedSequence(
     let writing = false;
     let touchStartY = 0;
     let touchTicked = false;
+    let touchTracking = false;
+    let gliding = false;
+    let glideTimer = 0;
     let pin: ScrollTrigger;
     let watch: ScrollTrigger;
 
@@ -334,10 +343,16 @@ function setupPinnedSequence(
       writeScroll(pin.start);
     };
 
+    const holdTouch = (held: boolean) => {
+      if (held) track.dataset.touchHold = "";
+      else delete track.dataset.touchHold;
+    };
+
     const engage = (fromBelow: boolean) => {
       engaged = true;
       suppressEngage = false;
       pending = 0;
+      holdTouch(true);
       showInstant(fromBelow ? count - 1 : 0);
       park();
     };
@@ -348,16 +363,46 @@ function setupPinnedSequence(
       return !suppressEngage;
     };
 
+    const finishGlide = () => {
+      gliding = false;
+      window.clearTimeout(glideTimer);
+      glideTimer = 0;
+    };
+
     const releaseSequence = (direction: number) => {
+      if (gliding) return;
       engaged = false;
       suppressEngage = true;
+      holdTouch(false);
       pending = 0;
       gestureDir = 0;
       window.clearTimeout(wheelIdleTimer);
       wheelIdleTimer = 0;
       freeLenis();
-      scrollByDelta(direction * EXIT_NUDGE_PX);
-      ScrollTrigger.update();
+
+      const following =
+        direction > 0
+          ? (section.querySelector<HTMLElement>("[data-show-more]")?.offsetHeight ?? 0)
+          : 0;
+      const distance = exitGlideDistance(window.innerHeight, following) * direction;
+      const lenis = getLenis();
+      gliding = true;
+
+      if (!lenis) {
+        scrollByDelta(distance);
+        ScrollTrigger.update();
+        finishGlide();
+        return;
+      }
+
+      lenis.scrollTo(getScrollY() + distance, {
+        duration: 1.05,
+        easing: glideEase,
+        force: true,
+        lock: true,
+        onComplete: finishGlide,
+      });
+      glideTimer = window.setTimeout(finishGlide, 1400);
     };
 
     const beginStep = (direction: number) => {
@@ -380,6 +425,11 @@ function setupPinnedSequence(
     };
 
     const onWheel = (event: WheelEvent) => {
+      if (gliding) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        return;
+      }
       if (event.ctrlKey) return;
       if (Math.abs(event.deltaX) > Math.abs(event.deltaY)) return;
 
@@ -390,8 +440,10 @@ function setupPinnedSequence(
       if (!engaged) {
         const top = track.getBoundingClientRect().top;
         if (!armEngage(top)) return;
+        // A fraction of a pixel past the pin still belongs to the card.
+        // Missing it lets the page fling the card off the viewport.
         const approaching =
-          (direction > 0 && top <= 140 && top >= 0) ||
+          (direction > 0 && top <= 140 && top >= -2) ||
           (direction < 0 && top >= -140 && top <= 40);
         if (!approaching) return;
         event.preventDefault();
@@ -431,65 +483,116 @@ function setupPinnedSequence(
       takeTick(direction);
     };
 
+    const touchOnControl = (event: TouchEvent) => {
+      const target = event.target;
+      return (
+        target instanceof Element &&
+        Boolean(target.closest("a, button, input, textarea, select"))
+      );
+    };
+
     const onTouchStart = (event: TouchEvent) => {
-      if (!engaged || event.touches.length !== 1) return;
+      if (event.touches.length !== 1 || touchOnControl(event)) {
+        touchTracking = false;
+        return;
+      }
+
+      const top = track.getBoundingClientRect().top;
+      if (!engaged && !canCatchSequenceTouch(top)) {
+        touchTracking = false;
+        return;
+      }
+
       touchStartY = event.touches[0].clientY;
       touchTicked = false;
+      touchTracking = true;
     };
 
     const onTouchMove = (event: TouchEvent) => {
-      if (!engaged || touchTicked || event.touches.length !== 1) return;
-      const delta = touchStartY - event.touches[0].clientY;
-      if (Math.abs(delta) < 36) {
+      if (gliding) {
         event.preventDefault();
         return;
       }
-      touchTicked = true;
+      if (!touchTracking || event.touches.length !== 1) return;
+
+      const delta = touchStartY - event.touches[0].clientY;
+      if (Math.abs(delta) < 36) {
+        if (engaged) event.preventDefault();
+        return;
+      }
+
+      if (touchTicked) {
+        if (engaged) event.preventDefault();
+        return;
+      }
+
+      const top = track.getBoundingClientRect().top;
+      if (!engaged) {
+        if (!armEngage(top) || !canCatchSequenceTouch(top)) return;
+        event.preventDefault();
+        engage(delta < 0);
+        touchTicked = true;
+        return;
+      }
+
       event.preventDefault();
+      touchTicked = true;
       takeTick(Math.sign(delta));
+    };
+
+    const onTouchEnd = () => {
+      touchTracking = false;
+      touchTicked = false;
     };
 
     window.addEventListener("wheel", onWheel, { passive: false, capture: true });
     window.addEventListener("keydown", onKey);
     window.addEventListener("touchstart", onTouchStart, { passive: true });
     window.addEventListener("touchmove", onTouchMove, { passive: false, capture: true });
+    window.addEventListener("touchend", onTouchEnd);
+    window.addEventListener("touchcancel", onTouchEnd);
 
     pin = ScrollTrigger.create({
       trigger: track,
       start: "top top",
       end: "+=8",
       pin: true,
-      anticipatePin: 1,
+      pinType: "transform",
+      anticipatePin: 0,
       invalidateOnRefresh: true,
     });
 
     watch = ScrollTrigger.create({
       trigger: track,
-      start: "top bottom",
-      end: "bottom top",
+          start: "top bottom",
+          end: "bottom top",
       onUpdate: (self) => {
-        if (writing) return;
+        if (writing || gliding) return;
         if (engaged) {
           park();
           return;
         }
         const top = track.getBoundingClientRect().top;
         if (!armEngage(top)) return;
-        if (self.direction > 0 && top < 72 && top >= 0) engage(false);
+        if (self.direction > 0 && top < 72 && top >= -2) engage(false);
         if (self.direction < 0 && top <= 40 && top > -96) engage(true);
-      },
-    });
+        },
+      });
 
     releaseShowMore = animateShowMore(section);
 
     publishIndex(0);
 
     release = () => {
+      finishGlide();
       window.clearTimeout(wheelIdleTimer);
       window.removeEventListener("wheel", onWheel, { capture: true });
       window.removeEventListener("keydown", onKey);
       window.removeEventListener("touchstart", onTouchStart);
       window.removeEventListener("touchmove", onTouchMove, { capture: true });
+      window.removeEventListener("touchend", onTouchEnd);
+      window.removeEventListener("touchcancel", onTouchEnd);
+      holdTouch(false);
       freeLenis();
       transition?.kill();
       pin.kill();

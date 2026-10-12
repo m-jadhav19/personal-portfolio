@@ -33,11 +33,38 @@ export function consumeScrollTick(pending: number, delta: number, threshold = SC
   return { pending: 0, direction: Math.sign(next) };
 }
 
+/**
+ * How far the dial has filled for a chapter, clockwise from the top.
+ * Each chapter owns one segment, so the last chapter closes the ring.
+ */
+export function dialTurnDegrees(index: number, count: number) {
+  if (count <= 0) return 0;
+  const safe = Math.min(count - 1, Math.max(0, index));
+  return ((safe + 1) / count) * 360;
+}
+
+/** The card is close enough to the viewport top for a finger swipe to take it. */
+export function canCatchSequenceTouch(trackTop: number) {
+  return trackTop <= 140 && trackTop >= -160;
+}
+
 /** The first and last chapters release the page instead of stepping again. */
 export function isSequenceExit(settled: number, direction: number, count: number) {
   if (!direction || count <= 0) return false;
   if (direction > 0) return settled >= count - 1;
   return settled <= 0;
+}
+
+/**
+ * How far the page eases after the sequence lets go.
+ * Far enough to clear the card's catch zone, and no farther than the
+ * block that follows it, so the card slides into that block instead of
+ * jumping off the viewport.
+ */
+export function exitGlideDistance(viewport: number, followingHeight: number) {
+  const room = Math.round(Math.max(220, Math.min(viewport * 0.42, 480)));
+  if (followingHeight <= 0) return room;
+  return Math.round(Math.max(220, Math.min(followingHeight, room)));
 }
 
 /**

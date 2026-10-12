@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 
+import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 import {
@@ -24,13 +25,34 @@ import { AllProjectsCatalog } from "./AllProjectsCatalog";
 import { initFeaturedWorkScroll } from "./featuredWorkScroll";
 import { ProjectDetail } from "./ProjectDetail";
 import { ProjectMedia } from "./ProjectMedia";
-import { selectFeaturedProjects } from "./projectMotion";
+import { dialTurnDegrees, selectFeaturedProjects } from "./projectMotion";
 import styles from "./FeaturedWork.module.css";
 
 function nextFrame() {
   return new Promise<void>((resolve) => {
     requestAnimationFrame(() => resolve());
   });
+}
+
+const DIAL_CENTER = 36;
+const DIAL_RADIUS = 27;
+const DIAL_CIRCUMFERENCE = 2 * Math.PI * DIAL_RADIUS;
+
+function dialOffset(turn: number) {
+  return DIAL_CIRCUMFERENCE * (1 - turn / 360);
+}
+
+function dialNotch(index: number, count: number, active: boolean) {
+  const degrees = -90 + dialTurnDegrees(index, count);
+  const radians = (degrees * Math.PI) / 180;
+  const outer = DIAL_RADIUS;
+  const inner = outer - (active ? 8 : 5);
+  return {
+    x1: DIAL_CENTER + Math.cos(radians) * inner,
+    y1: DIAL_CENTER + Math.sin(radians) * inner,
+    x2: DIAL_CENTER + Math.cos(radians) * outer,
+    y2: DIAL_CENTER + Math.sin(radians) * outer,
+  };
 }
 
 function chapterMeta(project: Project) {
@@ -47,6 +69,9 @@ export function FeaturedWork() {
 
   const [isSequence, setIsSequence] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
+  const dialArcRef = useRef<SVGCircleElement>(null);
+  const dialNeedleRef = useRef<SVGGElement>(null);
+  const dialTurnRef = useRef({ turn: dialTurnDegrees(0, projects.length) });
   const [isCatalogMounted, setIsCatalogMounted] = useState(false);
   const [isCatalogReady, setIsCatalogReady] = useState(false);
   const [detailProject, setDetailProject] = useState<Project | null>(null);
@@ -156,6 +181,35 @@ export function FeaturedWork() {
     };
   }, []);
 
+  useEffect(() => {
+    const arc = dialArcRef.current;
+    const needle = dialNeedleRef.current;
+    if (!arc || !needle) return;
+
+    const state = dialTurnRef.current;
+    const apply = () => {
+      arc.style.strokeDashoffset = String(dialOffset(state.turn));
+      needle.style.transform = `rotate(${state.turn}deg)`;
+    };
+
+    const tween = gsap.to(state, {
+      turn: dialTurnDegrees(activeIndex, projects.length),
+      duration: 0.75,
+      ease: "power3.out",
+      easeReverse: "power3.in",
+      overwrite: true,
+      onUpdate: apply,
+    } as gsap.TweenVars);
+
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      tween.progress(1);
+    }
+
+    return () => {
+      tween.kill();
+    };
+  }, [activeIndex, projects.length]);
+
   return (
     <>
       <section id="projects" ref={sectionRef} className={styles.featuredWork}>
@@ -163,15 +217,45 @@ export function FeaturedWork() {
           <div className={styles.stage} data-work-stage>
             <div className={styles.stageTop}>
               <p className={styles.label}>Projects</p>
-              <div className={styles.progress} aria-hidden="true">
-                {projects.map((project, index) => (
-                  <span
-                    key={project.id}
-                    className={styles.progressMark}
-                    data-reached={index <= activeIndex ? "" : undefined}
-                    data-current={index === activeIndex ? "" : undefined}
+              <div className={styles.dial} aria-hidden="true">
+                <svg className={styles.dialFace} viewBox="0 0 72 72">
+                  <circle className={styles.dialPlate} cx="36" cy="36" r="33" />
+                  <circle className={styles.dialRing} cx="36" cy="36" r={DIAL_RADIUS} />
+                  <circle
+                    ref={dialArcRef}
+                    className={styles.dialArc}
+                    cx="36"
+                    cy="36"
+                    r={DIAL_RADIUS}
+                    style={{
+                      strokeDasharray: DIAL_CIRCUMFERENCE,
+                      strokeDashoffset: dialOffset(dialTurnDegrees(0, projects.length)),
+                    }}
+                    transform="rotate(-90 36 36)"
                   />
-                ))}
+                  {projects.map((project, index) => {
+                    const notch = dialNotch(index, projects.length, index === activeIndex);
+                    return (
+                      <line
+                        key={project.id}
+                        className={styles.dialNotch}
+                        data-current={index === activeIndex ? "" : undefined}
+                        x1={notch.x1}
+                        y1={notch.y1}
+                        x2={notch.x2}
+                        y2={notch.y2}
+                      />
+                    );
+                  })}
+                  <g
+                    ref={dialNeedleRef}
+                    className={styles.dialNeedle}
+                    style={{ transform: `rotate(${dialTurnDegrees(0, projects.length)}deg)` }}
+                  >
+                    <line x1="36" y1="34" x2="36" y2="14" />
+                    <circle cx="36" cy="36" r="2.4" />
+                  </g>
+                </svg>
               </div>
               <p className={styles.counter} data-work-counter>
                 <span data-work-counter-current>

@@ -53,6 +53,10 @@
   background: var(--background);
 }
 
+.track[data-touch-hold] {
+  touch-action: none;
+}
+
 .stage {
   display: flex;
   flex-direction: column;
@@ -283,30 +287,60 @@
   background: color-mix(in srgb, var(--background) 14%, transparent);
 }
 
-.progress {
+.dial {
   display: none;
-  align-items: center;
-  gap: 0.4rem;
+  width: 3.6rem;
+  height: 3.6rem;
   margin-left: auto;
-  margin-right: 0.15rem;
+  flex: none;
 }
 
-.progressMark {
-  width: 0.9rem;
-  height: 3px;
-  background: color-mix(in srgb, var(--foreground) 28%, transparent);
-  transition:
-    width 0.45s var(--ease),
-    background-color 0.45s var(--ease);
+.dialFace {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
 }
 
-.progressMark[data-reached] {
-  background: color-mix(in srgb, var(--cobalt) 55%, var(--foreground));
+.dialPlate {
+  fill: color-mix(in srgb, var(--background) 86%, transparent);
+  stroke: var(--border);
+  stroke-width: 1;
 }
 
-.progressMark[data-current] {
-  width: 2.1rem;
-  background: var(--cobalt);
+.dialRing,
+.dialArc {
+  fill: none;
+  stroke-width: 1.25;
+}
+
+.dialRing {
+  stroke: color-mix(in srgb, var(--foreground) 22%, transparent);
+}
+
+.dialArc {
+  stroke: var(--cobalt);
+  stroke-linecap: butt;
+}
+
+.dialNotch {
+  stroke: color-mix(in srgb, var(--foreground) 42%, transparent);
+  stroke-width: 1.25;
+  stroke-linecap: round;
+}
+
+.dialNotch[data-current] {
+  stroke: var(--cobalt);
+  stroke-width: 2;
+}
+
+.dialNeedle {
+  transform-box: view-box;
+  transform-origin: center;
+  stroke: var(--cobalt);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  fill: var(--cobalt);
 }
 
 @media (min-width: 901px) {
@@ -354,7 +388,7 @@
   }
 
   .counter,
-  .progress {
+  .dial {
     display: flex;
   }
 
@@ -411,8 +445,7 @@
 @media (prefers-reduced-motion: reduce) {
   .mediaImage,
   .mediaVeil,
-  .media,
-  .progressMark {
+  .media {
     transition: none;
   }
 

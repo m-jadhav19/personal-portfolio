@@ -3,7 +3,10 @@ import test from "node:test";
 
 import {
   clampCtaPosition,
+  canCatchSequenceTouch,
   consumeScrollTick,
+  dialTurnDegrees,
+  exitGlideDistance,
   isSequenceExit,
   selectFeaturedProjects,
   shouldCommitWheel,
@@ -27,6 +30,29 @@ test("a wheel tick advances one chapter and drops the leftover", () => {
   assert.deepEqual(consumeScrollTick(0, 16), { pending: 16, direction: 0 });
   assert.deepEqual(consumeScrollTick(16, 30), { pending: 0, direction: 1 });
   assert.deepEqual(consumeScrollTick(0, -120), { pending: 0, direction: -1 });
+});
+
+test("fills the dial one segment per chapter and closes it on the last", () => {
+  assert.equal(dialTurnDegrees(0, 4), 90);
+  assert.equal(dialTurnDegrees(1, 4), 180);
+  assert.equal(dialTurnDegrees(3, 4), 360);
+  assert.equal(dialTurnDegrees(8, 4), 360);
+  assert.equal(dialTurnDegrees(-2, 4), 90);
+});
+
+test("catches a touch when the work card is at the top of the viewport", () => {
+  assert.equal(canCatchSequenceTouch(0), true);
+  assert.equal(canCatchSequenceTouch(120), true);
+  assert.equal(canCatchSequenceTouch(-140), true);
+  assert.equal(canCatchSequenceTouch(240), false);
+  assert.equal(canCatchSequenceTouch(-220), false);
+});
+
+test("the exit glide stays with the block after the last card", () => {
+  assert.equal(exitGlideDistance(800, 260), 260);
+  assert.equal(exitGlideDistance(800, 0), 336);
+  assert.equal(exitGlideDistance(1400, 900), 480);
+  assert.equal(exitGlideDistance(400, 40), 220);
 });
 
 test("the end chapters release the page", () => {
